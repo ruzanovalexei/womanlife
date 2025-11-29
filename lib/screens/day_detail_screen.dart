@@ -10,6 +10,19 @@ import '../models/settings.dart';
 import '../utils/period_calculator.dart';
 import '../models/medication.dart';
 
+// Added MedicationTime class
+class MedicationTime {
+  final int hour;
+  final int minute;
+
+  MedicationTime({required this.hour, required this.minute});
+
+  @override
+  String toString() {
+    return '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+  }
+}
+
 class MedicationEvent {
   final String name;
   final DateTime scheduledTime;
@@ -155,7 +168,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.startPeriodError(e.toString())),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error, // Изменено здесь
         ),
       );
     }
@@ -199,7 +212,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.startPeriodError(e.toString())),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error, // Изменено здесь
         ),
       );
     }
@@ -226,7 +239,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.startPeriodError(e.toString())),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error, // Изменено здесь
         ),
       );
     }
@@ -253,7 +266,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.startPeriodError(e.toString())),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error, // Изменено здесь
         ),
       );
     }
@@ -279,7 +292,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.startPeriodError(e.toString())),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error, // Изменено здесь
         ),
       );
     }
@@ -302,7 +315,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.startPeriodError(e.toString())),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error, // Изменено здесь
         ),
       );
     }
@@ -811,6 +824,32 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
   Widget _buildMedicineBlock(AppLocalizations l10n) {
     final activeMedications = _allMedications.where((med) => med.isActiveOn(widget.selectedDate)).toList();
 
+    List<MedicationEvent> medicationEvents = [];
+    for (var medication in activeMedications) {
+      for (var medicationTime in medication.times) { // Здесь medicationTime имеет тип MedicationTime
+        try {
+          final scheduledTime = DateTime(
+            widget.selectedDate.year,
+            widget.selectedDate.month,
+            widget.selectedDate.day,
+            medicationTime.hour,   // Используем hour из MedicationTime
+            medicationTime.minute, // Используем minute из MedicationTime
+          );
+          medicationEvents.add(MedicationEvent(
+            name: medication.name,
+            scheduledTime: scheduledTime,
+            medicationId: medication.id!,
+          ));
+        } catch (e) {
+          // Обрабатываем возможные ошибки
+          print('Ошибка при создании события приема лекарства ${medication.name}: ${medicationTime.toString()} - $e');
+        }
+      }
+    }
+
+    // Сортируем события по времени
+    medicationEvents.sort((a, b) => a.compareTo(b));
+
     return Card(
       child: ExpansionTile(
         initiallyExpanded: _isMedicineBlockExpanded,
@@ -829,23 +868,24 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (activeMedications.isEmpty)
+                if (medicationEvents.isEmpty)
                   const Text(
                     'Нет лекарств, запланированных на этот день.',
                     style: TextStyle(color: Colors.grey),
                   )
                 else
-                  ...activeMedications.map((medication) => Padding(
+                  ...medicationEvents.map((event) => Padding(
                     padding: const EdgeInsets.only(bottom: 8.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          medication.name,
+                          event.name,
                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                         ),
                         Text(
-                          'Время приема: ${medication.timesAsString}',
+                          // Форматируем время как "ЧЧ:ММ"
+                          'Время приема: ${DateFormat('HH:mm').format(event.scheduledTime)}',
                           style: const TextStyle(fontSize: 14, color: Colors.grey),
                         ),
                       ],
