@@ -1,6 +1,6 @@
 //import 'package:flutter/material.dart';
 
-class DateUtils {
+class MyDateUtils {
   /// Возвращает текущую дату в UTC без учета времени.
   static DateTime getUtcToday() {
     final now = DateTime.now().toUtc();

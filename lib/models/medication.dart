@@ -21,8 +21,8 @@ class Medication {
     return {
       'id': id,
       'name': name,
-      'startDate': DateUtils.toUtcDateString(startDate), // Используем toUtcDateString
-      'endDate': endDate != null ? DateUtils.toUtcDateString(endDate!) : null, // Используем toUtcDateString
+      'startDate': MyDateUtils.toUtcDateString(startDate), // Используем toUtcDateString
+      'endDate': endDate != null ? MyDateUtils.toUtcDateString(endDate!) : null, // Используем toUtcDateString
       'times': jsonEncode(times.map((t) => t.toMap()).toList()),
     };
   }
@@ -40,8 +40,8 @@ class Medication {
     return Medication(
       id: map['id'],
       name: map['name'],
-      startDate: DateUtils.fromUtcDateString(map['startDate']), // Используем fromUtcDateString
-      endDate: map['endDate'] != null ? DateUtils.fromUtcDateString(map['endDate']) : null, // Используем fromUtcDateString
+      startDate: MyDateUtils.fromUtcDateString(map['startDate']), // Используем fromUtcDateString
+      endDate: map['endDate'] != null ? MyDateUtils.fromUtcDateString(map['endDate']) : null, // Используем fromUtcDateString
       times: parsedTimes,
     );
   }
@@ -54,7 +54,7 @@ class Medication {
   bool isActiveOn(DateTime day) {
     // Входная 'day' также должна быть UTC датой без времени
     // Все даты в Medication (startDate, endDate) теперь уже UTC без времени
-    final normalizedDay = DateUtils.startOfDayUtc(day);
+    final normalizedDay = MyDateUtils.startOfDayUtc(day);
     final normalizedStartDate = startDate; // Уже нормализована
     final normalizedEndDate = endDate; // Уже нормализована
 

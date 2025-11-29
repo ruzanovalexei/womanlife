@@ -16,7 +16,7 @@ class DayNote {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'date': DateUtils.toUtcDateString(date), // Используем toUtcDateString
+      'date': MyDateUtils.toUtcDateString(date), // Используем toUtcDateString
       'symptoms': symptoms.join(','),
       'sexualActsCount': sexualActsCount,
     };
@@ -25,7 +25,7 @@ class DayNote {
   factory DayNote.fromMap(Map<String, dynamic> map) {
     return DayNote(
       id: map['id'],
-      date: DateUtils.fromUtcDateString(map['date']), // Используем fromUtcDateString
+      date: MyDateUtils.fromUtcDateString(map['date']), // Используем fromUtcDateString
       symptoms: _parseSymptoms(map['symptoms']),
       sexualActsCount: map['sexualActsCount'] ?? 0,
     );
@@ -41,7 +41,7 @@ class DayNote {
   static String formatDateForDatabase(DateTime date) {
     // Эта функция используется только для запросов к БД, где дата хранится в UTC.
     // Поэтому форматируем входящую дату в UTC-строку.
-    return DateUtils.toUtcDateString(date);
+    return MyDateUtils.toUtcDateString(date);
   }
 
   DayNote copyWith({
