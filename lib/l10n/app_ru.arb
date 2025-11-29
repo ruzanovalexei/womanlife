@@ -1,0 +1,223 @@
+{
+  "@@locale": "ru",
+  "appTitle": "Трекер цикла",
+  "refreshTooltip": "Обновить данные",
+  "settingsTooltip": "Настройки",
+  "exitTooltip": "Закрыть приложение",
+  "errorWithMessage": "Ошибка: {message}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "retry": "Повторить",
+  "calendarNextPeriod": "Следующий цикл:",
+  "calendarInDays": "Через {days} дн.",
+  "@calendarInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "calendarLegendTitle": "Обозначения:",
+  "calendarLegendPlanned": "Плановый",
+  "calendarLegendActual": "Фактический",
+  "calendarLegendBoth": "Плановый и фактический",
+  "calendarLegendToday": "Сегодня",
+  "calendarLegendOvulation": "День овуляции",
+  "calendarLegendOverdue": "Задержка",
+  "dayDetailsTitle": "Детали дня",
+  "periodManagementTitle": "Управление периодом",
+  "startNewPeriodButton": "Начать новый цикл",
+  "startNewPeriodHint": "Отметьте этот день как начало менструации",
+  "activePeriodLabel": "Активный цикл: {start} - Текущая дата",
+  "@activePeriodLabel": {
+    "placeholders": {
+      "start": {}
+    }
+  },
+  "endPeriodButton": "Завершить цикл",
+  "endPeriodHint": "Отметьте этот день как конец цикла",
+  "cancelPeriodButton": "Отменить цикл",
+  "cancelPeriodHint": "Удалить запись о цикле",
+  "dayWithinActive": "Этот день входит в активный цикл",
+  "dayWithinActiveHint": "Чтобы завершить цикл, отметьте последний день",
+  "lastPeriodLabel": "Последний цикл: {start} - {end}",
+  "@lastPeriodLabel": {
+    "placeholders": {
+      "start": {},
+      "end": {}
+    }
+  },
+  "lastPeriodHint": "Новый цикл можно начать после даты окончания",
+  "removeEndDateButton": "Удалить дату окончания",
+  "deletePeriodButton": "Удалить цикл",
+  "deletePeriodHint": "Сначала удалите дату окончания, затем запись",
+  "symptomsTitle": "Симптомы",
+  "addSymptomHint": "Добавить симптом",
+  "currentSymptomsTitle": "Текущие симптомы:",
+  "symptomAlreadyAdded": "Симптом уже добавлен",
+  "noSymptoms": "Симптомы не добавлены",
+  "debugInfoTitle": "Отладочная информация:",
+  "debugCanMarkStart": "Можно отметить начало: {value}",
+  "@debugCanMarkStart": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "debugCanMarkEnd": "Можно отметить конец: {value}",
+  "@debugCanMarkEnd": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "debugIsInActivePeriod": "День в активном цикле: {value}",
+  "@debugIsInActivePeriod": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "debugActivePeriod": "Активный цикл: {value}",
+  "@debugActivePeriod": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "debugLastPeriod": "Последний цикл: {value}",
+  "@debugLastPeriod": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "debugSymptomsCount": "Количество симптомов: {count}",
+  "@debugSymptomsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "symptomsSaved": "Симптомы сохранены",
+  "symptomsSaveError": "Ошибка сохранения симптомов: {message}",
+  "@symptomsSaveError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "symptomAlreadyAddedMessage": "Симптом уже добавлен",
+  "startPeriodSuccess": "Цикл начат",
+  "startPeriodError": "Ошибка начала цикла: {message}",
+  "@startPeriodError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "endPeriodSuccess": "Цикл завершен",
+  "endPeriodError": "Ошибка завершения цикла: {message}",
+  "@endPeriodError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "cancelPeriodSuccess": "Цикл отменен",
+  "cancelPeriodError": "Ошибка отмены цикла: {message}",
+  "@cancelPeriodError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "removePeriodEndSuccess": "Дата окончания удалена",
+  "removePeriodEndError": "Ошибка удаления даты окончания: {message}",
+  "@removePeriodEndError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "deletePeriodSuccess": "Цикл удален",
+  "deletePeriodError": "Ошибка удаления цикла: {message}",
+  "@deletePeriodError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "endDateBeforeStart": "Дата окончания не может быть раньше даты начала",
+  "settingsTitle": "Настройки",
+  "settingsSaved": "Настройки сохранены",
+  "settingsSaveError": "Ошибка сохранения настроек",
+  "settingsFormCycleLength": "Длина цикла (дни)",
+  "settingsFormPeriodLength": "Длительность менструации (дни)",
+  "settingsFormOvulationDay": "День овуляции (от начала)",
+  "settingsFormPlanningMonths": "Период планирования (мес.)",
+  "settingsFormSaveButton": "Сохранить",
+  "settingsFormValueMissing": "Введите значение",
+  "settingsFormInvalidNumber": "Введите корректное число",
+  "settingsFormRangeError": "Значение должно быть от {min} до {max}",
+  "@settingsFormRangeError": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsFormLanguageLabel": "Язык",
+  "settingsFormLanguageEnglish": "Английский",
+  "settingsFormLanguageRussian": "Русский",
+  "settingsFormFirstDayLabel": "Первый день календаря",
+  "settingsFormFirstDayMonday": "Понедельник",
+  "settingsFormFirstDaySunday": "Воскресенье",
+  "symptomHeadache": "Головная боль",
+  "symptomFatigue": "Усталость",
+  "symptomBloating": "Вздутие живота",
+  "symptomIrritability": "Раздражительность",
+  "symptomAbdominalPain": "Боли внизу живота",
+  "symptomAcne": "Акне",
+  "symptomSweetCravings": "Тяга к сладкому",
+  "symptomBreastPain": "Боль в груди",
+  "symptomCramps": "Судороги",
+  "symptomNausea": "Тошнота",
+  "symptomInsomnia": "Бессонница",
+  "addMedicationTitle": "Добавить лекарство",
+  "editMedicationTitle": "Реадктировать лекарство",
+  "medicationNameLabel": "Название лекарства",
+  "medicationStartDateLabel": "Дата начала",
+  "medicationPickStartDate": "Выберете дату начала приема",
+  "medicationEndDateLabel": "Дата окончания",
+  "medicationPickEndDate": "Выберете дату окончания приема",
+  "cancelButton": "Отмена",
+  "saveButton": "Сохранить",
+  "medicationNameMissingError": "Enter medication name and start date",
+  "medicationSaveError": "Error saving medication: {message}",
+  "@medicationSaveError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "noMedications": "No medications added",
+  "medicationEndDateNotSet": "Not set",
+  "medicationTimes": "Times",
+  "medicationDeleteConfirmTitle": "Удалить лекарство",
+  "medicationDeleteConfirmMessage": "Are you sure you want to delete \"{name}\"?",
+  "@medicationDeleteConfirmMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "deleteButton": "Delete",
+  "medicationDeleteSuccess": "Medication \"{name}\" deleted",
+  "@medicationDeleteSuccess": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "medicationDeleteError": "Error deleting medication: {message}",
+  "@medicationDeleteError": {
+    "placeholders": {
+      "message": {}
+    }
+  }
+}
+

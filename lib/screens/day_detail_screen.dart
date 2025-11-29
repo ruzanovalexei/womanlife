@@ -1,0 +1,867 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
+import 'package:period_tracker/l10n/app_localizations.dart';
+
+import '../database/database_helper.dart';
+import '../models/day_note.dart';
+import '../models/period_record.dart';
+import '../models/settings.dart';
+import '../utils/period_calculator.dart';
+import '../models/medication.dart';
+
+class MedicationEvent {
+  final String name;
+  final DateTime scheduledTime;
+  final int medicationId; // Для идентификации оригинального лекарства, если потребуется
+
+  MedicationEvent({
+    required this.name,
+    required this.scheduledTime,
+    required this.medicationId,
+  });
+
+  // Для сортировки
+  int compareTo(MedicationEvent other) {
+    return scheduledTime.compareTo(other.scheduledTime);
+  }
+}
+
+class DayDetailScreen extends StatefulWidget {
+  final DateTime selectedDate;
+  final List<PeriodRecord> periodRecords;
+  final Settings settings;
+
+  const DayDetailScreen({
+    super.key, 
+    required this.selectedDate,
+    required this.periodRecords,
+    required this.settings,
+  });
+
+  @override
+  _DayDetailScreenState createState() => _DayDetailScreenState();
+}
+
+class _DayDetailScreenState extends State<DayDetailScreen> {
+  final _databaseHelper = DatabaseHelper();
+  late DayNote _dayNote;
+  final _symptomController = TextEditingController();
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  PeriodRecord? _lastPeriod;
+  PeriodRecord? _activePeriod;
+  List<String> _allSymptoms = []; // Список всех доступных симптомов
+  List<Medication> _allMedications = []; // Список всех лекарств
+
+  // Состояние блоков (по умолчанию все раскрыты)
+  bool _isPeriodBlockExpanded = true;
+  bool _isSexBlockExpanded = true;
+  bool _isHealthBlockExpanded = true;
+  bool _isMedicineBlockExpanded = true;
+
+  bool get _canMarkStart => PeriodCalculator.canMarkPeriodStart(widget.selectedDate, _lastPeriod);
+  bool get _canMarkEnd => PeriodCalculator.canMarkPeriodEnd(widget.selectedDate, _activePeriod);
+  bool get _isInActivePeriod => PeriodCalculator.isDateInActivePeriod(widget.selectedDate, _activePeriod);
+  bool get _isDelayDay => PeriodCalculator.isDelayDay(widget.selectedDate, widget.settings, widget.periodRecords);
+
+  // Найти предыдущий период, предшествующий выбранному дню
+  PeriodRecord? get _previousPeriod {
+    if (widget.periodRecords.isEmpty) return null;
+    
+    // Фильтруем периоды, которые заканчиваются до выбранной даты
+    final previousPeriods = widget.periodRecords.where((period) {
+      final periodEndDate = period.endDate ?? DateTime.now();
+      return periodEndDate.isBefore(widget.selectedDate) || 
+             periodEndDate.isAtSameMomentAs(widget.selectedDate);
+    }).toList();
+    
+    if (previousPeriods.isEmpty) return null;
+    
+    // Сортируем по дате окончания (от новых к старым) и берем первый
+    previousPeriods.sort((a, b) {
+      final aEndDate = a.endDate ?? DateTime.now();
+      final bEndDate = b.endDate ?? DateTime.now();
+      return bEndDate.compareTo(aEndDate);
+    });
+    
+    return previousPeriods.first;
+  }
+
+  String _formatDate(BuildContext context, DateTime date) {
+    final localeTag = Localizations.localeOf(context).toString();
+    return DateFormat('dd.MM.yyyy', localeTag).format(date);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
+      // Загружаем заметку дня
+      DayNote? note = await _databaseHelper.getDayNote(widget.selectedDate);
+      _dayNote = note ?? DayNote(
+        date: widget.selectedDate,
+        symptoms: [],
+      );
+
+      // Загружаем последний период и активный период
+      _lastPeriod = await _databaseHelper.getLastPeriodRecord();
+      _activePeriod = await _databaseHelper.getActivePeriodRecord();
+
+      await _loadAllSymptoms(); // Загружаем все симптомы через новую функцию
+      _allMedications = await _databaseHelper.getAllMedications(); // Загружаем все лекарства
+
+      setState(() {
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _startNewPeriod() async {
+    try {
+      final l10n = AppLocalizations.of(context)!;
+      final newPeriod = PeriodRecord(
+        startDate: widget.selectedDate,
+      );
+      
+      await _databaseHelper.insertPeriodRecord(newPeriod);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.startPeriodSuccess),
+          backgroundColor: Colors.green,
+        ),
+      );
+      
+      await _loadData(); // Перезагружаем данные
+      
+    } catch (e) {
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.startPeriodError(e.toString())),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _endActivePeriod() async {
+    if (_activePeriod == null) return;
+    
+    try {
+      final l10n = AppLocalizations.of(context)!;
+      // Проверяем, что дата окончания не раньше даты начала
+      if (widget.selectedDate.isBefore(_activePeriod!.startDate)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.endDateBeforeStart),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      final updatedPeriod = PeriodRecord(
+        id: _activePeriod!.id,
+        startDate: _activePeriod!.startDate,
+        endDate: widget.selectedDate,
+      );
+      
+      await _databaseHelper.updatePeriodRecord(updatedPeriod);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.endPeriodSuccess),
+          backgroundColor: Colors.green,
+        ),
+      );
+      
+      await _loadData(); // Перезагружаем данные
+      
+    } catch (e) {
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.startPeriodError(e.toString())),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _cancelActivePeriod() async {
+    if (_activePeriod == null) return;
+    
+    try {
+      final l10n = AppLocalizations.of(context)!;
+      await _databaseHelper.deletePeriodRecord(_activePeriod!.id!);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.cancelPeriodSuccess),
+          backgroundColor: Colors.green,
+        ),
+      );
+      
+      await _loadData(); // Перезагружаем данные
+      
+    } catch (e) {
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.startPeriodError(e.toString())),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _removeLastPeriodEnd() async {
+    if (_lastPeriod == null || _lastPeriod!.endDate == null) return;
+    
+    try {
+      final l10n = AppLocalizations.of(context)!;
+      final updatedPeriod = _lastPeriod!.copyWith(endDate: null, setEndDate: true);
+      await _databaseHelper.updatePeriodRecord(updatedPeriod);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.removePeriodEndSuccess),
+          backgroundColor: Colors.green,
+        ),
+      );
+      
+      await _loadData();
+    } catch (e) {
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.startPeriodError(e.toString())),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _deleteLastPeriod() async {
+    if (_lastPeriod == null || _lastPeriod!.id == null) return;
+    
+    try {
+      final l10n = AppLocalizations.of(context)!;
+      await _databaseHelper.deletePeriodRecord(_lastPeriod!.id!);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.deletePeriodSuccess),
+          backgroundColor: Colors.green,
+        ),
+      );
+      
+      await _loadData();
+    } catch (e) {
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.startPeriodError(e.toString())),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _saveDayNote() async {
+    try {
+      final l10n = AppLocalizations.of(context)!;
+      await _databaseHelper.insertOrUpdateDayNote(_dayNote);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.symptomsSaved),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 1),
+        ),
+      );
+    } catch (e) {
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.startPeriodError(e.toString())),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _updateSexualActsCount(int newCount) {
+    setState(() {
+      _dayNote = _dayNote.copyWith(sexualActsCount: newCount);
+    });
+    _saveDayNote();
+  }
+
+  Future<void> _loadAllSymptoms() async {
+    try {
+      _allSymptoms = await _databaseHelper.getAllSymptoms();
+    } catch (e) {
+      print('Error loading all symptoms: $e');
+      setState(() {
+        _errorMessage = 'Error loading symptoms: ${e.toString()}';
+      });
+    }
+  }
+
+  void _addSymptom(String symptomText) async {
+    final symptom = symptomText.trim();
+    if (symptom.isNotEmpty) {
+      if (!_dayNote.symptoms.contains(symptom)) {
+        // Если симптома нет в текущих симптомах дня, добавляем его
+        setState(() {
+          _dayNote = _dayNote.copyWith(
+            symptoms: [..._dayNote.symptoms, symptom],
+          );
+        });
+        await _saveDayNote();
+
+        // Если этого симптома нет в глобальном списке, добавляем в БД и обновляем глобальный список
+        if (!_allSymptoms.any((s) => s.toLowerCase() == symptom.toLowerCase())) {
+          await _databaseHelper.insertSymptom(symptom); // Добавляем в БД
+          await _loadAllSymptoms(); // Перезагружаем список всех симптомов
+        }
+      } else {
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.symptomAlreadyAddedMessage),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+    }
+  }
+
+  void _removeSymptom(String symptom) {
+    setState(() {
+      _dayNote = _dayNote.copyWith(
+        symptoms: _dayNote.symptoms.where((s) => s != symptom).toList(),
+      );
+    });
+    _saveDayNote();
+  }
+
+@override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.dayDetailsTitle),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadData,
+            tooltip: l10n.refreshTooltip,
+          ),
+        ],
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _errorMessage != null
+              ? Center(child: Text(l10n.errorWithMessage(_errorMessage!)))
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Заголовок с датой
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Center(
+                            child: Text(
+                              _formatDate(context, widget.selectedDate),
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Блок "Месячные"
+                      _buildPeriodBlock(l10n),
+                      const SizedBox(height: 8),
+
+                      // Блок "Секс"
+                      _buildSexBlock(l10n),
+                      const SizedBox(height: 8),
+
+                      // Блок "Самочувствие"
+                      _buildHealthBlock(l10n),
+                      const SizedBox(height: 8),
+
+                      // Блок "Лекарства"
+                      _buildMedicineBlock(l10n),
+                    ],
+                  ),
+                ),
+    );
+  }
+
+  // Блок "Месячные"
+  Widget _buildPeriodBlock(AppLocalizations l10n) {
+    return Card(
+      child: ExpansionTile(
+        initiallyExpanded: _isPeriodBlockExpanded,
+        onExpansionChanged: (expanded) {
+          setState(() {
+            _isPeriodBlockExpanded = expanded;
+          });
+        },
+        title: const Text(
+          'Месячные',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Информация о задержке
+                if (_isDelayDay)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange[50],
+                      border: Border.all(color: Colors.orange),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.access_time, color: Colors.orange),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Задержка',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              color: Colors.orange,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                
+                if (_isDelayDay) const SizedBox(height: 16),
+
+                // Информация о предыдущих месячных
+                if (_previousPeriod != null) ...[
+                  const Text(
+                    'Предыдущие месячные',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      border: Border.all(color: Colors.blue),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.calendar_month, color: Colors.blue),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _previousPeriod!.endDate != null
+                                    ? '${_formatDate(context, _previousPeriod!.startDate)} - ${_formatDate(context, _previousPeriod!.endDate!)}'
+                                    : '${_formatDate(context, _previousPeriod!.startDate)} - (активный)',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Продолжительность: ${_previousPeriod!.durationInDays} ${_previousPeriod!.durationInDays == 1 ? 'день' : 'дня'}',
+                          style: const TextStyle(fontSize: 12, color: Colors.blue),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                // Управление периодом
+                const Text(
+                  'Управление циклом',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                
+                if (_activePeriod == null && _canMarkStart) ...[
+                  // Можно начать новый период
+                  ElevatedButton(
+                    onPressed: _startNewPeriod,
+                    child: Text(l10n.startNewPeriodButton),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.startNewPeriodHint,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ] else if (_activePeriod != null && _canMarkEnd) ...[
+                  // Можно завершить активный период
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.activePeriodLabel(
+                          _formatDate(context, _activePeriod!.startDate),
+                        ),
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: _endActivePeriod,
+                        child: Text(l10n.endPeriodButton),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        l10n.endPeriodHint,
+                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: _cancelActivePeriod,
+                        child: Text(
+                          l10n.cancelPeriodButton,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                      Text(
+                        l10n.cancelPeriodHint,
+                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ] else if (_isInActivePeriod) ...[
+                  // День внутри активного периода
+                  Text(
+                    l10n.dayWithinActive,
+                    style: const TextStyle(fontSize: 16, color: Colors.blue),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.dayWithinActiveHint,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ] else if (_lastPeriod != null && _lastPeriod!.endDate != null) ...[
+                  // Есть завершенный период
+                  Text(
+                    l10n.lastPeriodLabel(
+                      _formatDate(context, _lastPeriod!.startDate),
+                      _formatDate(context, _lastPeriod!.endDate!),
+                    ),
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.lastPeriodHint,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: _removeLastPeriodEnd,
+                    child: Text(l10n.removeEndDateButton),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: _deleteLastPeriod,
+                    child: Text(
+                      l10n.deletePeriodButton,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ),
+                  Text(
+                    l10n.deletePeriodHint,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Блок "Секс"
+  Widget _buildSexBlock(AppLocalizations l10n) {
+    return Card(
+      child: ExpansionTile(
+        initiallyExpanded: _isSexBlockExpanded,
+        onExpansionChanged: (expanded) {
+          setState(() {
+            _isSexBlockExpanded = expanded;
+          });
+        },
+        title: const Text(
+          'Секс',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Количество половых актов',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      onPressed: _dayNote.sexualActsCount > 0 
+                          ? () => _updateSexualActsCount(_dayNote.sexualActsCount - 1)
+                          : null,
+                      icon: const Icon(Icons.remove_circle_outline, size: 32),
+                      color: Colors.red,
+                    ),
+                    Container(
+                      width: 80,
+                      height: 60,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${_dayNote.sexualActsCount}',
+                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => _updateSexualActsCount(_dayNote.sexualActsCount + 1),
+                      icon: const Icon(Icons.add_circle_outline, size: 32),
+                      color: Colors.green,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Блок "Самочувствие"
+  Widget _buildHealthBlock(AppLocalizations l10n) {
+    return Card(
+      child: ExpansionTile(
+        initiallyExpanded: _isHealthBlockExpanded,
+        onExpansionChanged: (expanded) {
+          setState(() {
+            _isHealthBlockExpanded = expanded;
+          });
+        },
+        title: const Text(
+          'Самочувствие',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.symptomsTitle,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                
+                // Поле ввода симптома
+                Row(
+                  children: [
+                    Expanded(
+                      child: Autocomplete<String>(
+                        optionsBuilder: (TextEditingValue textEditingValue) {
+                          if (textEditingValue.text == '') {
+                            return _allSymptoms.where((String option) {
+                              return !_dayNote.symptoms.contains(option);
+                            });
+                          }
+                          return _allSymptoms.where((String option) {
+                            return !(_dayNote.symptoms.contains(option)) &&
+                                option.toLowerCase().contains(textEditingValue.text.toLowerCase());
+                          });
+                        },
+                        onSelected: (String selection) async {
+                          _addSymptom(selection); // Добавляем симптом
+                          _symptomController.clear(); // Очищаем наш контроллер
+                        },
+                        fieldViewBuilder: (BuildContext context, TextEditingController textEditingController, FocusNode focusNode, VoidCallback onFieldSubmitted) {
+                          // Используем _symptomController в TextField
+                          return TextField(
+                            controller: _symptomController,
+                            focusNode: focusNode,
+                            keyboardType: TextInputType.multiline,
+                            textInputAction: TextInputAction.done,
+                            maxLines: 1,
+                            autocorrect: true,
+                            enableSuggestions: true,
+                            smartDashesType: SmartDashesType.enabled,
+                            smartQuotesType: SmartQuotesType.enabled,
+                            textCapitalization: TextCapitalization.none,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(RegExp(r'.*')), // Разрешить любые символы
+                            ],
+                            decoration: InputDecoration(
+                              hintText: l10n.addSymptomHint,
+                              border: const OutlineInputBorder(),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                            ),
+                            onSubmitted: (_) {
+                              _addSymptom(_symptomController.text); // Передаем текст из нашего контроллера
+                              _symptomController.clear(); // Очищаем наш контроллер
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.add_circle, size: 40),
+                      color: Colors.pink,
+                      onPressed: () {
+                        _addSymptom(_symptomController.text);
+                        _symptomController.clear();
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                
+                // Список симптомов
+                if (_dayNote.symptoms.isNotEmpty) ...[
+                  Text(
+                    l10n.currentSymptomsTitle,
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _dayNote.symptoms.map((symptom) => Chip(
+                      label: Text(symptom),
+                      onDeleted: () => _removeSymptom(symptom),
+                      deleteIcon: const Icon(Icons.clear, size: 18),
+                    )).toList(),
+                  ),
+                ] else
+                  Text(
+                    l10n.noSymptoms,
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Блок "Лекарства"
+  Widget _buildMedicineBlock(AppLocalizations l10n) {
+    final activeMedications = _allMedications.where((med) => med.isActiveOn(widget.selectedDate)).toList();
+
+    return Card(
+      child: ExpansionTile(
+        initiallyExpanded: _isMedicineBlockExpanded,
+        onExpansionChanged: (expanded) {
+          setState(() {
+            _isMedicineBlockExpanded = expanded;
+          });
+        },
+        title: const Text(
+          'Лекарства',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (activeMedications.isEmpty)
+                  const Text(
+                    'Нет лекарств, запланированных на этот день.',
+                    style: TextStyle(color: Colors.grey),
+                  )
+                else
+                  ...activeMedications.map((medication) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          medication.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        Text(
+                          'Время приема: ${medication.timesAsString}',
+                          style: const TextStyle(fontSize: 14, color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  )),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _symptomController.dispose();
+    super.dispose();
+  }
+}

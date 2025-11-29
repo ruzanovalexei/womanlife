@@ -1,0 +1,222 @@
+{
+  "@@locale": "en",
+  "appTitle": "Period Tracker",
+  "refreshTooltip": "Refresh data",
+  "settingsTooltip": "Settings",
+  "exitTooltip": "Exit app",
+  "errorWithMessage": "Error: {message}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "retry": "Retry",
+  "calendarNextPeriod": "Next Period:",
+  "calendarInDays": "In {days} days",
+  "@calendarInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "calendarLegendTitle": "Legend:",
+  "calendarLegendPlanned": "Planned",
+  "calendarLegendActual": "Actual",
+  "calendarLegendToday": "Today",
+  "calendarLegendOvulation": "Ovulation",
+  "calendarLegendOverdue": "Delay",
+  "dayDetailsTitle": "Day Details",
+  "periodManagementTitle": "Period Management",
+  "startNewPeriodButton": "Start New Period",
+  "startNewPeriodHint": "Mark this day as the start of your period",
+  "activePeriodLabel": "Active period: {start} - Present",
+  "@activePeriodLabel": {
+    "placeholders": {
+      "start": {}
+    }
+  },
+  "endPeriodButton": "End Period Here",
+  "endPeriodHint": "Mark this day as the end of your period",
+  "cancelPeriodButton": "Cancel Period",
+  "cancelPeriodHint": "Remove this period record",
+  "dayWithinActive": "This day is within an active period",
+  "dayWithinActiveHint": "To end the period, mark the last day of bleeding",
+  "lastPeriodLabel": "Last period: {start} - {end}",
+  "@lastPeriodLabel": {
+    "placeholders": {
+      "start": {},
+      "end": {}
+    }
+  },
+  "lastPeriodHint": "You can start a new period after the end date",
+  "removeEndDateButton": "Remove End Date",
+  "deletePeriodButton": "Delete Period",
+  "deletePeriodHint": "First remove the end date, then you can delete the entire record if needed",
+  "symptomsTitle": "Symptoms",
+  "addSymptomHint": "Add symptom",
+  "currentSymptomsTitle": "Current symptoms:",
+  "symptomAlreadyAddedMessage": "Symptom already added",
+  "noSymptoms": "No symptoms added",
+  "debugInfoTitle": "Debug Info:",
+  "debugCanMarkStart": "Can mark start: {value}",
+  "@debugCanMarkStart": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "debugCanMarkEnd": "Can mark end: {value}",
+  "@debugCanMarkEnd": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "debugIsInActivePeriod": "Is in active period: {value}",
+  "@debugIsInActivePeriod": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "debugActivePeriod": "Active period: {value}",
+  "@debugActivePeriod": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "debugLastPeriod": "Last period: {value}",
+  "@debugLastPeriod": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "debugSymptomsCount": "Symptoms count: {count}",
+  "@debugSymptomsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "symptomsSaved": "Symptoms saved successfully",
+  "symptomsSaveError": "Error saving symptoms: {message}",
+  "@symptomsSaveError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "startPeriodSuccess": "Period started successfully",
+  "startPeriodError": "Error starting period: {message}",
+  "@startPeriodError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "endPeriodSuccess": "Period ended successfully",
+  "endPeriodError": "Error ending period: {message}",
+  "@endPeriodError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "cancelPeriodSuccess": "Period cancelled successfully",
+  "cancelPeriodError": "Error cancelling period: {message}",
+  "@cancelPeriodError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "removePeriodEndSuccess": "Period end removed",
+  "removePeriodEndError": "Error removing period end: {message}",
+  "@removePeriodEndError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "deletePeriodSuccess": "Period deleted",
+  "deletePeriodError": "Error deleting period: {message}",
+  "@deletePeriodError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "endDateBeforeStart": "End date cannot be earlier than start date",
+  "settingsTitle": "Settings",
+  "settingsSaved": "Settings saved successfully",
+  "settingsSaveError": "Error saving settings",
+  "settingsFormCycleLength": "Cycle Length (days)",
+  "settingsFormPeriodLength": "Period Length (days)",
+  "settingsFormOvulationDay": "Ovulation Day (from period start)",
+  "settingsFormPlanningMonths": "Planning Period (months)",
+  "settingsFormSaveButton": "Save Settings",
+  "settingsFormValueMissing": "Please enter a value",
+  "settingsFormInvalidNumber": "Please enter a valid number",
+  "settingsFormRangeError": "Value must be between {min} and {max}",
+  "@settingsFormRangeError": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsFormLanguageLabel": "Language",
+  "settingsFormLanguageEnglish": "English",
+  "settingsFormLanguageRussian": "Russian",
+  "settingsFormFirstDayLabel": "Calendar first day",
+  "settingsFormFirstDayMonday": "Monday",
+  "settingsFormFirstDaySunday": "Sunday",
+  "settingsTabGeneral": "General",
+  "settingsTabMedications": "Medications",
+  "symptomHeadache": "Headache",
+  "symptomFatigue": "Fatigue",
+  "symptomBloating": "Bloating",
+  "symptomIrritability": "Irritability",
+  "symptomAbdominalPain": "Abdominal pain",
+  "symptomAcne": "Acne",
+  "symptomSweetCravings": "Sweet cravings",
+  "symptomBreastPain": "Breast pain",
+  "symptomCramps": "Cramps",
+  "symptomNausea": "Nausea",
+  "symptomInsomnia": "Insomnia",
+  "addMedicationTitle": "Add Medication",
+  "editMedicationTitle": "Edit Medication",
+  "medicationNameLabel": "Medication Name",
+  "medicationStartDateLabel": "Start Date",
+  "medicationPickStartDate": "Pick start date",
+  "medicationEndDateLabel": "End Date",
+  "medicationPickEndDate": "Pick end date (optional)",
+  "cancelButton": "Cancel",
+  "saveButton": "Save",
+  "medicationNameMissingError": "Enter medication name and start date",
+  "medicationSaveError": "Error saving medication: {message}",
+  "@medicationSaveError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "noMedications": "No medications added",
+  "medicationEndDateNotSet": "Not set",
+  "medicationTimes": "Times",
+  "medicationDeleteConfirmTitle": "Delete Medication",
+  "medicationDeleteConfirmMessage": "Are you sure you want to delete \"{name}\"?",
+  "@medicationDeleteConfirmMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "deleteButton": "Delete",
+  "medicationDeleteSuccess": "Medication \"{name}\" deleted",
+  "@medicationDeleteSuccess": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "medicationDeleteError": "Error deleting medication: {message}",
+  "@medicationDeleteError": {
+    "placeholders": {
+      "message": {}
+    }
+  }
+}
