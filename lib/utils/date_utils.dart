@@ -15,8 +15,12 @@ class MyDateUtils {
 
   /// Парсит строку 'YYYY-MM-DD' и возвращает DateTime в UTC без учета времени.
   static DateTime fromUtcDateString(String dateString) {
-    final date = DateTime.parse(dateString).toUtc();
-    return DateTime.utc(date.year, date.month, date.day);
+    // Разбираем строку вручную, чтобы явно создать UTC DateTime
+    final parts = dateString.split('-');
+    final year = int.parse(parts[0]);
+    final month = int.parse(parts[1]);
+    final day = int.parse(parts[2]);
+    return DateTime.utc(year, month, day);
   }
 
   /// Получает локальную дату без учета времени из любой DateTime.
