@@ -38,8 +38,8 @@ class Medication {
     return Medication(
       id: map['id'],
       name: map['name'],
-      startDate: DateTime.parse(map['startDate']),
-      endDate: map['endDate'] != null ? DateTime.parse(map['endDate']) : null,
+      startDate: _parseDate(map['startDate']),
+      endDate: map['endDate'] != null ? _parseDate(map['endDate']) : null,
       times: parsedTimes,
     );
   }
@@ -51,6 +51,11 @@ class Medication {
   // Вспомогательный метод для форматирования даты
   static String _formatDate(DateTime date) {
     return date.toIso8601String().split('T')[0]; // YYYY-MM-DD
+  }
+
+  static DateTime _parseDate(String dateString) {
+    final date = DateTime.parse(dateString);
+    return DateTime(date.year, date.month, date.day);
   }
 
   // Проверка, активен ли препарат в конкретный день

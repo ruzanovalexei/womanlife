@@ -22,9 +22,15 @@ class PeriodRecord {
   factory PeriodRecord.fromMap(Map<String, dynamic> map) {
     return PeriodRecord(
       id: map['id'],
-      startDate: DateTime.parse(map['startDate']),
-      endDate: map['endDate'] != null ? DateTime.parse(map['endDate']) : null,
+      startDate: _parseDate(map['startDate']),
+      endDate: map['endDate'] != null ? _parseDate(map['endDate']) : null,
     );
+  }
+
+  static DateTime _parseDate(String dateString) {
+    // Парсим строку даты и возвращаем DateTime без информации о времени
+    final date = DateTime.parse(dateString);
+    return DateTime(date.year, date.month, date.day);
   }
 
   static String _formatDate(DateTime date) {

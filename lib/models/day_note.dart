@@ -23,10 +23,15 @@ class DayNote {
   factory DayNote.fromMap(Map<String, dynamic> map) {
     return DayNote(
       id: map['id'],
-      date: DateTime.parse(map['date']),
+      date: _parseDate(map['date']),
       symptoms: _parseSymptoms(map['symptoms']),
       sexualActsCount: map['sexualActsCount'] ?? 0,
     );
+  }
+
+  static DateTime _parseDate(String dateString) {
+    final date = DateTime.parse(dateString);
+    return DateTime(date.year, date.month, date.day);
   }
 
   static String _formatDate(DateTime date) {

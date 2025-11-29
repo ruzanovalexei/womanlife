@@ -72,7 +72,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
     
     // Фильтруем периоды, которые заканчиваются до выбранной даты
     final previousPeriods = widget.periodRecords.where((period) {
-      final periodEndDate = period.endDate ?? DateTime.now();
+      final periodEndDate = period.endDate ?? PeriodCalculator.getToday();
       return periodEndDate.isBefore(widget.selectedDate) || 
              periodEndDate.isAtSameMomentAs(widget.selectedDate);
     }).toList();
@@ -81,8 +81,8 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
     
     // Сортируем по дате окончания (от новых к старым) и берем первый
     previousPeriods.sort((a, b) {
-      final aEndDate = a.endDate ?? DateTime.now();
-      final bEndDate = b.endDate ?? DateTime.now();
+      final aEndDate = a.endDate ?? PeriodCalculator.getToday();
+      final bEndDate = b.endDate ?? PeriodCalculator.getToday();
       return bEndDate.compareTo(aEndDate);
     });
     
