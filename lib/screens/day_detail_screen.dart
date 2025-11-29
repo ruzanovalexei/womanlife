@@ -389,10 +389,6 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
 
   Future<void> _toggleMedicationTakenStatus(MedicationEvent event, bool isTaken) async {
     try {
-      if (event.medicationId == null) {
-        print("Ошибка: medicationId не может быть null.");
-        return;
-      }
 
       MedicationTakenRecord? existingRecord = await _databaseHelper.getMedicationTakenRecord(
         event.medicationId,
