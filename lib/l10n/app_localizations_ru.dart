@@ -333,7 +333,10 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get noMedications => 'No medications added';
+  String get noMedications => 'Лекарства не добавлены';
+
+  @override
+  String get noMedicationsScheduled => 'Нет запланированных лекарств';
 
   @override
   String get medicationEndDateNotSet => 'Not set';

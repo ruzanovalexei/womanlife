@@ -38,4 +38,14 @@ class MyDateUtils {
   static DateTime startOfDayLocal(DateTime date) {
     return DateTime(date.year, date.month, date.day);
   }
+
+  /// Форматирует DateTime в строку 'YYYY-MM-DD HH:MM:SS.mmm' в UTC.
+  static String toUtcDateTimeString(DateTime dateTime) {
+    return dateTime.toUtc().toIso8601String();
+  }
+
+  /// Парсит строку 'YYYY-MM-DD HH:MM:SS.mmm' и возвращает DateTime в UTC.
+  static DateTime fromUtcDateTimeString(String dateTimeString) {
+    return DateTime.parse(dateTimeString).toUtc();
+  }
 }

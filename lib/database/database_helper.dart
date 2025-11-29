@@ -6,17 +6,21 @@ import '../models/settings.dart';
 import '../models/day_note.dart';
 import '../models/period_record.dart';
 import '../models/medication.dart'; // Импортируем Medication
+import '../models/medication_taken_record.dart'; // Импортируем MedicationTakenRecord
+import '../utils/date_utils.dart'; // Импортируем MyDateUtils
 import '../utils/symptoms_provider.dart'; //для getDefaultSymptoms
+//import '../utils/date_utils.dart';
 
 class DatabaseHelper {
   static const _databaseName = "PeriodTracker.db";
-  static const _databaseVersion = 12; // Добавляем таблицу лекарств
+  static const _databaseVersion = 13; // Добавляем таблицу для записей о приеме лекарств
 
   static const settingsTable = 'settings';
   static const dayNotesTable = 'day_notes';
   static const periodsTable = 'periods';
   static const symptomsTable = 'symptoms';
   static const medicationsTable = 'medications';
+  static const medicationTakenRecordsTable = 'medication_taken_records';
 
   // Singleton
   DatabaseHelper._privateConstructor();
@@ -85,6 +89,19 @@ class DatabaseHelper {
         startDate TEXT NOT NULL,
         endDate TEXT,
         times TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE $medicationTakenRecordsTable (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        medicationId INTEGER NOT NULL,
+        date TEXT NOT NULL,
+        scheduledHour INTEGER NOT NULL,
+        scheduledMinute INTEGER NOT NULL,
+        actualTakenTime TEXT,
+        isTaken INTEGER NOT NULL DEFAULT 0,
+        FOREIGN KEY (medicationId) REFERENCES $medicationsTable (id) ON DELETE CASCADE
       )
     ''');
 
@@ -160,6 +177,13 @@ class DatabaseHelper {
             await db.execute('''CREATE TABLE $medicationsTable (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, startDate TEXT NOT NULL, endDate TEXT, times TEXT NOT NULL)''');
           } catch (e) {
             // print('Error creating medications table: $e');
+          }
+          break;
+        case 13:
+          try {
+            await db.execute('''CREATE TABLE $medicationTakenRecordsTable (id INTEGER PRIMARY KEY AUTOINCREMENT, medicationId INTEGER NOT NULL, date TEXT NOT NULL, scheduledHour INTEGER NOT NULL, scheduledMinute INTEGER NOT NULL, actualTakenTime TEXT, isTaken INTEGER NOT NULL DEFAULT 0, FOREIGN KEY (medicationId) REFERENCES $medicationsTable (id) ON DELETE CASCADE)''');
+          } catch (e) {
+            // print('Error creating medication_taken_records table: $e');
           }
           break;
       }
@@ -266,5 +290,45 @@ class DatabaseHelper {
     Database db = await database;
     List<Map<String, dynamic>> maps = await db.query(medicationsTable);
     return maps.map((map) => Medication.fromMap(map)).toList();
+  }
+
+  // MedicationTakenRecord methods
+  Future<int> insertMedicationTakenRecord(MedicationTakenRecord record) async {
+    Database db = await database;
+    return await db.insert(medicationTakenRecordsTable, record.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<int> updateMedicationTakenRecord(MedicationTakenRecord record) async {
+    Database db = await database;
+    return await db.update(medicationTakenRecordsTable, record.toMap(), where: 'id = ?', whereArgs: [record.id]);
+  }
+
+  Future<MedicationTakenRecord?> getMedicationTakenRecord(int medicationId, DateTime date, TimeOfDay scheduledTime) async {
+    Database db = await database;
+    final formattedDate = MyDateUtils.toUtcDateString(date);
+    List<Map<String, dynamic>> maps = await db.query(
+      medicationTakenRecordsTable,
+      where: 'medicationId = ? AND date = ? AND scheduledHour = ? AND scheduledMinute = ?',
+      whereArgs: [medicationId, formattedDate, scheduledTime.hour, scheduledTime.minute],
+      limit: 1,
+    );
+    return maps.isNotEmpty ? MedicationTakenRecord.fromMap(maps.first) : null;
+  }
+
+  Future<List<MedicationTakenRecord>> getMedicationTakenRecordsForDay(DateTime date) async {
+    Database db = await database;
+    final formattedDate = MyDateUtils.toUtcDateString(date);
+    List<Map<String, dynamic>> maps = await db.query(
+      medicationTakenRecordsTable,
+      where: 'date = ?',
+      whereArgs: [formattedDate],
+      orderBy: 'scheduledHour ASC, scheduledMinute ASC',
+    );
+    return maps.map((map) => MedicationTakenRecord.fromMap(map)).toList();
+  }
+
+  Future<int> deleteMedicationTakenRecord(int id) async {
+    Database db = await database;
+    return await db.delete(medicationTakenRecordsTable, where: 'id = ?', whereArgs: [id]);
   }
 }

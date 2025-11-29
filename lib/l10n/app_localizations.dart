@@ -677,6 +677,12 @@ abstract class AppLocalizations {
   /// **'No medications added'**
   String get noMedications;
 
+  /// No description provided for @noMedicationsScheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'No scheduled medications'**
+  String get noMedicationsScheduled;
+
   /// No description provided for @medicationEndDateNotSet.
   ///
   /// In en, this message translates to:

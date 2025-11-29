@@ -9,6 +9,7 @@ import '../models/period_record.dart';
 import '../models/settings.dart';
 import '../utils/period_calculator.dart';
 import '../models/medication.dart';
+import '../models/medication_taken_record.dart'; // Импортируем MedicationTakenRecord
 
 // Added MedicationTime class
 class MedicationTime {
@@ -27,11 +28,15 @@ class MedicationEvent {
   final String name;
   final DateTime scheduledTime;
   final int medicationId; // Для идентификации оригинального лекарства, если потребуется
+  bool isTaken; // Добавляем статус приема
+  DateTime? actualTakenTime; // Добавляем фактическое время приема
 
   MedicationEvent({
     required this.name,
     required this.scheduledTime,
     required this.medicationId,
+    this.isTaken = false,
+    this.actualTakenTime,
   });
 
   // Для сортировки
@@ -73,6 +78,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
   bool _isSexBlockExpanded = true;
   bool _isHealthBlockExpanded = true;
   bool _isMedicineBlockExpanded = true;
+  List<MedicationTakenRecord> _takenRecords = []; // Добавляем список записей о приеме
 
   bool get _canMarkStart => PeriodCalculator.canMarkPeriodStart(widget.selectedDate, _lastPeriod);
   bool get _canMarkEnd => PeriodCalculator.canMarkPeriodEnd(widget.selectedDate, _activePeriod);
@@ -132,7 +138,10 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       _activePeriod = await _databaseHelper.getActivePeriodRecord();
 
       await _loadAllSymptoms(); // Загружаем все симптомы через новую функцию
-      _allMedications = await _databaseHelper.getAllMedications(); // Загружаем все лекарства
+      // Загружаем все лекарства
+      _allMedications = await _databaseHelper.getAllMedications();
+      // Загружаем записи о приеме лекарств для выбранного дня
+      _takenRecords = await _databaseHelper.getMedicationTakenRecordsForDay(widget.selectedDate);
 
       setState(() {
         _isLoading = false;
@@ -376,6 +385,59 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       );
     });
     _saveDayNote();
+  }
+
+  Future<void> _toggleMedicationTakenStatus(MedicationEvent event, bool isTaken) async {
+    try {
+      if (event.medicationId == null) {
+        print("Ошибка: medicationId не может быть null.");
+        return;
+      }
+
+      MedicationTakenRecord? existingRecord = await _databaseHelper.getMedicationTakenRecord(
+        event.medicationId,
+        widget.selectedDate,
+        TimeOfDay(hour: event.scheduledTime.hour, minute: event.scheduledTime.minute),
+      );
+
+      if (isTaken) {
+        // Отмечаем как принятое
+        final newRecord = existingRecord?.copyWith(
+              isTaken: true,
+              actualTakenTime: DateTime.now(),
+            ) ??
+            MedicationTakenRecord(
+              medicationId: event.medicationId,
+              date: widget.selectedDate,
+              scheduledTime: TimeOfDay(hour: event.scheduledTime.hour, minute: event.scheduledTime.minute),
+              actualTakenTime: DateTime.now(),
+              isTaken: true,
+            );
+        if (existingRecord == null) {
+          await _databaseHelper.insertMedicationTakenRecord(newRecord);
+        } else {
+          await _databaseHelper.updateMedicationTakenRecord(newRecord);
+        }
+      } else {
+        // Отмечаем как непринятое или удаляем запись, если она была
+        if (existingRecord != null) {
+          final updatedRecord = existingRecord.copyWith(
+            isTaken: false,
+            actualTakenTime: null, // Сбрасываем фактическое время
+          );
+          await _databaseHelper.updateMedicationTakenRecord(updatedRecord);
+        }
+      }
+      await _loadData(); // Перезагружаем данные, чтобы обновить UI
+    } catch (e) {
+      print('Ошибка при обновлении статуса приема лекарства: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Ошибка: ${e.toString()}'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
   }
 
 @override
@@ -826,31 +888,44 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
 
     List<MedicationEvent> medicationEvents = [];
     for (var medication in activeMedications) {
-      for (var medicationTime in medication.times) { // Здесь medicationTime имеет тип MedicationTime
-        try {
-          final scheduledTime = DateTime(
-            widget.selectedDate.year,
-            widget.selectedDate.month,
-            widget.selectedDate.day,
-            medicationTime.hour,   // Используем hour из MedicationTime
-            medicationTime.minute, // Используем minute из MedicationTime
-          );
-          medicationEvents.add(MedicationEvent(
-            name: medication.name,
-            scheduledTime: scheduledTime,
+      for (var medicationTime in medication.times) {
+        // Формируем запланированное время для сравнения и отображения
+        final scheduledDateTime = DateTime(
+          widget.selectedDate.year,
+          widget.selectedDate.month,
+          widget.selectedDate.day,
+          medicationTime.hour,
+          medicationTime.minute,
+        );
+
+        // Ищем соответствующую запись о том, что лекарство было принято
+        final takenRecord = _takenRecords.firstWhere(
+          (record) =>
+              record.medicationId == medication.id &&
+              record.scheduledTime.hour == medicationTime.hour &&
+              record.scheduledTime.minute == medicationTime.minute,
+          orElse: () => MedicationTakenRecord(
             medicationId: medication.id!,
-          ));
-        } catch (e) {
-          // Обрабатываем возможные ошибки
-          print('Ошибка при создании события приема лекарства ${medication.name}: ${medicationTime.toString()} - $e');
-        }
+            date: widget.selectedDate,
+            scheduledTime: TimeOfDay(hour: medicationTime.hour, minute: medicationTime.minute),
+            isTaken: false, //по умолчанию false, если не найдено записи
+          ), // Возвращаем заглушку, если запись не найдена
+        );
+
+        medicationEvents.add(MedicationEvent(
+          name: medication.name,
+          scheduledTime: scheduledDateTime,
+          medicationId: medication.id!,
+          isTaken: takenRecord.isTaken,
+          actualTakenTime: takenRecord.actualTakenTime,
+        ));
       }
     }
 
-    // Сортируем события по времени
-    medicationEvents.sort((a, b) => a.compareTo(b));
+    medicationEvents.sort((a, b) => a.scheduledTime.compareTo(b.scheduledTime));
 
     return Card(
+      margin: EdgeInsets.zero, // Убираем отступы вокруг Card
       child: ExpansionTile(
         initiallyExpanded: _isMedicineBlockExpanded,
         onExpansionChanged: (expanded) {
@@ -864,33 +939,57 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
         ),
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (medicationEvents.isEmpty)
-                  const Text(
-                    'Нет лекарств, запланированных на этот день.',
-                    style: TextStyle(color: Colors.grey),
+                  Text(
+                    'Нет записей о лекарствах на этот день.',
+                    style: const TextStyle(color: Colors.grey),
                   )
                 else
-                  ...medicationEvents.map((event) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          event.name,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ListView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    itemCount: medicationEvents.length,
+                    itemBuilder: (context, index) {
+                      final event = medicationEvents[index];
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4.0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    event.name,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                  ),
+                                  Text(
+                                    'Время приема: ${DateFormat('HH:mm').format(event.scheduledTime)}',
+                                    style: const TextStyle(fontSize: 14, color: Colors.grey),
+                                  ),
+                                  if (event.isTaken && event.actualTakenTime != null)
+                                    Text(
+                                      'Принято: ${DateFormat('HH:mm').format(event.actualTakenTime!)}',
+                                      style: const TextStyle(fontSize: 12, color: Colors.green),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            Checkbox(
+                              value: event.isTaken,
+                              onChanged: (bool? newValue) {
+                                _toggleMedicationTakenStatus(event, newValue ?? false);
+                              },
+                            ),
+                          ],
                         ),
-                        Text(
-                          // Форматируем время как "ЧЧ:ММ"
-                          'Время приема: ${DateFormat('HH:mm').format(event.scheduledTime)}',
-                          style: const TextStyle(fontSize: 14, color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  )),
+                      );
+                    },
+                  ),
               ],
             ),
           ),

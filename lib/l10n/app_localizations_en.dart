@@ -336,6 +336,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noMedications => 'No medications added';
 
   @override
+  String get noMedicationsScheduled => 'No scheduled medications';
+
+  @override
   String get medicationEndDateNotSet => 'Not set';
 
   @override
