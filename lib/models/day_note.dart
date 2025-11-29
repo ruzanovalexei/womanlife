@@ -1,3 +1,5 @@
+import '../utils/date_utils.dart'; // Добавляем импорт
+
 class DayNote {
   final int? id;
   final DateTime date;
@@ -14,7 +16,7 @@ class DayNote {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'date': _formatDate(date),
+      'date': DateUtils.toUtcDateString(date), // Используем toUtcDateString
       'symptoms': symptoms.join(','),
       'sexualActsCount': sexualActsCount,
     };
@@ -23,19 +25,10 @@ class DayNote {
   factory DayNote.fromMap(Map<String, dynamic> map) {
     return DayNote(
       id: map['id'],
-      date: _parseDate(map['date']),
+      date: DateUtils.fromUtcDateString(map['date']), // Используем fromUtcDateString
       symptoms: _parseSymptoms(map['symptoms']),
       sexualActsCount: map['sexualActsCount'] ?? 0,
     );
-  }
-
-  static DateTime _parseDate(String dateString) {
-    final date = DateTime.parse(dateString);
-    return DateTime(date.year, date.month, date.day);
-  }
-
-  static String _formatDate(DateTime date) {
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
   static List<String> _parseSymptoms(String symptomsString) {
@@ -46,7 +39,9 @@ class DayNote {
   }
 
   static String formatDateForDatabase(DateTime date) {
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    // Эта функция используется только для запросов к БД, где дата хранится в UTC.
+    // Поэтому форматируем входящую дату в UTC-строку.
+    return DateUtils.toUtcDateString(date);
   }
 
   DayNote copyWith({

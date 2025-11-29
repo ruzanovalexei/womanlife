@@ -1,5 +1,6 @@
 // lib/models/medication.dart
 import 'dart:convert';
+import '../utils/date_utils.dart'; // Добавляем импорт
 
 class Medication {
   final int? id;
@@ -20,11 +21,12 @@ class Medication {
     return {
       'id': id,
       'name': name,
-      'startDate': _formatDate(startDate),
-      'endDate': endDate != null ? _formatDate(endDate!) : null,
+      'startDate': DateUtils.toUtcDateString(startDate), // Используем toUtcDateString
+      'endDate': endDate != null ? DateUtils.toUtcDateString(endDate!) : null, // Используем toUtcDateString
       'times': jsonEncode(times.map((t) => t.toMap()).toList()),
     };
   }
+
 
   factory Medication.fromMap(Map<String, dynamic> map) {
     final List<MedicationTime> parsedTimes = [];
@@ -38,8 +40,8 @@ class Medication {
     return Medication(
       id: map['id'],
       name: map['name'],
-      startDate: _parseDate(map['startDate']),
-      endDate: map['endDate'] != null ? _parseDate(map['endDate']) : null,
+      startDate: DateUtils.fromUtcDateString(map['startDate']), // Используем fromUtcDateString
+      endDate: map['endDate'] != null ? DateUtils.fromUtcDateString(map['endDate']) : null, // Используем fromUtcDateString
       times: parsedTimes,
     );
   }
@@ -48,21 +50,13 @@ class Medication {
     return times.map((t) => t.toString()).join(', ');
   }
 
-  // Вспомогательный метод для форматирования даты
-  static String _formatDate(DateTime date) {
-    return date.toIso8601String().split('T')[0]; // YYYY-MM-DD
-  }
-
-  static DateTime _parseDate(String dateString) {
-    final date = DateTime.parse(dateString);
-    return DateTime(date.year, date.month, date.day);
-  }
-
-  // Проверка, активен ли препарат в конкретный день
+ // Проверка, активен ли препарат в конкретный день
   bool isActiveOn(DateTime day) {
-    final normalizedDay = DateTime(day.year, day.month, day.day);
-    final normalizedStartDate = DateTime(startDate.year, startDate.month, startDate.day);
-    final normalizedEndDate = endDate != null ? DateTime(endDate!.year, endDate!.month, endDate!.day) : null;
+    // Входная 'day' также должна быть UTC датой без времени
+    // Все даты в Medication (startDate, endDate) теперь уже UTC без времени
+    final normalizedDay = DateUtils.startOfDayUtc(day);
+    final normalizedStartDate = startDate; // Уже нормализована
+    final normalizedEndDate = endDate; // Уже нормализована
 
     if (normalizedDay.isBefore(normalizedStartDate)) return false;
     if (normalizedEndDate != null && normalizedDay.isAfter(normalizedEndDate)) return false;
@@ -86,6 +80,7 @@ class Medication {
     );
   }
 }
+
 
 // lib/models/medication_time.dart
 class MedicationTime {

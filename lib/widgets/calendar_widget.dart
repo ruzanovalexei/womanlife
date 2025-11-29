@@ -5,6 +5,7 @@ import 'package:table_calendar/table_calendar.dart';
 import '../models/period_record.dart';
 import '../models/settings.dart';
 import '../utils/period_calculator.dart';
+import '../utils/date_utils.dart' as app_date_utils; // Используем app_date_utils
 
 class CalendarWidget extends StatefulWidget {
   final Function(DateTime) onDaySelected;
@@ -24,8 +25,16 @@ class CalendarWidget extends StatefulWidget {
 
 class _CalendarWidgetState extends State<CalendarWidget> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
-  DateTime _focusedDay = PeriodCalculator.getToday();
+  // Инициализируем focusedDay и selectedDay как UTC даты
+  DateTime _focusedDay = app_date_utils.getUtcToday();
   DateTime? _selectedDay;
+
+  @override
+  void initState() {
+    super.initState();
+    // Инициализируем _selectedDay также как UTC сегодня, если это не было сделано ранее
+    _selectedDay = app_date_utils.getUtcToday();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +61,8 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${nextPeriodInfo.startDate.day}.${nextPeriodInfo.startDate.month}.${nextPeriodInfo.startDate.year} - ${nextPeriodInfo.endDate.day}.${nextPeriodInfo.endDate.month}.${nextPeriodInfo.endDate.year}',
+                    // Отображаем даты в локальном времени для пользователя
+                    '${app_date_utils.toLocalDay(nextPeriodInfo.startDate).day}.${app_date_utils.toLocalDay(nextPeriodInfo.startDate).month}.${app_date_utils.toLocalDay(nextPeriodInfo.startDate).year} - ${app_date_utils.toLocalDay(nextPeriodInfo.endDate).day}.${app_date_utils.toLocalDay(nextPeriodInfo.endDate).month}.${app_date_utils.toLocalDay(nextPeriodInfo.endDate).year}',
                     style: const TextStyle(fontSize: 16),
                   ),
                   const SizedBox(height: 4),
@@ -70,8 +80,8 @@ class _CalendarWidgetState extends State<CalendarWidget> {
         
         // Календарь
         TableCalendar(
-          firstDay: PeriodCalculator.getToday().subtract(const Duration(days: 365)),
-          lastDay: PeriodCalculator.getToday().add(const Duration(days: 365)),
+          firstDay: app_date_utils.getUtcToday().subtract(const Duration(days: 365 * 10)), // Используем UTC даты
+          lastDay: app_date_utils.getUtcToday().add(const Duration(days: 365 * 10)), // Используем UTC даты
           focusedDay: _focusedDay,
           calendarFormat: _calendarFormat,
           locale: Localizations.localeOf(context).toLanguageTag(),
@@ -83,21 +93,23 @@ class _CalendarWidgetState extends State<CalendarWidget> {
             setState(() => _calendarFormat = format);
           },
           onPageChanged: (focusedDay) {
-            _focusedDay = focusedDay;
+            _focusedDay = app_date_utils.startOfDayUtc(focusedDay); // Убедимся, что это UTC без времени
           },
           onDaySelected: (selectedDay, focusedDay) {
+            final utcSelectedDay = app_date_utils.startOfDayUtc(selectedDay); // Переводим в UTC
+            final utcFocusedDay = app_date_utils.startOfDayUtc(focusedDay);   // Переводим в UTC
             setState(() {
-              _selectedDay = selectedDay;
-              _focusedDay = focusedDay;
+              _selectedDay = utcSelectedDay;
+              _focusedDay = utcFocusedDay;
             });
-            widget.onDaySelected(selectedDay);
+            widget.onDaySelected(utcSelectedDay); // Передаем UTC дату
           },
           calendarBuilders: CalendarBuilders(
             defaultBuilder: (context, date, events) {
-              return _buildCalendarDay(date, context, planOverdueToday);
+              return _buildCalendarDay(app_date_utils.startOfDayUtc(date), context, planOverdueToday); // Переводим в UTC
             },
             todayBuilder: (context, date, events) {
-              return _buildCalendarDay(date, context, planOverdueToday);
+              return _buildCalendarDay(app_date_utils.startOfDayUtc(date), context, planOverdueToday); // Переводим в UTC
             },
           ),
         ),
@@ -108,7 +120,9 @@ class _CalendarWidgetState extends State<CalendarWidget> {
   }
 
   Widget _buildCalendarDay(DateTime date, BuildContext context, bool planOverdueToday) {
-    final bool isToday = isSameDay(date, PeriodCalculator.getToday());
+    // Входящая 'date' теперь гарантированно UTC без времени
+    final bool isToday = isSameDay(date, app_date_utils.getUtcToday());
+    
     final PeriodDayType periodType = PeriodCalculator.getPeriodDayType(
       date, 
       widget.settings, 
@@ -158,7 +172,8 @@ class _CalendarWidgetState extends State<CalendarWidget> {
       ),
       child: Center(
         child: Text(
-          date.day.toString(),
+          // Дата для отображения всегда в локальном времени
+          app_date_utils.toLocalDay(date).day.toString(),
           style: TextStyle(
             color: textColor,
             fontWeight: isToday ? FontWeight.bold : FontWeight.normal,

@@ -1,19 +1,19 @@
 import '../models/settings.dart';
 import '../models/period_record.dart';
+import 'date_utils.dart'; // Добавляем импорт date_utils
 
 class PeriodCalculator {
-  // Получить текущую дату в локальном времени (без времени)
+  // Получить текущую дату в UTC без учета времени
   static DateTime getToday() {
-    final now = DateTime.now();
-    return DateTime(now.year, now.month, now.day);
+    return DateUtils.getUtcToday();
   }
 
   // Найти последнюю фактическую дату начала месячных
   static DateTime? findLastActualPeriodStart(List<PeriodRecord> periodRecords) {
     if (periodRecords.isEmpty) return null;
     
-    // Сортируем записи по дате начала (от новых к старым)
-    periodRecords.sort((a, b) => b.startDate.compareTo(a.startDate));
+    // Всегда работаем с UTC датами без времени
+    periodRecords.sort((a, b) => b.startDate.compareTo(a.startDate)); // startDate уже в UTC
     
     return periodRecords.first.startDate;
   }
@@ -23,7 +23,7 @@ class PeriodCalculator {
     List<DateTime> actualDays = [];
     
     for (PeriodRecord record in periodRecords) {
-      actualDays.addAll(record.getAllPeriodDates());
+      actualDays.addAll(record.getAllPeriodDates()); // getAllPeriodDates возвращает UTC даты
     }
     
     return actualDays;
@@ -36,6 +36,7 @@ class PeriodCalculator {
     DateTime? lastActualStart = findLastActualPeriodStart(periodRecords);
     if (lastActualStart == null) return plannedPeriods;
     
+    // Все даты в UTC, add Duration корректно работает
     DateTime endDate = getToday().add(Duration(days: 30 * settings.planningMonths));
     
     DateTime currentPeriodStart = lastActualStart;
@@ -69,30 +70,26 @@ class PeriodCalculator {
     return plannedDays;
   }
 
-  // Проверка, является ли день плановым днем месячных
+  // Проверка, является ли день плановым днем месячных (все даты уже UTC без времени)
   static bool isPlannedPeriodDay(DateTime day, Settings settings, List<PeriodRecord> periodRecords) {
     final plannedDays = getAllPlannedPeriodDays(settings, periodRecords);
-    return plannedDays.any((plannedDay) => 
-      plannedDay.year == day.year &&
-      plannedDay.month == day.month &&
-      plannedDay.day == day.day
-    );
+    final normalizedDay = DateUtils.startOfDayUtc(day);
+    return plannedDays.any((plannedDay) => plannedDay.isAtSameMomentAs(normalizedDay));
   }
 
-  // Проверка, является ли день фактическим днем месячных
+  // Проверка, является ли день фактическим днем месячных (все даты уже UTC без времени)
   static bool isActualPeriodDay(DateTime day, List<PeriodRecord> periodRecords) {
     final actualDays = getAllActualPeriodDays(periodRecords);
-    return actualDays.any((actualDay) => 
-      actualDay.year == day.year &&
-      actualDay.month == day.month &&
-      actualDay.day == day.day
-    );
+    final normalizedDay = DateUtils.startOfDayUtc(day);
+    return actualDays.any((actualDay) => actualDay.isAtSameMomentAs(normalizedDay));
   }
 
   // Получить тип дня для определения цвета
   static PeriodDayType getPeriodDayType(DateTime day, Settings settings, List<PeriodRecord> periodRecords) {
-    bool isPlanned = isPlannedPeriodDay(day, settings, periodRecords);
-    bool isActual = isActualPeriodDay(day, periodRecords);
+    // Нормализуем входящий день до UTC без времени
+    final normalizedDay = DateUtils.startOfDayUtc(day);
+    bool isPlanned = isPlannedPeriodDay(normalizedDay, settings, periodRecords);
+    bool isActual = isActualPeriodDay(normalizedDay, periodRecords);
     
     // Приоритет отдается фактическим дням
     if (isActual) {
@@ -115,26 +112,29 @@ class PeriodCalculator {
     return NextPeriodInfo(
       startDate: nextPeriodStart,
       endDate: nextPeriodEnd,
-      daysUntil: nextPeriodStart.difference(getToday()).inDays,
+      daysUntil: nextPeriodStart.difference(getToday()).inDays, // getToday() возвращает UTC
     );
   }
 
   // Проверить, можно ли отметить начало периода
   static bool canMarkPeriodStart(DateTime selectedDate, PeriodRecord? lastPeriod) {
+    final normalizedSelectedDate = DateUtils.startOfDayUtc(selectedDate);
     if (lastPeriod == null) return true;
     
     // Можно отметить начало, если выбранная дата после окончания последнего периода
-    DateTime lastPeriodEnd = lastPeriod.endDate ?? getToday();
-    return selectedDate.isAfter(lastPeriodEnd);
+    DateTime lastPeriodEnd = lastPeriod.endDate ?? getToday(); // getToday() возвращает UTC
+    return normalizedSelectedDate.isAfter(lastPeriodEnd);
   }
 
   // Проверить, можно ли отметить окончание периода
   static bool canMarkPeriodEnd(DateTime selectedDate, PeriodRecord? lastPeriod) {
+    final normalizedSelectedDate = DateUtils.startOfDayUtc(selectedDate);
     if (lastPeriod == null) return false;
     
     // Можно отметить окончание, если есть активный период и выбранная дата >= начала периода
+    // lastPeriod.startDate уже в UTC
     return lastPeriod.isActive && 
-           (selectedDate.isAfter(lastPeriod.startDate) || selectedDate.isAtSameMomentAs(lastPeriod.startDate));
+           (normalizedSelectedDate.isAfter(lastPeriod.startDate) || normalizedSelectedDate.isAtSameMomentAs(lastPeriod.startDate));
   }
 
   // Проверить, можно ли редактировать период
@@ -145,31 +145,30 @@ class PeriodCalculator {
   // Проверить, находится ли день в активном периоде
   static bool isDateInActivePeriod(DateTime date, PeriodRecord? activePeriod) {
     if (activePeriod == null) return false;
-    return activePeriod.containsDate(date);
+    // activePeriod.containsDate уже работает с UTC датами без времени
+    return activePeriod.containsDate(DateUtils.startOfDayUtc(date));
   }
 
   static bool isOvulationDay(DateTime day, Settings settings, List<PeriodRecord> periodRecords) {
+    final normalizedDay = DateUtils.startOfDayUtc(day);
     final ovulationOffset = settings.ovulationDay - 1;
     final cycleLength = settings.cycleLength;
     if (ovulationOffset < 0 || cycleLength <= 0 || ovulationOffset >= cycleLength) {
       return false;
     }
 
-    bool isSameDate(DateTime other) =>
-        other.year == day.year && other.month == day.month && other.day == day.day;
-
-    // Check actual recorded periods
+    // Check actual recorded periods (record.startDate уже UTC)
     for (final record in periodRecords) {
       final ovulationDate = record.startDate.add(Duration(days: ovulationOffset));
-      if (isSameDate(ovulationDate)) {
+      if (DateUtils.startOfDayUtc(ovulationDate) == normalizedDay) {
         return true;
       }
     }
 
-    final lastStart = findLastActualPeriodStart(periodRecords);
+    final lastStart = findLastActualPeriodStart(periodRecords); // Возвращает UTC
     if (lastStart == null) return false;
 
-    final diff = day.difference(lastStart).inDays;
+    final diff = normalizedDay.difference(lastStart).inDays;
     if (diff < 0) return false;
 
     final offsetInCycle = diff % cycleLength;
@@ -177,23 +176,23 @@ class PeriodCalculator {
   }
 
   static bool isPlanOverdue(Settings settings, List<PeriodRecord> periodRecords) {
-    final lastActualStart = findLastActualPeriodStart(periodRecords);
+    final lastActualStart = findLastActualPeriodStart(periodRecords); // Возвращает UTC
     final cycleLength = settings.cycleLength;
     if (lastActualStart == null || cycleLength <= 0) return false;
 
     DateTime plannedStart = lastActualStart.add(Duration(days: cycleLength));
-    final DateTime today = getToday();
+    final DateTime today = getToday(); // Возвращает UTC
     if (plannedStart.isAfter(today)) return false;
 
     while (true) {
       final DateTime nextStart = plannedStart.add(Duration(days: cycleLength));
-      if (nextStart.isAfter(today)) {
+      if (DateUtils.startOfDayUtc(nextStart).isAfter(today)) { // Нормализуем nextStart на всякий случай
         break;
       }
       plannedStart = nextStart;
     }
 
-    final DateTime plannedDate = DateTime(plannedStart.year, plannedStart.month, plannedStart.day);
+    final DateTime plannedDate = DateUtils.startOfDayUtc(plannedStart); // plannedStart уже UTC
     if (today.isBefore(plannedDate)) return false;
     final diff = today.difference(plannedDate).inDays;
     return diff >= 2;
@@ -201,58 +200,40 @@ class PeriodCalculator {
 
   // Проверить, является ли день днем задержки (иконка часов)
   static bool isDelayDay(DateTime day, Settings settings, List<PeriodRecord> periodRecords) {
-    final lastActualStart = findLastActualPeriodStart(periodRecords);
+    final normalizedDay = DateUtils.startOfDayUtc(day);
+    final lastActualStart = findLastActualPeriodStart(periodRecords); // Возвращает UTC
     final cycleLength = settings.cycleLength;
     if (lastActualStart == null || cycleLength <= 0) return false;
 
-    // Нормализуем даты до начала дня для корректного сравнения
-    DateTime normalizedDay = DateTime(day.year, day.month, day.day);
-    DateTime normalizedLastActualStart = DateTime(
-      lastActualStart.year, 
-      lastActualStart.month, 
-      lastActualStart.day
-    );
+    final normalizedLastActualStart = lastActualStart; // Уже UTC без времени
     
-    // Находим текущую дату
-    final DateTime normalizedToday = getToday();
+    final DateTime normalizedToday = getToday(); // Возвращает UTC
     
-    // Если проверяемый день в будущем относительно текущей даты, это не день задержки
     if (normalizedDay.isAfter(normalizedToday)) return false;
     
-    // Находим ближайшую плановую дату начала месячных к текущей дате
     DateTime plannedStart = normalizedLastActualStart.add(Duration(days: cycleLength));
     
-    // Если плановая дата еще не наступила до текущей даты, это не день задержки
     if (plannedStart.isAfter(normalizedToday)) return false;
     
-    // Ищем ближайшую плановую дату к текущей дате
     while (true) {
       final DateTime nextStart = plannedStart.add(Duration(days: cycleLength));
-      if (nextStart.isAfter(normalizedToday)) {
+      if (DateUtils.startOfDayUtc(nextStart).isAfter(normalizedToday)) { // Нормализуем nextStart на всякий случай
         break;
       }
       plannedStart = nextStart;
     }
     
-    // Если проверяемый день раньше плановой даты, это не день задержки
     if (normalizedDay.isBefore(plannedStart)) return false;
     
-    // Проверяем, что проверяемый день на 2+ дней позже плановой даты
     final daysDifference = normalizedDay.difference(plannedStart).inDays;
     if (daysDifference < 2) return false;
     
-    // Проверяем, есть ли фактические данные о месячных в период от плановой даты до проверяемого дня
     final actualPeriodRecords = periodRecords.where((record) {
-      DateTime normalizedRecordStart = DateTime(
-        record.startDate.year, 
-        record.startDate.month, 
-        record.startDate.day
-      );
+      final normalizedRecordStart = record.startDate; // Уже UTC без времени
       return normalizedRecordStart.isAfter(plannedStart.subtract(const Duration(days: 1))) &&
              normalizedRecordStart.isBefore(normalizedDay.add(const Duration(days: 1)));
     }).toList();
     
-    // Если есть фактические данные в этот период, то это не задержка
     if (actualPeriodRecords.isNotEmpty) return false;
     
     return true;
