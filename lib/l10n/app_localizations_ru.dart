@@ -259,10 +259,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsFormFirstDaySunday => 'Воскресенье';
 
   @override
-  String get settingsTabGeneral => 'General';
+  String get settingsTabGeneral => 'Основные';
 
   @override
-  String get settingsTabMedications => 'Medications';
+  String get settingsTabMedications => 'Лекарства';
 
   @override
   String get symptomHeadache => 'Головная боль';

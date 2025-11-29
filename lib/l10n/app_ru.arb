@@ -169,6 +169,8 @@
   "settingsFormFirstDayLabel": "Первый день календаря",
   "settingsFormFirstDayMonday": "Понедельник",
   "settingsFormFirstDaySunday": "Воскресенье",
+  "settingsTabGeneral": "Основные",
+  "settingsTabMedications": "Лекарства",
   "symptomHeadache": "Головная боль",
   "symptomFatigue": "Усталость",
   "symptomBloating": "Вздутие живота",
