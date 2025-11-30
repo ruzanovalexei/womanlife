@@ -37,13 +37,26 @@ void callbackDispatcher() {
       iOS: DarwinNotificationDetails(),
     );
     
-    await notifications.show(
+    // await notifications.show(
+    //   DateTime.now().millisecondsSinceEpoch.remainder(100000),
+    //   'Прием лекарств',
+    //   'Текущее время: ${DateTime.now().hour}:${DateTime.now().minute}',
+    //   platformChannelSpecifics,
+    // );
+        await notifications.show(
       DateTime.now().millisecondsSinceEpoch.remainder(100000),
-      'Прием лекарств',
+      'Автоматический Прием лекарств',
       'Текущее время: ${DateTime.now().hour}:${DateTime.now().minute}',
-      platformChannelSpecifics,
-    );
-    
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'periodic_channel',
+          'Периодические уведомления',
+          channelDescription: 'Напоминания о приеме лекарств',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+      ),
+    );   
     return Future.value(true);
   });
 }

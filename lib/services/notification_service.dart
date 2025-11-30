@@ -31,7 +31,7 @@ class NotificationService {
   Future<void> schedulePeriodicNotifications() async {
     await _notifications.periodicallyShow(
       0,
-      'Прием лекарств',
+      'Прием лекарств1',
       'Время принять лекарство',
       RepeatInterval.everyMinute, // Для тестирования. Замените на hourly
       const NotificationDetails(
@@ -53,7 +53,7 @@ class NotificationService {
   Future<void> showImmediateNotification() async {
     await _notifications.show(
       DateTime.now().millisecondsSinceEpoch.remainder(100000),
-      'Прием лекарств',
+      'Прием лекарств2',
       'Текущее время: ${DateTime.now().hour}:${DateTime.now().minute}',
       const NotificationDetails(
         android: AndroidNotificationDetails(
