@@ -7,6 +7,7 @@ import '../models/period_record.dart';
 import 'day_detail_screen.dart';
 import 'settings_screen.dart';
 import '../database/database_helper.dart';
+import '../services/notification_service.dart';
 //import '../utils/date_utils.dart'; // Добавляем импорт
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,6 +18,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final _databaseHelper = DatabaseHelper();
+  final _notificationService = NotificationService();
   late Settings _settings;
   List<PeriodRecord> _periodRecords = [];
   bool _isLoading = true;
@@ -25,7 +27,16 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _initializeNotifications();
     _loadData();
+  }
+
+  Future<void> _initializeNotifications() async {
+    await _notificationService.initialize();
+  }
+
+  Future<void> _simulateNotification() async {
+    await _notificationService.showImmediateNotification();
   }
 
   Future<void> _loadData() async {
@@ -88,6 +99,11 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Text(l10n.appTitle),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications),
+            onPressed: _simulateNotification,
+            tooltip: 'Имитация уведомления',
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadData,

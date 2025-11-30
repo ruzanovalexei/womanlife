@@ -5,6 +5,8 @@ import 'package:period_tracker/l10n/app_localizations.dart';
 import 'package:period_tracker/models/settings.dart';
 import 'package:period_tracker/screens/home_screen.dart';
 import 'package:period_tracker/services/locale_service.dart';
+import 'package:period_tracker/services/simple_background_service.dart';
+import 'package:period_tracker/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,6 +26,10 @@ void main() async {
     );
   }
   localeService = LocaleService(Locale(settings.locale));
+
+    // Запускаем фоновый сервис
+  await SimpleBackgroundService.initialize();
+
   runApp(const MyApp());
 }
 
