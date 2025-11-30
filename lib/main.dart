@@ -6,7 +6,7 @@ import 'package:period_tracker/models/settings.dart';
 import 'package:period_tracker/screens/home_screen.dart';
 import 'package:period_tracker/services/locale_service.dart';
 import 'package:period_tracker/services/simple_background_service.dart';
-import 'package:period_tracker/services/notification_service.dart';
+//import 'package:period_tracker/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
