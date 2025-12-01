@@ -29,6 +29,11 @@ class MyDateUtils {
     return DateTime(localDate.year, localDate.month, localDate.day);
   }
 
+  /// Преобразует локальную дату в UTC дату, представляющую тот же день в UTC, обнуляя время.
+  static DateTime fromLocalDayToUtcDay(DateTime localDate) {
+    return DateTime.utc(localDate.year, localDate.month, localDate.day);
+  }
+
   /// Обрезает DateTime до начала дня в UTC.
   static DateTime startOfDayUtc(DateTime date) {
     return DateTime.utc(date.year, date.month, date.day);

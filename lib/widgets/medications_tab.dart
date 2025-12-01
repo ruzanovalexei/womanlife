@@ -5,6 +5,8 @@ import '../models/medication.dart';
 import '../widgets/medication_time_picker.dart';
 import '../utils/period_calculator.dart';
 import '../database/database_helper.dart';
+import '../utils/date_utils.dart'; // Добавлен импорт MyDateUtils
+import '../models/medication_time.dart';
 
 class MedicationsTab extends StatefulWidget {
   const MedicationsTab({super.key});
@@ -70,17 +72,20 @@ class _MedicationsTabState extends State<MedicationsTab> {
                             onPressed: () async {
                               final DateTime? picked = await showDatePicker(
                                 context: context,
-                                initialDate: startDate ?? PeriodCalculator.getToday(),
+                                // При старте showDatePicker, используем toLocal() чтобы преобразовать UTC дату обратно в локальную
+                                initialDate: startDate == null ? PeriodCalculator.getToday().toLocal() : startDate!.toLocal(),
                                 firstDate: DateTime(2000),
                                 lastDate: DateTime(2100),
                               );
                               if (picked != null) {
                                 setState(() {
-                                  startDate = picked;
+                                  // Преобразуем выбранную локальную дату в UTC-дату, сохраняя день/месяц/год
+                                  startDate = MyDateUtils.fromLocalDayToUtcDay(picked);
                                 });
                               }
                             },
-                            child: Text(startDate != null ? '${l10n.medicationStartDateLabel}: ${DateFormat('dd.MM.yyyy').format(startDate!)}' : l10n.medicationPickStartDate),
+                            // Отображаем startDate преобразованную в локальное время для пользователя
+                            child: Text(startDate != null ? '${l10n.medicationStartDateLabel}: ${DateFormat('dd.MM.yyyy').format(startDate!.toLocal())}' : l10n.medicationPickStartDate),
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -89,17 +94,20 @@ class _MedicationsTabState extends State<MedicationsTab> {
                             onPressed: () async {
                               final DateTime? picked = await showDatePicker(
                                 context: context,
-                                initialDate: endDate ?? startDate ?? PeriodCalculator.getToday(),
+                                // При старте showDatePicker, используем toLocal() чтобы преобразовать UTC дату обратно в локальную
+                                initialDate: endDate == null ? startDate?.toLocal() ?? PeriodCalculator.getToday().toLocal() : endDate!.toLocal(),
                                 firstDate: DateTime(2000),
                                 lastDate: DateTime(2100),
                               );
                               if (picked != null) {
                                 setState(() {
-                                  endDate = picked;
+                                  // Преобразуем выбранную локальную дату в UTC-дату, сохраняя день/месяц/год
+                                  endDate = MyDateUtils.fromLocalDayToUtcDay(picked);
                                 });
                               }
                             },
-                            child: Text(endDate != null ? '${l10n.medicationEndDateLabel}: ${DateFormat('dd.MM.yyyy').format(endDate!)}' : l10n.medicationPickEndDate),
+                            // Отображаем endDate преобразованную в локальное время для пользователя
+                            child: Text(endDate != null ? '${l10n.medicationEndDateLabel}: ${DateFormat('dd.MM.yyyy').format(endDate!.toLocal())}' : l10n.medicationPickEndDate),
                           ),
                         ),
                       ],
@@ -211,11 +219,11 @@ class _MedicationsTabState extends State<MedicationsTab> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '${l10n.medicationStartDateLabel}: ${DateFormat('dd.MM.yyyy').format(medication.startDate)}'
+                              '${l10n.medicationStartDateLabel}: ${DateFormat('dd.MM.yyyy').format(medication.startDate.toLocal())}' // toLocal()
                             ),
                             Text(
                               medication.endDate != null 
-                                  ? '${l10n.medicationEndDateLabel}: ${DateFormat('dd.MM.yyyy').format(medication.endDate!)}'
+                                  ? '${l10n.medicationEndDateLabel}: ${DateFormat('dd.MM.yyyy').format(medication.endDate!.toLocal())}' // toLocal()
                                   : l10n.medicationEndDateNotSet // localization
                             ),
                             if (medication.times.isNotEmpty) Text('${l10n.medicationTimes}: ${medication.timesAsString}'), // localization
