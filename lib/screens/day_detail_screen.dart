@@ -75,7 +75,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
 
   // Состояние блоков (по умолчанию все раскрыты)
   bool _isPeriodBlockExpanded = true;
-  bool _isSexBlockExpanded = true;
+  // bool _isSexBlockExpanded = true;
   bool _isHealthBlockExpanded = true;
   bool _isMedicineBlockExpanded = true;
   List<MedicationTakenRecord> _takenRecords = []; // Добавляем список записей о приеме
@@ -329,13 +329,13 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       );
     }
   }
-
-  void _updateSexualActsCount(int newCount) {
-    setState(() {
-      _dayNote = _dayNote.copyWith(sexualActsCount: newCount);
-    });
-    _saveDayNote();
-  }
+// Нужно разкомментить если вернм блок секс
+  // void _updateSexualActsCount(int newCount) {
+  //   setState(() {
+  //     _dayNote = _dayNote.copyWith(sexualActsCount: newCount);
+  //   });
+  //   _saveDayNote();
+  // }
 
   Future<void> _loadAllSymptoms() async {
     try {
@@ -479,10 +479,10 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                       // Блок "Месячные"
                       _buildPeriodBlock(l10n),
                       const SizedBox(height: 8),
-
-                      // Блок "Секс"
-                      _buildSexBlock(l10n),
-                      const SizedBox(height: 8),
+//Убрал на будущее, пока не особо нужен
+                      // // Блок "Секс"
+                      // _buildSexBlock(l10n),
+                      // const SizedBox(height: 8),
 
                       // Блок "Самочувствие"
                       _buildHealthBlock(l10n),
@@ -694,69 +694,69 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       ),
     );
   }
-
-  // Блок "Секс"
-  Widget _buildSexBlock(AppLocalizations l10n) {
-    return Card(
-      child: ExpansionTile(
-        initiallyExpanded: _isSexBlockExpanded,
-        onExpansionChanged: (expanded) {
-          setState(() {
-            _isSexBlockExpanded = expanded;
-          });
-        },
-        title: const Text(
-          'Секс',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Количество половых актов',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      onPressed: _dayNote.sexualActsCount > 0 
-                          ? () => _updateSexualActsCount(_dayNote.sexualActsCount - 1)
-                          : null,
-                      icon: const Icon(Icons.remove_circle_outline, size: 32),
-                      color: Colors.red,
-                    ),
-                    Container(
-                      width: 80,
-                      height: 60,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '${_dayNote.sexualActsCount}',
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => _updateSexualActsCount(_dayNote.sexualActsCount + 1),
-                      icon: const Icon(Icons.add_circle_outline, size: 32),
-                      color: Colors.green,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+//Убрал на будущее, пока не особо нужен
+  // // Блок "Секс"
+  // Widget _buildSexBlock(AppLocalizations l10n) {
+  //   return Card(
+  //     child: ExpansionTile(
+  //       initiallyExpanded: _isSexBlockExpanded,
+  //       onExpansionChanged: (expanded) {
+  //         setState(() {
+  //           _isSexBlockExpanded = expanded;
+  //         });
+  //       },
+  //       title: const Text(
+  //         'Секс',
+  //         style: TextStyle(fontWeight: FontWeight.bold),
+  //       ),
+  //       children: [
+  //         Padding(
+  //           padding: const EdgeInsets.all(16),
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               const Text(
+  //                 'Количество половых актов',
+  //                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+  //               ),
+  //               const SizedBox(height: 16),
+  //               Row(
+  //                 mainAxisAlignment: MainAxisAlignment.center,
+  //                 children: [
+  //                   IconButton(
+  //                     onPressed: _dayNote.sexualActsCount > 0 
+  //                         ? () => _updateSexualActsCount(_dayNote.sexualActsCount - 1)
+  //                         : null,
+  //                     icon: const Icon(Icons.remove_circle_outline, size: 32),
+  //                     color: Colors.red,
+  //                   ),
+  //                   Container(
+  //                     width: 80,
+  //                     height: 60,
+  //                     alignment: Alignment.center,
+  //                     decoration: BoxDecoration(
+  //                       border: Border.all(color: Colors.grey),
+  //                       borderRadius: BorderRadius.circular(8),
+  //                     ),
+  //                     child: Text(
+  //                       '${_dayNote.sexualActsCount}',
+  //                       style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+  //                     ),
+  //                   ),
+  //                   IconButton(
+  //                     onPressed: () => _updateSexualActsCount(_dayNote.sexualActsCount + 1),
+  //                     icon: const Icon(Icons.add_circle_outline, size: 32),
+  //                     color: Colors.green,
+  //                   ),
+  //                 ],
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   // Блок "Самочувствие"
   Widget _buildHealthBlock(AppLocalizations l10n) {

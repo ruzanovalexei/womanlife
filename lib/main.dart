@@ -21,7 +21,7 @@ void main() async {
       periodLength: 5,
       ovulationDay: 14,
       planningMonths: 3,
-      locale: 'en',
+      locale: 'ru',
       firstDayOfWeek: 'monday',
     );
   }

@@ -111,13 +111,13 @@ class DatabaseHelper {
       'periodLength': 5,
       'ovulationDay': 14,
       'planningMonths': 3,
-      'locale': 'en',
+      'locale': 'ru',
       'firstDayOfWeek': 'monday',
     });
 
     // Load default symptoms and insert
-    // Используем английскую локаль для начальной загрузки симптомов
-    final l10n = await AppLocalizations.delegate.load(const Locale('en'));
+    // Используем русскую локаль для начальной загрузки симптомов
+    final l10n = await AppLocalizations.delegate.load(const Locale('ru'));
     final List<String> defaultSymptoms = SymptomsProvider.getDefaultSymptoms(l10n);
     for (final symptom in defaultSymptoms) {
       await db.insert(symptomsTable, {'name': symptom});

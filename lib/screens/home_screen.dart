@@ -34,10 +34,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _initializeNotifications() async {
     await _notificationService.initialize();
   }
-
-  Future<void> _simulateNotification() async {
-    await _notificationService.showImmediateNotification();
-  }
+//Этот блок нужен для ручного вызова уведомлений по кнопке - делался для проверки
+  // Future<void> _simulateNotification() async {
+  //   await _notificationService.showImmediateNotification();
+  // }
 
   Future<void> _loadData() async {
     try {
@@ -99,11 +99,12 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Text(l10n.appTitle),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications),
-            onPressed: _simulateNotification,
-            tooltip: 'Имитация уведомления',
-          ),
+          //Кнопка колокольчик для ручного вызовауведомлений - нужно было для проверки
+          // IconButton(
+          //   icon: const Icon(Icons.notifications),
+          //   onPressed: _simulateNotification,
+          //   tooltip: 'Имитация уведомления',
+          // ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadData,
