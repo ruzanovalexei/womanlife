@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:period_tracker/l10n/app_localizations.dart';
 import 'package:table_calendar/table_calendar.dart';
 
@@ -24,7 +25,6 @@ class CalendarWidget extends StatefulWidget {
 }
 
 class _CalendarWidgetState extends State<CalendarWidget> {
-  CalendarFormat _calendarFormat = CalendarFormat.month;
   // Инициализируем focusedDay и selectedDay как UTC даты
   DateTime _focusedDay = MyDateUtils.getUtcToday();
   DateTime? _selectedDay;
@@ -78,20 +78,56 @@ class _CalendarWidgetState extends State<CalendarWidget> {
             ),
           ),
         
+        // Кастомный заголовок без кнопки формата
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.chevron_left),
+                onPressed: () {
+                  setState(() {
+                    _focusedDay = DateTime(
+                      _focusedDay.year,
+                      _focusedDay.month - 1,
+                      1,
+                    );
+                  });
+                },
+              ),
+              Text(
+                '${_getMonthName(_focusedDay.month, context)} ${_focusedDay.year}',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              IconButton(
+                icon: const Icon(Icons.chevron_right),
+                onPressed: () {
+                  setState(() {
+                    _focusedDay = DateTime(
+                      _focusedDay.year,
+                      _focusedDay.month + 1,
+                      1,
+                    );
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+        
         // Календарь
         TableCalendar(
           firstDay: MyDateUtils.getUtcToday().subtract(const Duration(days: 365 * 10)), // Используем UTC даты
           lastDay: MyDateUtils.getUtcToday().add(const Duration(days: 365 * 10)), // Используем UTC даты
           focusedDay: _focusedDay,
-          calendarFormat: _calendarFormat,
+          calendarFormat: CalendarFormat.month, // Фиксируем формат на месяц
+          headerVisible: false, // Скрываем встроенный заголовок
           locale: Localizations.localeOf(context).toLanguageTag(),
           startingDayOfWeek: widget.settings.firstDayOfWeek == 'sunday'
               ? StartingDayOfWeek.sunday
               : StartingDayOfWeek.monday,
           selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-          onFormatChanged: (format) {
-            setState(() => _calendarFormat = format);
-          },
           onPageChanged: (focusedDay) {
             _focusedDay = MyDateUtils.startOfDayUtc(focusedDay); // Убедимся, что это UTC без времени
           },
@@ -301,5 +337,11 @@ class _CalendarWidgetState extends State<CalendarWidget> {
         Text(text, style: const TextStyle(fontSize: 12)),
       ],
     );
+  }
+
+  // Получить локализованное название месяца
+  String _getMonthName(int month, BuildContext context) {
+    final locale = Localizations.localeOf(context);
+    return DateFormat('LLLL', locale.toLanguageTag()).format(DateTime(DateTime.now().year, month, 1));
   }
 }

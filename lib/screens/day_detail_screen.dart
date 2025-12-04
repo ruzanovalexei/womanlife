@@ -1029,7 +1029,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                                   ),
                                   if (event.isTaken && event.actualTakenTime != null)
                                     Text(
-                                      'Принято: ${DateFormat('HH:mm').format(event.actualTakenTime!)}',
+                                      'Принято: ${DateFormat('HH:mm').format(event.actualTakenTime!.toLocal())}',
                                       style: const TextStyle(fontSize: 12, color: Colors.green),
                                     ),
                                 ],
