@@ -27,6 +27,8 @@
   "calendarLegendOvulation": "Ovulation",
   "calendarLegendFertile": "Fertile days",
   "calendarLegendOverdue": "Delay",
+  "idealTimeForConception": "Ideal time for conception",
+  "favorableTimeForConception": "Favorable time for conception",
   "dayDetailsTitle": "Day Details",
   "periodManagementTitle": "Period Management",
   "startNewPeriodButton": "Start New Period",

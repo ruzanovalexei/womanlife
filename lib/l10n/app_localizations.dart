@@ -185,6 +185,18 @@ abstract class AppLocalizations {
   /// **'Delay'**
   String get calendarLegendOverdue;
 
+  /// No description provided for @idealTimeForConception.
+  ///
+  /// In en, this message translates to:
+  /// **'Ideal time for conception'**
+  String get idealTimeForConception;
+
+  /// No description provided for @favorableTimeForConception.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorable time for conception'**
+  String get favorableTimeForConception;
+
   /// No description provided for @dayDetailsTitle.
   ///
   /// In en, this message translates to:

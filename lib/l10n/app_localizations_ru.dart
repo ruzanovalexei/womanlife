@@ -58,6 +58,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get calendarLegendOverdue => 'Задержка';
 
   @override
+  String get idealTimeForConception => 'Идеальное время для зачатия';
+
+  @override
+  String get favorableTimeForConception => 'Благополучное время для зачатия';
+
+  @override
   String get dayDetailsTitle => 'Детали дня';
 
   @override

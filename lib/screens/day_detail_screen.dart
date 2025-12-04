@@ -84,6 +84,8 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
   bool get _canMarkEnd => PeriodCalculator.canMarkPeriodEnd(widget.selectedDate, _activePeriod);
   bool get _isInActivePeriod => PeriodCalculator.isDateInActivePeriod(widget.selectedDate, _activePeriod);
   bool get _isDelayDay => PeriodCalculator.isDelayDay(widget.selectedDate, widget.settings, widget.periodRecords);
+  bool get _isOvulationDay => PeriodCalculator.isOvulationDay(widget.selectedDate, widget.settings, widget.periodRecords);
+  bool get _isFertileDay => PeriodCalculator.isFertileDay(widget.selectedDate, widget.settings, widget.periodRecords);
 
   // Найти предыдущий период, предшествующий выбранному дню
   PeriodRecord? get _previousPeriod {
@@ -544,6 +546,64 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                   ),
                 
                 if (_isDelayDay) const SizedBox(height: 16),
+
+                // Информация об овуляции
+                if (_isOvulationDay)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.green[50],
+                      border: Border.all(color: Colors.green),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.child_friendly, color: Colors.green),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            l10n.idealTimeForConception,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w500,
+                              color: Colors.green,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                
+                if (_isOvulationDay) const SizedBox(height: 16),
+
+                // Информация о фертильных днях
+                if (_isFertileDay && !_isOvulationDay)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.lightGreen[50],
+                      border: Border.all(color: Colors.lightGreen),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.favorite, color: Colors.lightGreen),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            l10n.favorableTimeForConception,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w500,
+                              color: Colors.lightGreen,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                
+                if (_isFertileDay && !_isOvulationDay) const SizedBox(height: 16),
 
                 // Информация о предыдущих месячных
                 if (_previousPeriod != null) ...[

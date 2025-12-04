@@ -58,6 +58,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get calendarLegendOverdue => 'Delay';
 
   @override
+  String get idealTimeForConception => 'Ideal time for conception';
+
+  @override
+  String get favorableTimeForConception => 'Favorable time for conception';
+
+  @override
   String get dayDetailsTitle => 'Day Details';
 
   @override

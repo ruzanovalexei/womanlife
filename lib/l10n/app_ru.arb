@@ -28,6 +28,8 @@
   "calendarLegendOvulation": "День овуляции",
   "calendarLegendFertile": "Фертильные дни",
   "calendarLegendOverdue": "Задержка",
+  "idealTimeForConception": "Идеальное время для зачатия",
+  "favorableTimeForConception": "Благополучное время для зачатия",
   "dayDetailsTitle": "Детали дня",
   "periodManagementTitle": "Управление периодом",
   "startNewPeriodButton": "Начать новый цикл",
