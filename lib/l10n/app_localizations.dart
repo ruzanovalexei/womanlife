@@ -730,6 +730,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error deleting medication: {message}'**
   String medicationDeleteError(Object message);
+
+  /// No description provided for @analyticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Analytics'**
+  String get analyticsTitle;
+
+  /// No description provided for @medicationsReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Medications Report'**
+  String get medicationsReportTitle;
+
+  /// No description provided for @medicationsReportDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed analytics on medication intake, missed doses and adherence'**
+  String get medicationsReportDescription;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

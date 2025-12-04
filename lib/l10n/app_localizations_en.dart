@@ -367,4 +367,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String medicationDeleteError(Object message) {
     return 'Error deleting medication: $message';
   }
+
+  @override
+  String get analyticsTitle => 'Analytics';
+
+  @override
+  String get medicationsReportTitle => 'Medications Report';
+
+  @override
+  String get medicationsReportDescription => 'Detailed analytics on medication intake, missed doses and adherence';
 }

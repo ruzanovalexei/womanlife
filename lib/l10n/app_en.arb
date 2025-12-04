@@ -216,6 +216,9 @@
     }
   },
   "medicationDeleteError": "Error deleting medication: {message}",
+  "analyticsTitle": "Analytics",
+  "medicationsReportTitle": "Medications Report",
+  "medicationsReportDescription": "Detailed analytics on medication intake, missed doses and adherence",
   "@medicationDeleteError": {
     "placeholders": {
       "message": {}

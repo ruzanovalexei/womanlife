@@ -6,6 +6,7 @@ import '../models/settings.dart';
 import '../models/period_record.dart';
 import 'day_detail_screen.dart';
 import 'settings_screen.dart';
+import 'analytics_screen.dart';
 import '../database/database_helper.dart';
 import '../services/notification_service.dart';
 //import '../utils/date_utils.dart'; // Добавляем импорт
@@ -72,6 +73,13 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _openAnalytics() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AnalyticsScreen()),
+    );
+  }
+
   void _openDayDetail(DateTime day) {
     Navigator.push(
       context,
@@ -109,6 +117,11 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: const Icon(Icons.refresh),
             onPressed: _loadData,
             tooltip: l10n.refreshTooltip,
+          ),
+          IconButton(
+            icon: const Icon(Icons.analytics),
+            onPressed: _openAnalytics,
+            tooltip: l10n.analyticsTitle,
           ),
           IconButton(
             icon: const Icon(Icons.settings),

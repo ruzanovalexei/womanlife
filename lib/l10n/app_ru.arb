@@ -218,6 +218,9 @@
     }
   },
   "medicationDeleteError": "Error deleting medication: {message}",
+  "analyticsTitle": "Аналитика",
+  "medicationsReportTitle": "Отчет по приему лекарств",
+  "medicationsReportDescription": "Подробная аналитика по приему лекарств, пропускам и соблюдению режима приема",
   "@medicationDeleteError": {
     "placeholders": {
       "message": {}

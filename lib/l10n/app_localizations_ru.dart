@@ -367,4 +367,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String medicationDeleteError(Object message) {
     return 'Error deleting medication: $message';
   }
+
+  @override
+  String get analyticsTitle => 'Аналитика';
+
+  @override
+  String get medicationsReportTitle => 'Отчет по приему лекарств';
+
+  @override
+  String get medicationsReportDescription => 'Подробная аналитика по приему лекарств, пропускам и соблюдению режима приема';
 }
