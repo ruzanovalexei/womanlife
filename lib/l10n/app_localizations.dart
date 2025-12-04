@@ -173,6 +173,12 @@ abstract class AppLocalizations {
   /// **'Ovulation'**
   String get calendarLegendOvulation;
 
+  /// No description provided for @calendarLegendFertile.
+  ///
+  /// In en, this message translates to:
+  /// **'Fertile days'**
+  String get calendarLegendFertile;
+
   /// No description provided for @calendarLegendOverdue.
   ///
   /// In en, this message translates to:
@@ -455,12 +461,6 @@ abstract class AppLocalizations {
   /// **'Period Length (days)'**
   String get settingsFormPeriodLength;
 
-  /// No description provided for @settingsFormOvulationDay.
-  ///
-  /// In en, this message translates to:
-  /// **'Ovulation Day (from period start)'**
-  String get settingsFormOvulationDay;
-
   /// No description provided for @settingsFormPlanningMonths.
   ///
   /// In en, this message translates to:
@@ -676,12 +676,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No medications added'**
   String get noMedications;
-
-  /// No description provided for @noMedicationsScheduled.
-  ///
-  /// In en, this message translates to:
-  /// **'No scheduled medications'**
-  String get noMedicationsScheduled;
 
   /// No description provided for @medicationEndDateNotSet.
   ///

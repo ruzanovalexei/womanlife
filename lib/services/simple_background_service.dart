@@ -7,7 +7,7 @@ import 'package:period_tracker/database/database_helper.dart';
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
-    final DatabaseHelper _databaseHelper = DatabaseHelper(); // Инициализация DatabaseHelper
+    final DatabaseHelper databaseHelper = DatabaseHelper(); // Инициализация DatabaseHelper
 
     // Инициализируем уведомления
     const AndroidInitializationSettings androidSettings =
@@ -47,7 +47,7 @@ void callbackDispatcher() {
     final oneHourLater = now.add(const Duration(hours: 1));
 
     // Получаем все активные лекарства
-    final allMedications = await _databaseHelper.getAllMedications();
+    final allMedications = await databaseHelper.getAllMedications();
 
     List<String> upcomingMedications = [];
 
@@ -75,7 +75,7 @@ void callbackDispatcher() {
     }
 
     if (upcomingMedications.isNotEmpty) {
-      final title = "Скоро принимать лекарства!";
+      const title = "Скоро принимать лекарства!";
       final body = "Не забудьте принять:\n${upcomingMedications.join('\n')}";
 
       await notifications.show(

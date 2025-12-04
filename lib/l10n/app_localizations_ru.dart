@@ -52,6 +52,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get calendarLegendOvulation => 'День овуляции';
 
   @override
+  String get calendarLegendFertile => 'Фертильные дни';
+
+  @override
   String get calendarLegendOverdue => 'Задержка';
 
   @override
@@ -221,9 +224,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsFormPeriodLength => 'Длительность менструации (дни)';
 
   @override
-  String get settingsFormOvulationDay => 'День овуляции (от начала)';
-
-  @override
   String get settingsFormPlanningMonths => 'Период планирования (мес.)';
 
   @override
@@ -333,10 +333,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get noMedications => 'Лекарства не добавлены';
-
-  @override
-  String get noMedicationsScheduled => 'Нет запланированных лекарств';
+  String get noMedications => 'No medications added';
 
   @override
   String get medicationEndDateNotSet => 'Not set';

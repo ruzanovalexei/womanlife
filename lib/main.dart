@@ -19,7 +19,6 @@ void main() async {
       id: 1,
       cycleLength: 28,
       periodLength: 5,
-      ovulationDay: 14,
       planningMonths: 3,
       locale: 'ru',
       firstDayOfWeek: 'monday',

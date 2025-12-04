@@ -90,12 +90,15 @@ class PeriodCalculator {
     final normalizedDay = MyDateUtils.startOfDayUtc(day);
     bool isPlanned = isPlannedPeriodDay(normalizedDay, settings, periodRecords);
     bool isActual = isActualPeriodDay(normalizedDay, periodRecords);
+    bool isFertile = isFertileDay(normalizedDay, settings, periodRecords);
     
-    // Приоритет отдается фактическим дням
+    // Приоритет: фактические дни > плановые дни > фертильные дни > обычные дни
     if (isActual) {
       return PeriodDayType.actual;
     } else if (isPlanned) {
       return PeriodDayType.planned;
+    } else if (isFertile) {
+      return PeriodDayType.fertile;
     } else {
       return PeriodDayType.none;
     }
@@ -151,9 +154,14 @@ class PeriodCalculator {
 
   static bool isOvulationDay(DateTime day, Settings settings, List<PeriodRecord> periodRecords) {
     final normalizedDay = MyDateUtils.startOfDayUtc(day);
-    final ovulationOffset = settings.ovulationDay - 1;
     final cycleLength = settings.cycleLength;
-    if (ovulationOffset < 0 || cycleLength <= 0 || ovulationOffset >= cycleLength) {
+    
+    // Овуляция происходит за 14 дней до следующего цикла (медицинский стандарт)
+    // Формула: овуляция = начало периода + (cycleLength - 14) дней
+    final daysBeforeNextCycle = 14;
+    final ovulationOffset = cycleLength - daysBeforeNextCycle;
+    
+    if (ovulationOffset < 0 || cycleLength <= 0 || daysBeforeNextCycle <= 0 || daysBeforeNextCycle > cycleLength) {
       return false;
     }
 
@@ -175,6 +183,46 @@ class PeriodCalculator {
     return offsetInCycle == ovulationOffset;
   }
 
+  // Проверить, является ли день фертильным днем (овуляция + 3 дня до + 1 день после)
+  static bool isFertileDay(DateTime day, Settings settings, List<PeriodRecord> periodRecords) {
+    final normalizedDay = MyDateUtils.startOfDayUtc(day);
+    final cycleLength = settings.cycleLength;
+    
+    // Овуляция происходит за 14 дней до следующего цикла
+    final daysBeforeNextCycle = 14;
+    final ovulationOffset = cycleLength - daysBeforeNextCycle;
+    
+    if (ovulationOffset < 0 || cycleLength <= 0 || daysBeforeNextCycle <= 0 || daysBeforeNextCycle > cycleLength) {
+      return false;
+    }
+
+    // Check actual recorded periods (record.startDate уже UTC)
+    for (final record in periodRecords) {
+      final ovulationDate = record.startDate.add(Duration(days: ovulationOffset));
+      final normalizedOvulationDate = MyDateUtils.startOfDayUtc(ovulationDate);
+      
+      // Фертильный период: овуляция - 3 дня до + 1 день после
+      final fertileStart = normalizedOvulationDate.subtract(const Duration(days: 3));
+      final fertileEnd = normalizedOvulationDate.add(const Duration(days: 1));
+      
+      if (normalizedDay.isAtSameMomentAs(normalizedOvulationDate) ||
+          (normalizedDay.isAfter(fertileStart) && normalizedDay.isBefore(fertileEnd))) {
+        return true;
+      }
+    }
+
+    final lastStart = findLastActualPeriodStart(periodRecords); // Возвращает UTC
+    if (lastStart == null) return false;
+
+    final diff = normalizedDay.difference(lastStart).inDays;
+    if (diff < 0) return false;
+
+    final offsetInCycle = diff % cycleLength;
+    
+    // Проверяем, находится ли день в фертильном периоде
+    return offsetInCycle >= (ovulationOffset - 3) && offsetInCycle <= (ovulationOffset + 1);
+  }
+
   static bool isPlanOverdue(Settings settings, List<PeriodRecord> periodRecords) {
     final lastActualStart = findLastActualPeriodStart(periodRecords); // Возвращает UTC
     final cycleLength = settings.cycleLength;
@@ -191,7 +239,7 @@ class PeriodCalculator {
       }
       plannedStart = nextStart;
     }
-
+    
     final DateTime plannedDate = MyDateUtils.startOfDayUtc(plannedStart); // plannedStart уже UTC
     if (today.isBefore(plannedDate)) return false;
     final diff = today.difference(plannedDate).inDays;
@@ -245,6 +293,7 @@ enum PeriodDayType {
   none,      // Не день месячных
   planned,   // Только плановый
   actual,    // Только фактический
+  fertile,   // Фертильный день
 }
 
 // Информация о следующем периоде

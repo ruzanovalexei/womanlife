@@ -940,9 +940,9 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (medicationEvents.isEmpty)
-                  Text(
+                  const Text(
                     'Нет записей о лекарствах на этот день.',
-                    style: const TextStyle(color: Colors.grey),
+                    style: TextStyle(color: Colors.grey),
                   )
                 else
                   ListView.builder(

@@ -20,7 +20,6 @@ class SettingsForm extends StatefulWidget {
 class _SettingsFormState extends State<SettingsForm> {
   late TextEditingController _cycleLengthController;
   late TextEditingController _periodLengthController;
-  late TextEditingController _ovulationDayController;
   late TextEditingController _planningMonthsController;
   late String _selectedLocale;
   late String _selectedFirstDay;
@@ -32,7 +31,6 @@ class _SettingsFormState extends State<SettingsForm> {
     super.initState();
     _cycleLengthController = TextEditingController(text: widget.settings.cycleLength.toString());
     _periodLengthController = TextEditingController(text: widget.settings.periodLength.toString());
-    _ovulationDayController = TextEditingController(text: widget.settings.ovulationDay.toString());
     _planningMonthsController = TextEditingController(text: widget.settings.planningMonths.toString());
     _selectedLocale = widget.settings.locale;
     _selectedFirstDay = widget.settings.firstDayOfWeek;
@@ -58,13 +56,6 @@ class _SettingsFormState extends State<SettingsForm> {
             label: l10n.settingsFormPeriodLength,
             min: 3,
             max: 7,
-          ),
-          const SizedBox(height: 16),
-          _buildNumberField(
-            controller: _ovulationDayController,
-            label: l10n.settingsFormOvulationDay,
-            min: 10,
-            max: 20,
           ),
           const SizedBox(height: 16),
           _buildNumberField(
@@ -160,7 +151,6 @@ class _SettingsFormState extends State<SettingsForm> {
       final newSettings = widget.settings.copyWith(
         cycleLength: int.parse(_cycleLengthController.text),
         periodLength: int.parse(_periodLengthController.text),
-        ovulationDay: int.parse(_ovulationDayController.text),
         planningMonths: int.parse(_planningMonthsController.text),
         locale: _selectedLocale,
         firstDayOfWeek: _selectedFirstDay,
@@ -174,7 +164,6 @@ class _SettingsFormState extends State<SettingsForm> {
   void dispose() {
     _cycleLengthController.dispose();
     _periodLengthController.dispose();
-    _ovulationDayController.dispose();
     _planningMonthsController.dispose();
     super.dispose();
   }

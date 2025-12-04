@@ -133,6 +133,11 @@ class _CalendarWidgetState extends State<CalendarWidget> {
       widget.settings,
       widget.periodRecords,
     );
+    final bool isFertileDay = PeriodCalculator.isFertileDay(
+      date,
+      widget.settings,
+      widget.periodRecords,
+    );
     final bool isDelayDay = PeriodCalculator.isDelayDay(
       date,
       widget.settings,
@@ -148,11 +153,19 @@ class _CalendarWidgetState extends State<CalendarWidget> {
         backgroundColor = Colors.pink[100]!;
         break;
       case PeriodDayType.actual:
-        backgroundColor = Colors.lightBlue[200]!;
+        backgroundColor = Colors.red[200]!;
+        break;
+      case PeriodDayType.fertile:
+        backgroundColor = Colors.green[200]!; // Зеленый для фертильных дней
         break;
       case PeriodDayType.none:
         backgroundColor = Colors.transparent;
         break;
+    }
+
+    // Если день фертильный, но не является днем месячных, используем зеленый цвет
+    if (isFertileDay && periodType == PeriodDayType.none) {
+      backgroundColor = Colors.green[200]!;
     }
 
     // Если сегодняшний день, добавляем черную обводку и жирный шрифт
@@ -227,7 +240,8 @@ class _CalendarWidgetState extends State<CalendarWidget> {
             runSpacing: 8,
             children: [
               _buildLegendItem(Colors.pink[100]!, l10n.calendarLegendPlanned),
-              _buildLegendItem(Colors.lightBlue[200]!, l10n.calendarLegendActual),
+              _buildLegendItem(Colors.red[200]!, l10n.calendarLegendActual),
+              _buildLegendItem(Colors.green[200]!, l10n.calendarLegendFertile),
               _buildLegendIconItem(
                 Icons.circle,
                 l10n.calendarLegendToday,

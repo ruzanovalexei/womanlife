@@ -52,6 +52,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get calendarLegendOvulation => 'Ovulation';
 
   @override
+  String get calendarLegendFertile => 'Fertile days';
+
+  @override
   String get calendarLegendOverdue => 'Delay';
 
   @override
@@ -221,9 +224,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsFormPeriodLength => 'Period Length (days)';
 
   @override
-  String get settingsFormOvulationDay => 'Ovulation Day (from period start)';
-
-  @override
   String get settingsFormPlanningMonths => 'Planning Period (months)';
 
   @override
@@ -334,9 +334,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noMedications => 'No medications added';
-
-  @override
-  String get noMedicationsScheduled => 'No scheduled medications';
 
   @override
   String get medicationEndDateNotSet => 'Not set';
