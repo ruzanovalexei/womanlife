@@ -1,4 +1,4 @@
-package com.example.woman_life
+package com.ruzanov.womancalendar
 
 import io.flutter.embedding.android.FlutterActivity
 

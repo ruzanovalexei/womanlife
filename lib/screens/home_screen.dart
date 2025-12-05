@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+//import 'package:flutter/services.dart';
 import 'package:period_tracker/l10n/app_localizations.dart';
 import '../widgets/calendar_widget.dart';
 import '../models/settings.dart';
 import '../models/period_record.dart';
 import 'day_detail_screen.dart';
 import 'settings_screen.dart';
-import 'analytics_screen.dart';
+
+//import 'analytics_screen.dart'; // вернуть, когда воскресим экран аналитики
 import '../database/database_helper.dart';
 import '../services/notification_service.dart';
 //import '../utils/date_utils.dart'; // Добавляем импорт
@@ -72,13 +73,13 @@ class _HomeScreenState extends State<HomeScreen> {
       _loadData();
     }
   }
-
-  void _openAnalytics() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const AnalyticsScreen()),
-    );
-  }
+//Аналитику пока скрыли, позже к ней вернемся
+  // void _openAnalytics() {
+  //   Navigator.push(
+  //     context,
+  //     MaterialPageRoute(builder: (context) => const AnalyticsScreen()),
+  //   );
+  // }
 
   void _openDayDetail(DateTime day) {
     Navigator.push(
@@ -96,9 +97,9 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _closeApp() {
-    SystemNavigator.pop();
-  }
+  // void _closeApp() {
+  //   SystemNavigator.pop();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -113,26 +114,27 @@ class _HomeScreenState extends State<HomeScreen> {
           //   onPressed: _simulateNotification,
           //   tooltip: 'Имитация уведомления',
           // ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadData,
-            tooltip: l10n.refreshTooltip,
-          ),
-          IconButton(
-            icon: const Icon(Icons.analytics),
-            onPressed: _openAnalytics,
-            tooltip: l10n.analyticsTitle,
-          ),
+          // IconButton(
+          //   icon: const Icon(Icons.refresh),
+          //   onPressed: _loadData,
+          //   tooltip: l10n.refreshTooltip,
+          // ),
+          //Аналитику пока скроем, после к ней вернемся
+          // IconButton(
+          //   icon: const Icon(Icons.analytics),
+          //   onPressed: _openAnalytics,
+          //   tooltip: l10n.analyticsTitle,
+          // ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: _openSettings,
             tooltip: l10n.settingsTooltip,
           ),
-          IconButton(
-            icon: const Icon(Icons.close),
-            tooltip: l10n.exitTooltip,
-            onPressed: _closeApp,
-          ),
+          // IconButton(
+          //   icon: const Icon(Icons.close),
+          //   tooltip: l10n.exitTooltip,
+          //   onPressed: _closeApp,
+          // ),
         ],
       ),
       body: _isLoading

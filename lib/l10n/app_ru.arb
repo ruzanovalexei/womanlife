@@ -193,31 +193,31 @@
   "medicationPickEndDate": "Выберете дату окончания приема",
   "cancelButton": "Отмена",
   "saveButton": "Сохранить",
-  "medicationNameMissingError": "Enter medication name and start date",
-  "medicationSaveError": "Error saving medication: {message}",
+  "medicationNameMissingError": "Введите название лекарства и даты приема",
+  "medicationSaveError": "Ошибка сохранения лекарства: {message}",
   "@medicationSaveError": {
     "placeholders": {
       "message": {}
     }
   },
-  "noMedications": "No medications added",
-  "medicationEndDateNotSet": "Not set",
-  "medicationTimes": "Times",
+  "noMedications": "Нет лекарств",
+  "medicationEndDateNotSet": "Не заданно",
+  "medicationTimes": "Время",
   "medicationDeleteConfirmTitle": "Удалить лекарство",
-  "medicationDeleteConfirmMessage": "Are you sure you want to delete \"{name}\"?",
+  "medicationDeleteConfirmMessage": "Вы уверены, что хотите удалить \"{name}\"?",
   "@medicationDeleteConfirmMessage": {
     "placeholders": {
       "name": {}
     }
   },
-  "deleteButton": "Delete",
-  "medicationDeleteSuccess": "Medication \"{name}\" deleted",
+  "deleteButton": "Удалить",
+  "medicationDeleteSuccess": "Лекарство \"{name}\" удалено",
   "@medicationDeleteSuccess": {
     "placeholders": {
       "name": {}
     }
   },
-  "medicationDeleteError": "Error deleting medication: {message}",
+  "medicationDeleteError": "Ошибка удаления лекарства: {message}",
   "analyticsTitle": "Аналитика",
   "medicationsReportTitle": "Отчет по приему лекарств",
   "medicationsReportDescription": "Подробная аналитика по приему лекарств, пропускам и соблюдению режима приема",

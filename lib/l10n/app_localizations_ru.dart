@@ -331,41 +331,41 @@ class AppLocalizationsRu extends AppLocalizations {
   String get saveButton => 'Сохранить';
 
   @override
-  String get medicationNameMissingError => 'Enter medication name and start date';
+  String get medicationNameMissingError => 'Введите название лекарства и даты приема';
 
   @override
   String medicationSaveError(Object message) {
-    return 'Error saving medication: $message';
+    return 'Ошибка сохранения лекарства: $message';
   }
 
   @override
-  String get noMedications => 'No medications added';
+  String get noMedications => 'Нет лекарств';
 
   @override
-  String get medicationEndDateNotSet => 'Not set';
+  String get medicationEndDateNotSet => 'Не заданно';
 
   @override
-  String get medicationTimes => 'Times';
+  String get medicationTimes => 'Время';
 
   @override
   String get medicationDeleteConfirmTitle => 'Удалить лекарство';
 
   @override
   String medicationDeleteConfirmMessage(Object name) {
-    return 'Are you sure you want to delete \"$name\"?';
+    return 'Вы уверены, что хотите удалить \"$name\"?';
   }
 
   @override
-  String get deleteButton => 'Delete';
+  String get deleteButton => 'Удалить';
 
   @override
   String medicationDeleteSuccess(Object name) {
-    return 'Medication \"$name\" deleted';
+    return 'Лекарство \"$name\" удалено';
   }
 
   @override
   String medicationDeleteError(Object message) {
-    return 'Error deleting medication: $message';
+    return 'Ошибка удаления лекарства: $message';
   }
 
   @override

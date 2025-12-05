@@ -76,8 +76,8 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
   // Состояние блоков (по умолчанию все раскрыты)
   bool _isPeriodBlockExpanded = true;
   // bool _isSexBlockExpanded = true;
-  bool _isHealthBlockExpanded = true;
-  bool _isMedicineBlockExpanded = true;
+  bool _isHealthBlockExpanded = false;
+  bool _isMedicineBlockExpanded = false;
   List<MedicationTakenRecord> _takenRecords = []; // Добавляем список записей о приеме
 
   bool get _canMarkStart => PeriodCalculator.canMarkPeriodStart(widget.selectedDate, _lastPeriod);
