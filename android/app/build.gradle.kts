@@ -18,7 +18,6 @@ android {
 
     kotlinOptions {
         jvmTarget = "17"
-
     }
 
     defaultConfig {
@@ -30,11 +29,15 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        
+        // ✅ ДОБАВЛЯЕМ: App ID Яндекс Рекламы
+        manifestPlaceholders["yandexMobileAdsAppId"] = "17946414"
     }
 
 
     dependencies {
         coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+        implementation("com.yandex.android:mobileads:7.18.0")
     }
     
     buildTypes {
