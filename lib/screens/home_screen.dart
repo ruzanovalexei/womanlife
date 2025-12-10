@@ -41,10 +41,10 @@ class _HomeScreenState extends State<HomeScreen> {
   var isBannerAlreadyCreated = false;
 
 
-  BannerAdSize _getAdSize() {
-    final screenWidth = MediaQuery.of(context).size.width.round();
-    return BannerAdSize.sticky(width: screenWidth);
-  }
+  // BannerAdSize _getAdSize() {
+  //   final screenWidth = MediaQuery.of(context).size.width.round();
+  //   return BannerAdSize.sticky(width: screenWidth);
+  // }
 
   _createBanner() {
     final screenWidth = MediaQuery.of(context).size.width.round();
