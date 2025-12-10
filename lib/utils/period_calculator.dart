@@ -165,7 +165,7 @@ class PeriodCalculator {
       return false;
     }
 
-    // Check actual recorded periods (record.startDate уже UTC)
+    // Проверяем все записанные периоды, чтобы найти дни овуляции для каждого цикла
     for (final record in periodRecords) {
       final ovulationDate = record.startDate.add(Duration(days: ovulationOffset));
       if (MyDateUtils.startOfDayUtc(ovulationDate) == normalizedDay) {
@@ -173,6 +173,7 @@ class PeriodCalculator {
       }
     }
 
+    // Дополнительная проверка для будущих/планируемых циклов на основе последнего записанного периода
     final lastStart = findLastActualPeriodStart(periodRecords); // Возвращает UTC
     if (lastStart == null) return false;
 
@@ -196,7 +197,7 @@ class PeriodCalculator {
       return false;
     }
 
-    // Check actual recorded periods (record.startDate уже UTC)
+    // Проверяем все записанные периоды, чтобы найти фертильные дни для каждого цикла
     for (final record in periodRecords) {
       final ovulationDate = record.startDate.add(Duration(days: ovulationOffset));
       final normalizedOvulationDate = MyDateUtils.startOfDayUtc(ovulationDate);
@@ -205,22 +206,21 @@ class PeriodCalculator {
       final fertileStart = normalizedOvulationDate.subtract(const Duration(days: 3));
       final fertileEnd = normalizedOvulationDate.add(const Duration(days: 1));
       
-      if (normalizedDay.isAtSameMomentAs(normalizedOvulationDate) ||
-          (normalizedDay.isAfter(fertileStart) && normalizedDay.isBefore(fertileEnd))) {
+      // Проверяем, что день находится в диапазоне фертильного периода
+      // Используем isAtSameMomentAs и isAfter/isBefore для точного сравнения
+      final isDayFertile = 
+          normalizedDay.isAtSameMomentAs(fertileStart) ||           // 3 дня до овуляции
+          normalizedDay.isAtSameMomentAs(fertileStart.add(Duration(days: 1))) ||  // 2 дня до овуляции
+          normalizedDay.isAtSameMomentAs(fertileStart.add(Duration(days: 2))) ||  // 1 день до овуляции
+          normalizedDay.isAtSameMomentAs(normalizedOvulationDate) ||              // день овуляции
+          normalizedDay.isAtSameMomentAs(fertileEnd);                             // день после овуляции
+      
+      if (isDayFertile) {
         return true;
       }
     }
 
-    final lastStart = findLastActualPeriodStart(periodRecords); // Возвращает UTC
-    if (lastStart == null) return false;
-
-    final diff = normalizedDay.difference(lastStart).inDays;
-    if (diff < 0) return false;
-
-    final offsetInCycle = diff % cycleLength;
-    
-    // Проверяем, находится ли день в фертильном периоде
-    return offsetInCycle >= (ovulationOffset - 3) && offsetInCycle <= (ovulationOffset + 1);
+    return false;
   }
 
   static bool isPlanOverdue(Settings settings, List<PeriodRecord> periodRecords) {
