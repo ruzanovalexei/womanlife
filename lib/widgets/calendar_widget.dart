@@ -129,7 +129,9 @@ class _CalendarWidgetState extends State<CalendarWidget> {
               : StartingDayOfWeek.monday,
           selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
           onPageChanged: (focusedDay) {
-            _focusedDay = MyDateUtils.startOfDayUtc(focusedDay); // Убедимся, что это UTC без времени
+            setState(() {
+              _focusedDay = MyDateUtils.startOfDayUtc(focusedDay); // Убедимся, что это UTC без времени
+            });
           },
           onDaySelected: (selectedDay, focusedDay) {
             final utcSelectedDay = MyDateUtils.startOfDayUtc(selectedDay); // Переводим в UTC
