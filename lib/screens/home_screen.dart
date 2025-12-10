@@ -202,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
           ),
           
-          // Виджет с названием приложения внизу
+          // Виджет рекламы
           Container(
             alignment: Alignment.bottomCenter,
             child: isBannerAlreadyCreated ? AdWidget(bannerAd: banner) : null,

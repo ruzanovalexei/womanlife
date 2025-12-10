@@ -7,7 +7,8 @@ import '../models/settings.dart';
 import '../services/locale_service.dart';
 import '../widgets/settings_tab.dart';
 import '../widgets/medications_tab.dart';
-
+import 'package:yandex_mobileads/mobile_ads.dart';
+//import 'package:yandex_mobileads/ad_widget.dart';
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -21,14 +22,53 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _isLoading = true;
   String? _errorMessage;
 
+
+  late BannerAd banner;
+  var isBannerAlreadyCreated = false;
+
+
   @override
   void initState() {
     super.initState();
-    _loadSettings();
+    _loadSettings(includeBanner: false);
   }
 
-  Future<void> _loadSettings() async {
+
+  _createBanner() {
+    final screenWidth = MediaQuery.of(context).size.width.round();
+    final adSize = BannerAdSize.sticky(width: screenWidth);
+    
+    return BannerAd(
+      adUnitId: 'R-M-17946414-1',
+      adSize: adSize,
+      adRequest: const AdRequest(),
+      onAdLoaded: () {},
+      onAdFailedToLoad: (error) {},
+      onAdClicked: () {},
+      onLeftApplication: () {},
+      onReturnedToApplication: () {},
+      onImpression: (impressionData) {}
+    );
+  }
+
+
+
+  Future<void> _loadSettings({bool includeBanner = false}) async {
     try {
+        if (includeBanner) {
+        banner = _createBanner();
+        
+        setState(() {
+          _isLoading = true;
+          _errorMessage = null;
+          isBannerAlreadyCreated = true;
+        });
+      } else {
+        setState(() {
+          _isLoading = true;
+          _errorMessage = null;
+        });
+      }
       setState(() {
         _isLoading = true;
         _errorMessage = null;
@@ -89,6 +129,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    
+    // Создаем баннер только если его еще нет и мы не в процессе загрузки
+    if (!isBannerAlreadyCreated && !_isLoading) {
+      try {
+        banner = _createBanner();
+        setState(() {
+          isBannerAlreadyCreated = true;
+        });
+      } catch (e) {
+        // Игнорируем ошибки создания баннера
+      }
+    }
+    
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -101,31 +154,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
         ),
-        body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _errorMessage != null
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(l10n.errorWithMessage(_errorMessage!)),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: _loadSettings,
-                          child: Text(l10n.retry),
+        body: Column(
+          children: [
+            // Основной контент
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _errorMessage != null
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(l10n.errorWithMessage(_errorMessage!)),
+                              const SizedBox(height: 16),
+                              ElevatedButton(
+                                onPressed: _loadSettings,
+                                child: Text(l10n.retry),
+                              ),
+                            ],
+                          ),
+                        )
+                      : TabBarView(
+                          children: [
+                            SettingsTab(
+                              settings: _settings,
+                              onSave: _saveSettings,
+                            ),
+                            const MedicationsTab(),
+                          ],
                         ),
-                      ],
-                    ),
-                  )
-                : TabBarView(
-                    children: [
-                      SettingsTab(
-                        settings: _settings,
-                        onSave: _saveSettings,
-                      ),
-                      const MedicationsTab(),
-                    ],
-                  ),
+            ),
+            
+            // Виджет рекламы
+            Container(
+              alignment: Alignment.bottomCenter,
+              child: isBannerAlreadyCreated ? AdWidget(bannerAd: banner) : null,
+            ),
+          ],
+        ),
       ),
     );
   }

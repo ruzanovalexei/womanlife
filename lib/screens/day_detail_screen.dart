@@ -11,6 +11,9 @@ import '../utils/period_calculator.dart';
 import '../models/medication.dart';
 import '../models/medication_taken_record.dart'; // Импортируем MedicationTakenRecord
 
+import 'package:yandex_mobileads/mobile_ads.dart';
+//import 'package:yandex_mobileads/ad_widget.dart';
+
 // Added MedicationTime class
 class MedicationTime {
   final int hour;
@@ -67,6 +70,12 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
   final _symptomController = TextEditingController();
   bool _isLoading = true;
   String? _errorMessage;
+  
+  
+  //Реклама
+  late BannerAd banner;
+  var isBannerAlreadyCreated = false;
+
 
   PeriodRecord? _lastPeriod;
   PeriodRecord? _activePeriod;
@@ -86,6 +95,29 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
   bool get _isDelayDay => PeriodCalculator.isDelayDay(widget.selectedDate, widget.settings, widget.periodRecords);
   bool get _isOvulationDay => PeriodCalculator.isOvulationDay(widget.selectedDate, widget.settings, widget.periodRecords);
   bool get _isFertileDay => PeriodCalculator.isFertileDay(widget.selectedDate, widget.settings, widget.periodRecords);
+
+
+
+//Реклама
+  _createBanner() {
+    final screenWidth = MediaQuery.of(context).size.width.round();
+    final adSize = BannerAdSize.sticky(width: screenWidth);
+    
+    return BannerAd(
+      adUnitId: 'R-M-17946414-1',
+      adSize: adSize,
+      adRequest: const AdRequest(),
+      onAdLoaded: () {},
+      onAdFailedToLoad: (error) {},
+      onAdClicked: () {},
+      onLeftApplication: () {},
+      onReturnedToApplication: () {},
+      onImpression: (impressionData) {}
+    );
+  }
+
+
+
 
   // Найти предыдущий период, предшествующий выбранному дню
   PeriodRecord? get _previousPeriod {
@@ -121,8 +153,23 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
     _loadData();
   }
 
-  Future<void> _loadData() async {
+  Future<void> _loadData({bool includeBanner = false}) async {
     try {
+
+      if (includeBanner) {
+        banner = _createBanner();
+        
+        setState(() {
+          _isLoading = true;
+          _errorMessage = null;
+          isBannerAlreadyCreated = true;
+        });
+      } else {
+        setState(() {
+          _isLoading = true;
+          _errorMessage = null;
+        });
+      }
       setState(() {
         _isLoading = true;
         _errorMessage = null;
@@ -441,6 +488,19 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
 @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+
+    // Создаем баннер только если его еще нет и мы не в процессе загрузки
+    if (!isBannerAlreadyCreated && !_isLoading) {
+      try {
+        banner = _createBanner();
+        setState(() {
+          isBannerAlreadyCreated = true;
+        });
+      } catch (e) {
+        // Игнорируем ошибки создания баннера
+      }
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.dayDetailsTitle),
@@ -452,49 +512,62 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _errorMessage != null
-              ? Center(child: Text(l10n.errorWithMessage(_errorMessage!)))
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Заголовок с датой
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Center(
-                            child: Text(
-                              _formatDate(context, widget.selectedDate),
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
+      body: Column(
+        children: [
+          // Основной контент
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _errorMessage != null
+                    ? Center(child: Text(l10n.errorWithMessage(_errorMessage!)))
+                    : SingleChildScrollView(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Заголовок с датой
+                            Card(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Center(
+                                  child: Text(
+                                    _formatDate(context, widget.selectedDate),
+                                    style: const TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
+                            const SizedBox(height: 16),
+
+                            // Блок "Месячные"
+                            _buildPeriodBlock(l10n),
+                            const SizedBox(height: 8),
+//Убрал на будущее, пока не особо нужен
+                            // // Блок "Секс"
+                            // _buildSexBlock(l10n),
+                            // const SizedBox(height: 8),
+
+                            // Блок "Самочувствие"
+                            _buildHealthBlock(l10n),
+                            const SizedBox(height: 8),
+
+                            // Блок "Лекарства"
+                            _buildMedicineBlock(l10n),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 16),
-
-                      // Блок "Месячные"
-                      _buildPeriodBlock(l10n),
-                      const SizedBox(height: 8),
-//Убрал на будущее, пока не особо нужен
-                      // // Блок "Секс"
-                      // _buildSexBlock(l10n),
-                      // const SizedBox(height: 8),
-
-                      // Блок "Самочувствие"
-                      _buildHealthBlock(l10n),
-                      const SizedBox(height: 8),
-
-                      // Блок "Лекарства"
-                      _buildMedicineBlock(l10n),
-                    ],
-                  ),
-                ),
+          ),
+          
+          // Виджет рекламы
+          Container(
+            alignment: Alignment.bottomCenter,
+            child: isBannerAlreadyCreated ? AdWidget(bannerAd: banner) : null,
+          ),
+        ],
+      ),
     );
   }
 
