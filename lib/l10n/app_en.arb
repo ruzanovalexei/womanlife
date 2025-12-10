@@ -219,6 +219,21 @@
   "analyticsTitle": "Analytics",
   "medicationsReportTitle": "Medications Report",
   "medicationsReportDescription": "Detailed analytics on medication intake, missed doses and adherence",
+  "notificationPermissionGranted": "Notification permission granted",
+  "notificationPermissionDenied": "Notification permission denied",
+  "notificationPermissionPermanentlyDenied": "Notification permission permanently denied",
+  "notificationPermissionDescription": "Required for sending medication and menstrual cycle reminders",
+  "exactAlarmPermissionGranted": "Exact alarm permission granted",
+  "exactAlarmPermissionDenied": "Exact alarm permission denied",
+  "exactAlarmPermissionPermanentlyDenied": "Exact alarm permission permanently denied",
+  "exactAlarmPermissionDescription": "Required for precise medication reminder scheduling",
+  "permissionsRequestTitle": "Permissions Required",
+  "permissionsRequestMessage": "The following permissions are required for the app to work properly:",
+  "notNow": "Not now",
+  "enable": "Enable",
+  "openSettings": "Settings",
+  "ok": "OK",
+  "cancel": "Cancel",
   "@medicationDeleteError": {
     "placeholders": {
       "message": {}

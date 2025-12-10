@@ -5,6 +5,7 @@ import 'package:period_tracker/l10n/app_localizations.dart';
 import '../database/database_helper.dart';
 import '../models/settings.dart';
 import '../services/locale_service.dart';
+import '../services/permissions_service.dart';
 import '../widgets/settings_tab.dart';
 import '../widgets/medications_tab.dart';
 import 'package:yandex_mobileads/mobile_ads.dart';
@@ -103,6 +104,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       // if (!newSettings.delayNotificationEnabled) {
       //   await NotificationService().cancelAllNotifications();
       // }
+      
+      // Проверяем разрешения после сохранения настроек
+      if (mounted) {
+        await PermissionsService.checkAndRequestPermissions(context);
+      }
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

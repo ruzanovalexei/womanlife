@@ -748,6 +748,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Detailed analytics on medication intake, missed doses and adherence'**
   String get medicationsReportDescription;
+
+  /// No description provided for @notificationPermissionGranted.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification permission granted'**
+  String get notificationPermissionGranted;
+
+  /// No description provided for @notificationPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification permission denied'**
+  String get notificationPermissionDenied;
+
+  /// No description provided for @notificationPermissionPermanentlyDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification permission permanently denied'**
+  String get notificationPermissionPermanentlyDenied;
+
+  /// No description provided for @notificationPermissionDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Required for sending medication and menstrual cycle reminders'**
+  String get notificationPermissionDescription;
+
+  /// No description provided for @exactAlarmPermissionGranted.
+  ///
+  /// In en, this message translates to:
+  /// **'Exact alarm permission granted'**
+  String get exactAlarmPermissionGranted;
+
+  /// No description provided for @exactAlarmPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Exact alarm permission denied'**
+  String get exactAlarmPermissionDenied;
+
+  /// No description provided for @exactAlarmPermissionPermanentlyDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Exact alarm permission permanently denied'**
+  String get exactAlarmPermissionPermanentlyDenied;
+
+  /// No description provided for @exactAlarmPermissionDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Required for precise medication reminder scheduling'**
+  String get exactAlarmPermissionDescription;
+
+  /// No description provided for @permissionsRequestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions Required'**
+  String get permissionsRequestTitle;
+
+  /// No description provided for @permissionsRequestMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The following permissions are required for the app to work properly:'**
+  String get permissionsRequestMessage;
+
+  /// No description provided for @notNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get notNow;
+
+  /// No description provided for @enable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable'**
+  String get enable;
+
+  /// No description provided for @openSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get openSettings;
+
+  /// No description provided for @ok.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get ok;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

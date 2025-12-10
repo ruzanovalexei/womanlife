@@ -221,6 +221,21 @@
   "analyticsTitle": "Аналитика",
   "medicationsReportTitle": "Отчет по приему лекарств",
   "medicationsReportDescription": "Подробная аналитика по приему лекарств, пропускам и соблюдению режима приема",
+  "notificationPermissionGranted": "Разрешение на уведомления получено",
+  "notificationPermissionDenied": "Разрешение на уведомления отклонено",
+  "notificationPermissionPermanentlyDenied": "Разрешение на уведомления навсегда отклонено",
+  "notificationPermissionDescription": "Необходимо для отправки напоминаний о лекарствах и менструальном цикле",
+  "exactAlarmPermissionGranted": "Разрешение на точные будильники получено",
+  "exactAlarmPermissionDenied": "Разрешение на точные будильники отклонено",
+  "exactAlarmPermissionPermanentlyDenied": "Разрешение на точные будильники навсегда отклонено",
+  "exactAlarmPermissionDescription": "Необходимо для точного планирования напоминаний о лекарствах",
+  "permissionsRequestTitle": "Необходимы разрешения",
+  "permissionsRequestMessage": "Для корректной работы приложения требуются следующие разрешения:",
+  "notNow": "Не сейчас",
+  "enable": "Включить",
+  "openSettings": "Настройки",
+  "ok": "ОК",
+  "cancel": "Отмена",
   "@medicationDeleteError": {
     "placeholders": {
       "message": {}

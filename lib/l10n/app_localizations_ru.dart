@@ -376,4 +376,49 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get medicationsReportDescription => 'Подробная аналитика по приему лекарств, пропускам и соблюдению режима приема';
+
+  @override
+  String get notificationPermissionGranted => 'Разрешение на уведомления получено';
+
+  @override
+  String get notificationPermissionDenied => 'Разрешение на уведомления отклонено';
+
+  @override
+  String get notificationPermissionPermanentlyDenied => 'Разрешение на уведомления навсегда отклонено';
+
+  @override
+  String get notificationPermissionDescription => 'Необходимо для отправки напоминаний о лекарствах и менструальном цикле';
+
+  @override
+  String get exactAlarmPermissionGranted => 'Разрешение на точные будильники получено';
+
+  @override
+  String get exactAlarmPermissionDenied => 'Разрешение на точные будильники отклонено';
+
+  @override
+  String get exactAlarmPermissionPermanentlyDenied => 'Разрешение на точные будильники навсегда отклонено';
+
+  @override
+  String get exactAlarmPermissionDescription => 'Необходимо для точного планирования напоминаний о лекарствах';
+
+  @override
+  String get permissionsRequestTitle => 'Необходимы разрешения';
+
+  @override
+  String get permissionsRequestMessage => 'Для корректной работы приложения требуются следующие разрешения:';
+
+  @override
+  String get notNow => 'Не сейчас';
+
+  @override
+  String get enable => 'Включить';
+
+  @override
+  String get openSettings => 'Настройки';
+
+  @override
+  String get ok => 'ОК';
+
+  @override
+  String get cancel => 'Отмена';
 }

@@ -376,4 +376,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get medicationsReportDescription => 'Detailed analytics on medication intake, missed doses and adherence';
+
+  @override
+  String get notificationPermissionGranted => 'Notification permission granted';
+
+  @override
+  String get notificationPermissionDenied => 'Notification permission denied';
+
+  @override
+  String get notificationPermissionPermanentlyDenied => 'Notification permission permanently denied';
+
+  @override
+  String get notificationPermissionDescription => 'Required for sending medication and menstrual cycle reminders';
+
+  @override
+  String get exactAlarmPermissionGranted => 'Exact alarm permission granted';
+
+  @override
+  String get exactAlarmPermissionDenied => 'Exact alarm permission denied';
+
+  @override
+  String get exactAlarmPermissionPermanentlyDenied => 'Exact alarm permission permanently denied';
+
+  @override
+  String get exactAlarmPermissionDescription => 'Required for precise medication reminder scheduling';
+
+  @override
+  String get permissionsRequestTitle => 'Permissions Required';
+
+  @override
+  String get permissionsRequestMessage => 'The following permissions are required for the app to work properly:';
+
+  @override
+  String get notNow => 'Not now';
+
+  @override
+  String get enable => 'Enable';
+
+  @override
+  String get openSettings => 'Settings';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get cancel => 'Cancel';
 }

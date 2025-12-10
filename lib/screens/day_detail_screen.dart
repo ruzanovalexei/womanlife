@@ -12,6 +12,7 @@ import '../models/medication.dart';
 import '../models/medication_taken_record.dart'; // Импортируем MedicationTakenRecord
 
 import 'package:yandex_mobileads/mobile_ads.dart';
+import '../services/permissions_service.dart';
 //import 'package:yandex_mobileads/ad_widget.dart';
 
 // Added MedicationTime class
@@ -195,6 +196,11 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       setState(() {
         _isLoading = false;
       });
+      
+      // Проверяем разрешения после загрузки данных
+      if (mounted) {
+        await PermissionsService.checkAndRequestPermissions(context);
+      }
     } catch (e) {
       setState(() {
         _errorMessage = e.toString();

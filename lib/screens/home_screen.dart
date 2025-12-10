@@ -20,6 +20,7 @@ import 'package:yandex_mobileads/mobile_ads.dart';
 //import 'analytics_screen.dart'; // вернуть, когда воскресим экран аналитики
 import '../database/database_helper.dart';
 import '../services/notification_service.dart';
+import '../services/permissions_service.dart';
 //import '../utils/date_utils.dart'; // Добавляем импорт
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -73,6 +74,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _initializeNotifications() async {
     await _notificationService.initialize();
+    
+    // Проверяем и предлагаем включить разрешения при необходимости
+    if (mounted) {
+      await PermissionsService.checkAndRequestPermissions(context);
+    }
   }
 //Этот блок нужен для ручного вызова уведомлений по кнопке - делался для проверки
   // Future<void> _simulateNotification() async {
