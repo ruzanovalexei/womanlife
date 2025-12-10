@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:period_tracker/database/database_helper.dart';
 import 'package:period_tracker/l10n/app_localizations.dart';
@@ -10,6 +11,13 @@ import 'package:period_tracker/services/simple_background_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Закрепляем портретную ориентацию
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+  
   final dbHelper = DatabaseHelper();
   Settings settings;
   try {
