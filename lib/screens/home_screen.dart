@@ -47,75 +47,32 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   _createBanner() {
-    print('🎯 HomeScreen: _createBanner() НАЧАЛСЯ');
-    try {
-      print('📱 HomeScreen: получаем размер экрана...');
-      final screenWidth = MediaQuery.of(context).size.width.round();
-      print('✅ HomeScreen: ширина экрана: $screenWidth');
-      
-      print('📏 HomeScreen: создаем BannerAdSize...');
-      final adSize = BannerAdSize.sticky(width: screenWidth);
-      print('✅ HomeScreen: BannerAdSize создан: $adSize');
-      
-      print('🏗️ HomeScreen: создаем BannerAd...');
-      final bannerAd = BannerAd(
-        adUnitId: 'demo-banner-yandex',
-        adSize: adSize,
-        adRequest: const AdRequest(),
-        onAdLoaded: () {
-          print('✅ HomeScreen: баннер загружен успешно');
-        },
-        onAdFailedToLoad: (error) {
-          print('❌ HomeScreen: ошибка загрузки баннера: $error');
-        },
-        onAdClicked: () {
-          print('👆 HomeScreen: клик по баннеру');
-        },
-        onLeftApplication: () {
-          print('🚪 HomeScreen: уход из приложения');
-        },
-        onReturnedToApplication: () {
-          print('↩️ HomeScreen: возврат в приложение');
-        },
-        onImpression: (impressionData) {
-          print('👀 HomeScreen: показ баннера (impression)');
-        }
-      );
-      
-      print('✅ HomeScreen: BannerAd создан успешно');
-      return bannerAd;
-      
-    } catch (e) {
-      print('❌ HomeScreen: _createBanner() ошибка: $e');
-      rethrow;
-    }
+    final screenWidth = MediaQuery.of(context).size.width.round();
+    final adSize = BannerAdSize.sticky(width: screenWidth);
+    
+    return BannerAd(
+      adUnitId: 'R-M-17946414-1',
+      adSize: adSize,
+      adRequest: const AdRequest(),
+      onAdLoaded: () {},
+      onAdFailedToLoad: (error) {},
+      onAdClicked: () {},
+      onLeftApplication: () {},
+      onReturnedToApplication: () {},
+      onImpression: (impressionData) {}
+    );
   }
 
 
   @override
   void initState() {
-    print('🏠 HomeScreen: initState() НАЧАЛСЯ');
     super.initState();
-    print('🏠 HomeScreen: super.initState() завершен');
-    
-    print('🏠 HomeScreen: вызываем _initializeNotifications()...');
     _initializeNotifications();
-    
-    print('🏠 HomeScreen: вызываем _loadData() (без баннера)...');
     _loadData(includeBanner: false);
-    
-    print('🏠 HomeScreen: initState() ЗАВЕРШЕН');
   }
 
   Future<void> _initializeNotifications() async {
-    print('🔔 HomeScreen: _initializeNotifications() НАЧАЛСЯ');
-    try {
-      await _notificationService.initialize();
-      print('✅ HomeScreen: _initializeNotifications() успешно завершен');
-    } catch (e) {
-      print('❌ HomeScreen: _initializeNotifications() ошибка: $e');
-      rethrow;
-    }
+    await _notificationService.initialize();
   }
 //Этот блок нужен для ручного вызова уведомлений по кнопке - делался для проверки
   // Future<void> _simulateNotification() async {
@@ -123,68 +80,45 @@ class _HomeScreenState extends State<HomeScreen> {
   // }
 
   Future<void> _loadData({bool includeBanner = false}) async {
-    print('📊 HomeScreen: _loadData() НАЧАЛСЯ (includeBanner: $includeBanner)');
     try {
       if (includeBanner) {
-        print('🏗️ HomeScreen: создаем баннер...');
         banner = _createBanner();
-        print('✅ HomeScreen: баннер создан');
         
-        print('⏳ HomeScreen: устанавливаем isLoading = true и isBannerAlreadyCreated = true...');
         setState(() {
           _isLoading = true;
           _errorMessage = null;
           isBannerAlreadyCreated = true;
         });
       } else {
-        print('⏳ HomeScreen: устанавливаем isLoading = true (без баннера)...');
         setState(() {
           _isLoading = true;
           _errorMessage = null;
         });
       }
-      print('✅ HomeScreen: состояние обновлено');
       
-      print('💾 HomeScreen: загружаем настройки из БД...');
       _settings = await _databaseHelper.getSettings();
-      print('✅ HomeScreen: настройки загружены: $_settings');
-      
-      print('📅 HomeScreen: загружаем записи о периодах из БД...');
       _periodRecords = await _databaseHelper.getAllPeriodRecords();
-      print('✅ HomeScreen: загружено периодов: ${_periodRecords.length}');
       
-      print('⏳ HomeScreen: устанавливаем isLoading = false...');
       setState(() {
         _isLoading = false;
       });
-      print('✅ HomeScreen: _loadData() успешно завершен');
       
     } catch (e) {
-      print('❌ HomeScreen: _loadData() ошибка: $e');
       setState(() {
         _errorMessage = e.toString();
         _isLoading = false;
       });
-      print('❌ HomeScreen: состояние ошибки установлено');
     }
   }
 
   void _openSettings() async {
-    print('⚙️ HomeScreen: _openSettings() НАЧАЛСЯ');
-    try {
-      final result = await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const SettingsScreen()),
-      );
-      print('✅ HomeScreen: вернулись из настроек, результат: $result');
-      
-      if (result == true) {
-        print('🔄 HomeScreen: результат true, вызываем _loadData() с баннером...');
-        _loadData(includeBanner: true);
-      }
-      print('✅ HomeScreen: _openSettings() завершен');
-    } catch (e) {
-      print('❌ HomeScreen: _openSettings() ошибка: $e');
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const SettingsScreen()),
+    );
+    
+    if (result == true) {
+      _loadData(includeBanner: true);
     }
   }
 //Аналитику пока скрыли, позже к ней вернемся
@@ -196,25 +130,18 @@ class _HomeScreenState extends State<HomeScreen> {
   // }
 
   void _openDayDetail(DateTime day) {
-    print('📅 HomeScreen: _openDayDetail() НАЧАЛСЯ для даты: $day');
-    try {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DayDetailScreen(
-            selectedDate: day,
-            periodRecords: _periodRecords,
-            settings: _settings,
-          ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DayDetailScreen(
+          selectedDate: day,
+          periodRecords: _periodRecords,
+          settings: _settings,
         ),
-      ).then((_) {
-        print('↩️ HomeScreen: вернулись из деталей дня, перезагружаем данные с баннером...');
-        _loadData(includeBanner: true);
-      });
-      print('✅ HomeScreen: _openDayDetail() навигация выполнена');
-    } catch (e) {
-      print('❌ HomeScreen: _openDayDetail() ошибка: $e');
-    }
+      ),
+    ).then((_) {
+      _loadData(includeBanner: true);
+    });
   }
 
   // void _closeApp() {
@@ -223,57 +150,29 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print('🏗️ HomeScreen: build() НАЧАЛСЯ');
-    try {
-      final l10n = AppLocalizations.of(context)!;
-      print('✅ HomeScreen: l10n получен: ${l10n.runtimeType}');
-      
-      // Создаем баннер только если его еще нет и мы не в процессе загрузки
-      if (!isBannerAlreadyCreated && !_isLoading) {
-        print('🎯 HomeScreen: создаем баннер в build()...');
-        try {
-          banner = _createBanner();
-          setState(() {
-            isBannerAlreadyCreated = true;
-          });
-          print('✅ HomeScreen: баннер создан в build()');
-        } catch (e) {
-          print('❌ HomeScreen: ошибка создания баннера в build(): $e');
-        }
+    final l10n = AppLocalizations.of(context)!;
+    
+    // Создаем баннер только если его еще нет и мы не в процессе загрузки
+    if (!isBannerAlreadyCreated && !_isLoading) {
+      try {
+        banner = _createBanner();
+        setState(() {
+          isBannerAlreadyCreated = true;
+        });
+      } catch (e) {
+        // Игнорируем ошибки создания баннера
       }
-      
-      print('🎨 HomeScreen: создаем Scaffold...');
-      final scaffold = Scaffold(
+    }
+    
+    return Scaffold(
       appBar: AppBar(
         title: Text(l10n.appTitle),
         actions: [
-          //Кнопка колокольчик для ручного вызовауведомлений - нужно было для проверки
-          // IconButton(
-          //   icon: const Icon(Icons.notifications),
-          //   onPressed: _simulateNotification,
-          //   tooltip: 'Имитация уведомления',
-          // ),
-          // IconButton(
-          //   icon: const Icon(Icons.refresh),
-          //   onPressed: _loadData,
-          //   tooltip: l10n.refreshTooltip,
-          // ),
-          //Аналитику пока скроем, после к ней вернемся
-          // IconButton(
-          //   icon: const Icon(Icons.analytics),
-          //   onPressed: _openAnalytics,
-          //   tooltip: l10n.analyticsTitle,
-          // ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: _openSettings,
             tooltip: l10n.settingsTooltip,
           ),
-          // IconButton(
-          //   icon: const Icon(Icons.close),
-          //   tooltip: l10n.exitTooltip,
-          //   onPressed: _closeApp,
-          // ),
         ],
       ),
       body: Column(
@@ -305,19 +204,11 @@ class _HomeScreenState extends State<HomeScreen> {
           
           // Виджет с названием приложения внизу
           Container(
-                    alignment: Alignment.bottomCenter,
-                    child: isBannerAlreadyCreated ? AdWidget(bannerAd: banner) : null,
+            alignment: Alignment.bottomCenter,
+            child: isBannerAlreadyCreated ? AdWidget(bannerAd: banner) : null,
           ),
         ],
       ),
     );
-    
-    print('✅ HomeScreen: Scaffold создан успешно');
-    return scaffold;
-    
-    } catch (e) {
-      print('❌ HomeScreen: build() ошибка: $e');
-      rethrow;
-    }
   }
 }
