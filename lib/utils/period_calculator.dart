@@ -286,6 +286,63 @@ class PeriodCalculator {
     
     return true;
   }
+
+  // Получить номер дня в цикле для указанной даты
+  static int? getCycleDayNumber(DateTime day, Settings settings, List<PeriodRecord> periodRecords) {
+    final normalizedDay = MyDateUtils.startOfDayUtc(day);
+    final cycleLength = settings.cycleLength;
+    
+    if (cycleLength <= 0) return null;
+    
+    // Сортируем записи периодов по дате начала (по возрастанию)
+    final sortedRecords = List<PeriodRecord>.from(periodRecords)
+      ..sort((a, b) => a.startDate.compareTo(b.startDate));
+    
+    // Если нет записей о периодах, возвращаем null
+    if (sortedRecords.isEmpty) return null;
+    
+    // Определяем текущий цикл для указанной даты
+    DateTime? cycleStartDate;
+    
+    // Проверяем, относится ли дата к историческому периоду (до последней фактической даты)
+    final lastActualStart = findLastActualPeriodStart(periodRecords);
+    if (lastActualStart != null && normalizedDay.isBefore(lastActualStart)) {
+      // Исторический период - ищем цикл, к которому относится дата
+      for (int i = sortedRecords.length - 1; i >= 0; i--) {
+        final record = sortedRecords[i];
+        final cycleEnd = record.startDate.add(Duration(days: cycleLength - 1));
+        
+        if (normalizedDay.isAfter(record.startDate.subtract(const Duration(days: 1))) && 
+            (normalizedDay.isBefore(cycleEnd) || normalizedDay.isAtSameMomentAs(cycleEnd))) {
+          cycleStartDate = record.startDate;
+          break;
+        }
+      }
+    } else {
+      // Текущий или будущий период - используем логику от последнего фактического начала
+      cycleStartDate = lastActualStart;
+      
+      if (cycleStartDate != null) {
+        // Проверяем, не превышает ли дата длину текущего цикла
+        final daysSinceCycleStart = normalizedDay.difference(cycleStartDate).inDays;
+        if (daysSinceCycleStart >= cycleLength) {
+          return null; // Дата выходит за пределы длины цикла
+        }
+      }
+    }
+    
+    if (cycleStartDate == null) return null;
+    
+    // Вычисляем номер дня в цикле
+    final dayNumber = normalizedDay.difference(cycleStartDate).inDays + 1;
+    
+    // Проверяем, что номер дня в пределах длины цикла
+    if (dayNumber >= 1 && dayNumber <= cycleLength) {
+      return dayNumber;
+    }
+    
+    return null;
+  }
 }
 
 // Типы дней для определения цвета
