@@ -421,4 +421,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancel => 'Cancel';
+
+  @override
+  String get menuTitle => 'Menu';
+
+  @override
+  String get menuSubtitle => 'Choose the section you need';
+
+  @override
+  String get menuAnalytics => 'Health';
+
+  @override
+  String get menuMedications => 'Daily Schedule';
+
+  @override
+  String get menuInsights => 'To-Do List';
+
+  @override
+  String get menuReminders => 'Habits';
+
+  @override
+  String get menuHelp => 'Notes';
+
+  @override
+  String get menuItem1 => 'Health opened';
+
+  @override
+  String get menuItem2 => 'Daily Schedule opened';
+
+  @override
+  String get menuItem3 => 'To-Do List opened';
+
+  @override
+  String get menuItem4 => 'Habits opened';
+
+  @override
+  String get menuItem5 => 'Notes opened';
 }

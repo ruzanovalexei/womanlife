@@ -838,6 +838,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel'**
   String get cancel;
+
+  /// No description provided for @menuTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu'**
+  String get menuTitle;
+
+  /// No description provided for @menuSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the section you need'**
+  String get menuSubtitle;
+
+  /// No description provided for @menuAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get menuAnalytics;
+
+  /// No description provided for @menuMedications.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Schedule'**
+  String get menuMedications;
+
+  /// No description provided for @menuInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'To-Do List'**
+  String get menuInsights;
+
+  /// No description provided for @menuReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Habits'**
+  String get menuReminders;
+
+  /// No description provided for @menuHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get menuHelp;
+
+  /// No description provided for @menuItem1.
+  ///
+  /// In en, this message translates to:
+  /// **'Health opened'**
+  String get menuItem1;
+
+  /// No description provided for @menuItem2.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Schedule opened'**
+  String get menuItem2;
+
+  /// No description provided for @menuItem3.
+  ///
+  /// In en, this message translates to:
+  /// **'To-Do List opened'**
+  String get menuItem3;
+
+  /// No description provided for @menuItem4.
+  ///
+  /// In en, this message translates to:
+  /// **'Habits opened'**
+  String get menuItem4;
+
+  /// No description provided for @menuItem5.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes opened'**
+  String get menuItem5;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

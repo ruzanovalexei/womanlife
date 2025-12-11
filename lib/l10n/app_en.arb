@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appTitle": "Calendar",
+  "appTitle": "Stay in Rhythm",
   "refreshTooltip": "Refresh data",
   "settingsTooltip": "Settings",
   "exitTooltip": "Exit app",
@@ -234,6 +234,18 @@
   "openSettings": "Settings",
   "ok": "OK",
   "cancel": "Cancel",
+  "menuTitle": "Menu",
+  "menuSubtitle": "Choose the section you need",
+  "menuAnalytics": "Health",
+  "menuMedications": "Daily Schedule",
+  "menuInsights": "To-Do List",
+  "menuReminders": "Habits",
+  "menuHelp": "Notes",
+  "menuItem1": "Health opened",
+  "menuItem2": "Daily Schedule opened",
+  "menuItem3": "To-Do List opened",
+  "menuItem4": "Habits opened",
+  "menuItem5": "Notes opened",
   "@medicationDeleteError": {
     "placeholders": {
       "message": {}

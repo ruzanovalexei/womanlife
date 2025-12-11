@@ -6,6 +6,7 @@ import '../models/settings.dart';
 import '../models/period_record.dart';
 import 'day_detail_screen.dart';
 import 'settings_screen.dart';
+import 'menu_screen.dart';
 
 
 
@@ -127,6 +128,13 @@ class _HomeScreenState extends State<HomeScreen> {
       _loadData(includeBanner: true);
     }
   }
+
+  void _openMenu() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const MenuScreen()),
+    );
+  }
 //Аналитику пока скрыли, позже к ней вернемся
   // void _openAnalytics() {
   //   Navigator.push(
@@ -175,13 +183,25 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text(l10n.appTitle),
         actions: [
           IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: _openMenu,
+            tooltip: l10n.menuTitle,
+          ),
+          IconButton(
             icon: const Icon(Icons.settings),
             onPressed: _openSettings,
             tooltip: l10n.settingsTooltip,
           ),
         ],
       ),
-      body: Column(
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/fon1.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Column(
         children: [
           // Основной контент - календарь
           Expanded(
@@ -215,6 +235,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+    )
     );
   }
 }

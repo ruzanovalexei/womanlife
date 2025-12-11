@@ -203,49 +203,57 @@ class _MedicationsTabState extends State<MedicationsTab> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : (_medications.isEmpty
-              ? Center(child: Text(l10n.noMedications)) // localization
-              : ListView.builder(
-                  itemCount: _medications.length,
-                  itemBuilder: (context, index) {
-                    final medication = _medications[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      child: ListTile(
-                        title: Text(medication.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${l10n.medicationStartDateLabel}: ${DateFormat('dd.MM.yyyy').format(medication.startDate.toLocal())}' // toLocal()
-                            ),
-                            Text(
-                              medication.endDate != null 
-                                  ? '${l10n.medicationEndDateLabel}: ${DateFormat('dd.MM.yyyy').format(medication.endDate!.toLocal())}' // toLocal()
-                                  : l10n.medicationEndDateNotSet // localization
-                            ),
-                            if (medication.times.isNotEmpty) Text('${l10n.medicationTimes}: ${medication.timesAsString}'), // localization
-                          ],
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/fon1.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : (_medications.isEmpty
+                ? Center(child: Text(l10n.noMedications)) // localization
+                : ListView.builder(
+                    itemCount: _medications.length,
+                    itemBuilder: (context, index) {
+                      final medication = _medications[index];
+                      return Card(
+                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: ListTile(
+                          title: Text(medication.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${l10n.medicationStartDateLabel}: ${DateFormat('dd.MM.yyyy').format(medication.startDate.toLocal())}' // toLocal()
+                              ),
+                              Text(
+                                medication.endDate != null 
+                                    ? '${l10n.medicationEndDateLabel}: ${DateFormat('dd.MM.yyyy').format(medication.endDate!.toLocal())}' // toLocal()
+                                    : l10n.medicationEndDateNotSet // localization
+                              ),
+                              if (medication.times.isNotEmpty) Text('${l10n.medicationTimes}: ${medication.timesAsString}'), // localization
+                            ],
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit, color: Colors.blueAccent),
+                                onPressed: () => _showMedicationDialog(medication: medication),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.redAccent),
+                                onPressed: () => _showDeleteConfirmationDialog(context, medication),
+                              ),
+                            ],
+                          ),
                         ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit, color: Colors.blueAccent),
-                              onPressed: () => _showMedicationDialog(medication: medication),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.redAccent),
-                              onPressed: () => _showDeleteConfirmationDialog(context, medication),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                )),
+                      );
+                    },
+                  )),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showMedicationDialog(),
         child: const Icon(Icons.add),

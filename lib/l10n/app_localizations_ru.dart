@@ -9,7 +9,7 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
-  String get appTitle => 'Календарь';
+  String get appTitle => 'Будь в ритме';
 
   @override
   String get refreshTooltip => 'Обновить данные';
@@ -421,4 +421,40 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get cancel => 'Отмена';
+
+  @override
+  String get menuTitle => 'Меню';
+
+  @override
+  String get menuSubtitle => 'Выберите нужный раздел';
+
+  @override
+  String get menuAnalytics => 'Здоровье';
+
+  @override
+  String get menuMedications => 'Распорядок дня';
+
+  @override
+  String get menuInsights => 'Список дел';
+
+  @override
+  String get menuReminders => 'Привычки';
+
+  @override
+  String get menuHelp => 'Заметки';
+
+  @override
+  String get menuItem1 => 'Здоровье открыто';
+
+  @override
+  String get menuItem2 => 'Распорядок дня открыт';
+
+  @override
+  String get menuItem3 => 'Список дел открыт';
+
+  @override
+  String get menuItem4 => 'Привычки открыты';
+
+  @override
+  String get menuItem5 => 'Заметки открыты';
 }

@@ -518,7 +518,14 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
           ),
         ],
       ),
-      body: Column(
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/fon1.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Column(
         children: [
           // Основной контент
           Expanded(
@@ -573,6 +580,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
             child: isBannerAlreadyCreated ? AdWidget(bannerAd: banner) : null,
           ),
         ],
+      ),
       ),
     );
   }

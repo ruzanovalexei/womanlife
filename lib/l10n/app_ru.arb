@@ -1,6 +1,6 @@
 {
   "@@locale": "ru",
-  "appTitle": "Календарь",
+  "appTitle": "Будь в ритме",
   "refreshTooltip": "Обновить данные",
   "settingsTooltip": "Настройки",
   "exitTooltip": "Закрыть приложение",
@@ -236,6 +236,18 @@
   "openSettings": "Настройки",
   "ok": "ОК",
   "cancel": "Отмена",
+  "menuTitle": "Меню",
+  "menuSubtitle": "Выберите нужный раздел",
+  "menuAnalytics": "Здоровье",
+  "menuMedications": "Распорядок дня",
+  "menuInsights": "Список дел",
+  "menuReminders": "Привычки",
+  "menuHelp": "Заметки",
+  "menuItem1": "Здоровье открыто",
+  "menuItem2": "Распорядок дня открыт",
+  "menuItem3": "Список дел открыт",
+  "menuItem4": "Привычки открыты",
+  "menuItem5": "Заметки открыты",
   "@medicationDeleteError": {
     "placeholders": {
       "message": {}
