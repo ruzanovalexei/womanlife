@@ -183,7 +183,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
     );
 
     Color backgroundColor = Colors.transparent;
-    Color textColor = Colors.black;
+    Color textColor = const Color.fromARGB(255, 15, 42, 95); // Изменяем цвет текста на белый
 
     // Определяем цвет фона в зависимости от типа дня
     switch (periodType) {
@@ -217,8 +217,8 @@ class _CalendarWidgetState extends State<CalendarWidget> {
         color: backgroundColor,
         shape: BoxShape.circle,
         border: Border.all(
-          color: isToday ? Colors.black : (periodType != PeriodDayType.none ? Colors.black26 : Colors.transparent),
-          width: isToday ? 2 : 1,
+          color: const Color.fromARGB(255, 15, 42, 95), // Белое обрамление для всех дней
+          width: periodType != PeriodDayType.none ? 2 : 1, // Толще для месячных и фертильных дней
         ),
       ),
       child: Center(
@@ -227,7 +227,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
           MyDateUtils.toLocalDay(date).day.toString(),
           style: TextStyle(
             color: textColor,
-            fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+            fontWeight: FontWeight.bold, // Все номера дней делаем жирными
           ),
         ),
       ),
