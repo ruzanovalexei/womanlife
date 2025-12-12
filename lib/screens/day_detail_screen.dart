@@ -56,12 +56,14 @@ class DayDetailScreen extends StatefulWidget {
   final DateTime selectedDate;
   final List<PeriodRecord> periodRecords;
   final Settings settings;
+  final bool shouldReturnResult; // Нужно ли возвращать результат
 
   const DayDetailScreen({
     super.key, 
     required this.selectedDate,
     required this.periodRecords,
     required this.settings,
+    this.shouldReturnResult = false,
   });
 
   @override
@@ -516,10 +518,10 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
             Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => const MenuScreen()),
-              (route) => false,
-            );
+                context,
+                MaterialPageRoute(builder: (context) => const MenuScreen()),
+                (route) => false,
+              );
           },
         ),
         title: Text(l10n.dayDetailsTitle),
@@ -560,10 +562,13 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                             Card(
                               child: InkWell(
                                 onTap: () {
-                                  Navigator.pushAndRemoveUntil(
+                                  Navigator.push(
                                     context,
-                                    MaterialPageRoute(builder: (context) => const HomeScreen()),
-                                    (route) => false,
+                                    MaterialPageRoute(
+                                      builder: (context) => HomeScreen(
+                                        calledFromDetailScreen: true,
+                                      ),
+                                    ),
                                   );
                                 },
                                 borderRadius: BorderRadius.circular(8),

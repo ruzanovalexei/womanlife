@@ -24,7 +24,12 @@ import '../services/notification_service.dart';
 import '../services/permissions_service.dart';
 //import '../utils/date_utils.dart'; // Добавляем импорт
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final bool calledFromDetailScreen; // Указывает, был ли вызван из детального экрана
+
+  const HomeScreen({
+    super.key,
+    this.calledFromDetailScreen = false,
+  });
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -37,6 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<PeriodRecord> _periodRecords = [];
   bool _isLoading = true;
   String? _errorMessage;
+  DateTime _lastSelectedDate = DateTime.now(); // Добавляем последнюю выбранную дату
 
 
   late BannerAd banner;
@@ -144,6 +150,10 @@ class _HomeScreenState extends State<HomeScreen> {
   // }
 
   void _openDayDetail(DateTime day) {
+    setState(() {
+      _lastSelectedDate = day; // Обновляем последнюю выбранную дату
+    });
+    
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -151,11 +161,46 @@ class _HomeScreenState extends State<HomeScreen> {
           selectedDate: day,
           periodRecords: _periodRecords,
           settings: _settings,
+          shouldReturnResult: true, // Указываем, что нужно возвращать результат
         ),
       ),
-    ).then((_) {
+    ).then((returnedDate) {
+      // Если из детального экрана вернулась дата, обновляем _lastSelectedDate
+      if (returnedDate != null && returnedDate is DateTime) {
+        setState(() {
+          _lastSelectedDate = returnedDate;
+        });
+      }
       _loadData(includeBanner: true);
     });
+  }
+
+  void _backToDayDetail() {
+    if (widget.calledFromDetailScreen) {
+      // Если были вызваны из детального экрана, просто возвращаемся назад
+      Navigator.pop(context, _lastSelectedDate);
+    } else {
+      // Иначе открываем новый детальный экран
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DayDetailScreen(
+            selectedDate: _lastSelectedDate,
+            periodRecords: _periodRecords,
+            settings: _settings,
+            shouldReturnResult: true,
+          ),
+        ),
+      ).then((returnedDate) {
+        // Если из детального экрана вернулась дата, обновляем _lastSelectedDate
+        if (returnedDate != null && returnedDate is DateTime) {
+          setState(() {
+            _lastSelectedDate = returnedDate;
+          });
+        }
+        _loadData(includeBanner: true);
+      });
+    }
   }
 
   // void _closeApp() {
@@ -180,6 +225,11 @@ class _HomeScreenState extends State<HomeScreen> {
     
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: _backToDayDetail,
+          tooltip: 'Назад к деталям дня',
+        ),
         title: Text(l10n.calendar),
         // actions: [
         //   IconButton(

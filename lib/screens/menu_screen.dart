@@ -94,6 +94,7 @@ class _MenuScreenState extends State<MenuScreen> {
                 selectedDate: MyDateUtils.getUtcToday(),
                 periodRecords: _periodRecords,
                 settings: _settings,
+                shouldReturnResult: false, // По умолчанию не возвращаем результат
               ),
             ),
           ).then((_) {
