@@ -7,6 +7,7 @@ import '../database/database_helper.dart';
 import '../models/day_note.dart';
 import '../models/period_record.dart';
 import '../models/settings.dart';
+import '../models/symptom.dart';
 import '../utils/period_calculator.dart';
 import '../models/medication.dart';
 import '../models/medication_taken_record.dart'; // Импортируем MedicationTakenRecord
@@ -91,8 +92,8 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
   // Состояние блоков (по умолчанию все раскрыты)
   bool _isPeriodBlockExpanded = true;
   bool _isSexBlockExpanded = true;
-  bool _isHealthBlockExpanded = false;
-  bool _isMedicineBlockExpanded = false;
+  bool _isHealthBlockExpanded = true;
+  bool _isMedicineBlockExpanded = true;
   List<MedicationTakenRecord> _takenRecords = []; // Добавляем список записей о приеме
 
   bool get _canMarkStart => PeriodCalculator.canMarkPeriodStart(widget.selectedDate, _lastPeriod);
@@ -441,7 +442,8 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
 
         // Если этого симптома нет в глобальном списке, добавляем в БД и обновляем глобальный список
         if (!_allSymptoms.any((s) => s.toLowerCase() == symptom.toLowerCase())) {
-          await _databaseHelper.insertSymptom(symptom); // Добавляем в БД
+          final newSymptom = Symptom(name: symptom, isDefault: false);
+          await _databaseHelper.insertSymptom(newSymptom); // Добавляем в БД
           await _loadAllSymptoms(); // Перезагружаем список всех симптомов
         }
       } else {

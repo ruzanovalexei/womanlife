@@ -271,6 +271,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTabMedications => 'Medications';
 
   @override
+  String get settingsTabSymptoms => 'Symptoms';
+
+  @override
   String get symptomHeadache => 'Headache';
 
   @override
@@ -302,6 +305,101 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get symptomInsomnia => 'Insomnia';
+
+  @override
+  String get symptomBackPain => 'Back pain';
+
+  @override
+  String get symptomMoodSwings => 'Mood swings';
+
+  @override
+  String get symptomConstipation => 'Constipation';
+
+  @override
+  String get symptomDiarrhea => 'Diarrhea';
+
+  @override
+  String get symptomHotFlashes => 'Hot flashes';
+
+  @override
+  String get symptomNightSweats => 'Night sweats';
+
+  @override
+  String get symptomDizziness => 'Dizziness';
+
+  @override
+  String get symptomFoodAversions => 'Food aversions';
+
+  @override
+  String get symptomFoodCravings => 'Food cravings';
+
+  @override
+  String get symptomBreastTenderness => 'Breast tenderness';
+
+  @override
+  String get symptomPelvicPain => 'Pelvic pain';
+
+  @override
+  String get symptomJointPain => 'Joint pain';
+
+  @override
+  String get symptomMuscleTension => 'Muscle tension';
+
+  @override
+  String get symptomLowLibido => 'Low libido';
+
+  @override
+  String get symptomVaginalDryness => 'Vaginal dryness';
+
+  @override
+  String get addSymptomTitle => 'Add Symptom';
+
+  @override
+  String get editSymptomTitle => 'Edit Symptom';
+
+  @override
+  String get symptomNameLabel => 'Symptom Name';
+
+  @override
+  String get symptomCodeLabel => 'Symptom Code';
+
+  @override
+  String get symptomNameRequired => 'Enter symptom name';
+
+  @override
+  String get symptomCodeExists => 'Symptom code already exists';
+
+  @override
+  String get symptomAdded => 'Symptom added';
+
+  @override
+  String get symptomAddError => 'Error adding symptom';
+
+  @override
+  String get symptomUpdated => 'Symptom updated';
+
+  @override
+  String get symptomUpdateError => 'Error updating symptom';
+
+  @override
+  String get fillAllFields => 'Fill all fields';
+
+  @override
+  String get deleteSymptomTitle => 'Delete Symptom';
+
+  @override
+  String deleteSymptomMessage(Object name) {
+    return 'Are you sure you want to delete symptom \"$name\"?';
+  }
+
+  @override
+  String get symptomDeleted => 'Symptom deleted';
+
+  @override
+  String get symptomDeleteError => 'Error deleting symptom';
+
+  @override
+  String get editButton => 'Edit';
 
   @override
   String get addMedicationTitle => 'Add Medication';

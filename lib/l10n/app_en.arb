@@ -171,6 +171,7 @@
   "settingsFormFirstDaySunday": "Sunday",
   "settingsTabGeneral": "General",
   "settingsTabMedications": "Medications",
+  "settingsTabSymptoms": "Symptoms",
   "symptomHeadache": "Headache",
   "symptomFatigue": "Fatigue",
   "symptomBloating": "Bloating",
@@ -182,6 +183,25 @@
   "symptomCramps": "Cramps",
   "symptomNausea": "Nausea",
   "symptomInsomnia": "Insomnia",
+  "addSymptomTitle": "Add Symptom",
+  "editSymptomTitle": "Edit Symptom",
+  "symptomNameLabel": "Symptom Name",
+  "symptomNameRequired": "Enter symptom name",
+  "symptomAdded": "Symptom added",
+  "symptomAddError": "Error adding symptom",
+  "symptomUpdated": "Symptom updated",
+  "symptomUpdateError": "Error updating symptom",
+  "fillAllFields": "Fill all fields",
+  "deleteSymptomTitle": "Delete Symptom",
+  "deleteSymptomMessage": "Are you sure you want to delete symptom \"{name}\"?",
+  "@deleteSymptomMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "symptomDeleted": "Symptom deleted",
+  "symptomDeleteError": "Error deleting symptom",
+  "editButton": "Edit",
   "addMedicationTitle": "Add Medication",
   "editMedicationTitle": "Edit Medication",
   "medicationNameLabel": "Medication Name",

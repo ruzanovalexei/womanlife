@@ -9,11 +9,12 @@ import '../models/medication.dart'; // Импортируем Medication
 import '../models/medication_taken_record.dart'; // Импортируем MedicationTakenRecord
 import '../utils/date_utils.dart'; // Импортируем MyDateUtils
 import '../utils/symptoms_provider.dart'; //для getDefaultSymptoms
+import '../models/symptom.dart'; // Импортируем модель Symptom
 //import '../utils/date_utils.dart';
 
 class DatabaseHelper {
   static const _databaseName = "PeriodTracker.db";
-  static const _databaseVersion = 14; // Обновляем поля для блока секса
+  static const _databaseVersion = 15; // Добавляем поддержку кодов симптомов
 
   static const settingsTable = 'settings';
   static const dayNotesTable = 'day_notes';
@@ -80,7 +81,8 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE $symptomsTable (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL UNIQUE
+        name TEXT NOT NULL,
+        isDefault INTEGER DEFAULT 0
       )
     ''');
 
@@ -117,12 +119,37 @@ class DatabaseHelper {
       'firstDayOfWeek': 'monday',
     });
 
-    // Load default symptoms and insert
-    // Используем русскую локаль для начальной загрузки симптомов
+    // Initialize default symptoms with codes
+    await _initializeDefaultSymptoms(db);
+  }
+
+  // Вспомогательная функция для генерации кода симптома
+  // static String _generateSymptomCode(String symptomName, [int? index]) {
+  //   // Удаляем пробелы и приводим к нижнему регистру
+  //   final baseCode = symptomName
+  //       .toLowerCase()
+  //       .replaceAll(RegExp(r'[^a-z0-9]'), '')
+  //       .substring(0, 6); // Ограничиваем длину базового кода
+    
+  //   // Если есть индекс, добавляем его для уникальности
+  //   if (index != null) {
+  //     return '${baseCode}_$index';
+  //   }
+    
+  //   return baseCode;
+  // }
+
+  // Статический метод для инициализации симптомов по умолчанию (для миграций)
+  static Future<void> _initializeDefaultSymptoms(Database db) async {
+    // Загружаем симптомы по умолчанию
     final l10n = await AppLocalizations.delegate.load(const Locale('ru'));
-    final List<String> defaultSymptoms = SymptomsProvider.getDefaultSymptoms(l10n);
-    for (final symptom in defaultSymptoms) {
-      await db.insert(symptomsTable, {'name': symptom});
+    final defaultSymptoms = SymptomsProvider.getDefaultSymptoms(l10n);
+    
+    for (final symptomName in defaultSymptoms) {
+      await db.insert(symptomsTable, {
+        'name': symptomName,
+        'isDefault': 1,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
     }
   }
 
@@ -162,13 +189,9 @@ class DatabaseHelper {
         case 11:
           try {
             await db.execute('''CREATE TABLE IF NOT EXISTS $symptomsTable (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE)''');
-            final l10n = await AppLocalizations.delegate.load(const Locale('en'));
-            final List<String> defaultSymptoms = SymptomsProvider.getDefaultSymptoms(l10n);
             final List<Map<String, dynamic>> existingSymptoms = await db.query(symptomsTable);
             if (existingSymptoms.isEmpty) {
-              for (final symptom in defaultSymptoms) {
-                await db.insert(symptomsTable, {'name': symptom}, conflictAlgorithm: ConflictAlgorithm.ignore);
-              }
+              await _initializeDefaultSymptoms(db);
             }
           } catch (e) {
             // print('Error creating symptoms table or inserting default symptoms: $e');
@@ -204,6 +227,14 @@ class DatabaseHelper {
             } catch (e2) {
               // print('Error adding new sex-related columns: $e2');
             }
+          }
+          break;
+        case 15:
+          try {
+            // Добавляем поле isDefault в таблицу symptoms (если его еще нет)
+            await db.execute('ALTER TABLE $symptomsTable ADD COLUMN isDefault INTEGER DEFAULT 0');
+          } catch (e) {
+            // print('Error adding isDefault column: $e');
           }
           break;
       }
@@ -279,10 +310,10 @@ class DatabaseHelper {
   }
 
   // Symptom methods
-  Future<void> insertSymptom(String symptom) async {
-    Database db = await database;
-    await db.insert(symptomsTable, {'name': symptom}, conflictAlgorithm: ConflictAlgorithm.ignore);
-  }
+  // Future<void> insertSymptom(String symptom) async {
+  //   Database db = await database;
+  //   await db.insert(symptomsTable, {'name': symptom}, conflictAlgorithm: ConflictAlgorithm.ignore);
+  // }
 
   Future<List<String>> getAllSymptoms() async {
     Database db = await database;
@@ -350,5 +381,48 @@ class DatabaseHelper {
   Future<int> deleteMedicationTakenRecord(int id) async {
     Database db = await database;
     return await db.delete(medicationTakenRecordsTable, where: 'id = ?', whereArgs: [id]);
+  }
+
+  // Symptom methods (updated for new model)
+  Future<int> insertSymptom(Symptom symptom) async {
+    Database db = await database;
+    return await db.insert(symptomsTable, symptom.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<int> updateSymptom(Symptom symptom) async {
+    Database db = await database;
+    return await db.update(symptomsTable, symptom.toMap(), where: 'id = ?', whereArgs: [symptom.id]);
+  }
+
+  Future<int> deleteSymptom(int id) async {
+    Database db = await database;
+    return await db.delete(symptomsTable, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<Symptom>> getAllSymptomsAsObjects() async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query(symptomsTable, orderBy: 'name ASC');
+    return maps.map((map) => Symptom.fromMap(map)).toList();
+  }
+
+  Future<void> initializeDefaultSymptoms() async {
+    Database db = await database;
+    
+    // Проверяем, есть ли уже симптомы в БД
+    final existingSymptoms = await db.query(symptomsTable);
+    if (existingSymptoms.isNotEmpty) {
+      return; // Симптомы уже есть, не перезаписываем
+    }
+
+    // Загружаем симптомы по умолчанию
+    final l10n = await AppLocalizations.delegate.load(const Locale('ru'));
+    final defaultSymptoms = SymptomsProvider.getDefaultSymptoms(l10n);
+    
+    for (final symptomName in defaultSymptoms) {
+      await db.insert(symptomsTable, {
+        'name': symptomName,
+        'isDefault': 1,
+      });
+    }
   }
 }

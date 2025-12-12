@@ -173,6 +173,7 @@
   "settingsFormFirstDaySunday": "Воскресенье",
   "settingsTabGeneral": "Основные",
   "settingsTabMedications": "Лекарства",
+  "settingsTabSymptoms": "Симптомы",
   "symptomHeadache": "Головная боль",
   "symptomFatigue": "Усталость",
   "symptomBloating": "Вздутие живота",
@@ -184,6 +185,25 @@
   "symptomCramps": "Судороги",
   "symptomNausea": "Тошнота",
   "symptomInsomnia": "Бессонница",
+  "addSymptomTitle": "Добавить симптом",
+  "editSymptomTitle": "Редактировать симптом",
+  "symptomNameLabel": "Название симптома",
+  "symptomNameRequired": "Введите название симптома",
+  "symptomAdded": "Симптом добавлен",
+  "symptomAddError": "Ошибка добавления симптома",
+  "symptomUpdated": "Симптом обновлен",
+  "symptomUpdateError": "Ошибка обновления симптома",
+  "fillAllFields": "Заполните все поля",
+  "deleteSymptomTitle": "Удалить симптом",
+  "deleteSymptomMessage": "Вы уверены, что хотите удалить симптом \"{name}\"?",
+  "@deleteSymptomMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "symptomDeleted": "Симптом удален",
+  "symptomDeleteError": "Ошибка удаления симптома",
+  "editButton": "Редактировать",
   "addMedicationTitle": "Добавить лекарство",
   "editMedicationTitle": "Реадктировать лекарство",
   "medicationNameLabel": "Название лекарства",

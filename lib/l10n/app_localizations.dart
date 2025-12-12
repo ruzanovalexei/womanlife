@@ -551,6 +551,12 @@ abstract class AppLocalizations {
   /// **'Medications'**
   String get settingsTabMedications;
 
+  /// No description provided for @settingsTabSymptoms.
+  ///
+  /// In en, this message translates to:
+  /// **'Symptoms'**
+  String get settingsTabSymptoms;
+
   /// No description provided for @symptomHeadache.
   ///
   /// In en, this message translates to:
@@ -616,6 +622,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Insomnia'**
   String get symptomInsomnia;
+
+  /// No description provided for @symptomBackPain.
+  ///
+  /// In en, this message translates to:
+  /// **'Back pain'**
+  String get symptomBackPain;
+
+  /// No description provided for @symptomMoodSwings.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood swings'**
+  String get symptomMoodSwings;
+
+  /// No description provided for @symptomConstipation.
+  ///
+  /// In en, this message translates to:
+  /// **'Constipation'**
+  String get symptomConstipation;
+
+  /// No description provided for @symptomDiarrhea.
+  ///
+  /// In en, this message translates to:
+  /// **'Diarrhea'**
+  String get symptomDiarrhea;
+
+  /// No description provided for @symptomHotFlashes.
+  ///
+  /// In en, this message translates to:
+  /// **'Hot flashes'**
+  String get symptomHotFlashes;
+
+  /// No description provided for @symptomNightSweats.
+  ///
+  /// In en, this message translates to:
+  /// **'Night sweats'**
+  String get symptomNightSweats;
+
+  /// No description provided for @symptomDizziness.
+  ///
+  /// In en, this message translates to:
+  /// **'Dizziness'**
+  String get symptomDizziness;
+
+  /// No description provided for @symptomFoodAversions.
+  ///
+  /// In en, this message translates to:
+  /// **'Food aversions'**
+  String get symptomFoodAversions;
+
+  /// No description provided for @symptomFoodCravings.
+  ///
+  /// In en, this message translates to:
+  /// **'Food cravings'**
+  String get symptomFoodCravings;
+
+  /// No description provided for @symptomBreastTenderness.
+  ///
+  /// In en, this message translates to:
+  /// **'Breast tenderness'**
+  String get symptomBreastTenderness;
+
+  /// No description provided for @symptomPelvicPain.
+  ///
+  /// In en, this message translates to:
+  /// **'Pelvic pain'**
+  String get symptomPelvicPain;
+
+  /// No description provided for @symptomJointPain.
+  ///
+  /// In en, this message translates to:
+  /// **'Joint pain'**
+  String get symptomJointPain;
+
+  /// No description provided for @symptomMuscleTension.
+  ///
+  /// In en, this message translates to:
+  /// **'Muscle tension'**
+  String get symptomMuscleTension;
+
+  /// No description provided for @symptomLowLibido.
+  ///
+  /// In en, this message translates to:
+  /// **'Low libido'**
+  String get symptomLowLibido;
+
+  /// No description provided for @symptomVaginalDryness.
+  ///
+  /// In en, this message translates to:
+  /// **'Vaginal dryness'**
+  String get symptomVaginalDryness;
+
+  /// No description provided for @addSymptomTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Symptom'**
+  String get addSymptomTitle;
+
+  /// No description provided for @editSymptomTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Symptom'**
+  String get editSymptomTitle;
+
+  /// No description provided for @symptomNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Symptom Name'**
+  String get symptomNameLabel;
+
+  /// No description provided for @symptomCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Symptom Code'**
+  String get symptomCodeLabel;
+
+  /// No description provided for @symptomNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter symptom name'**
+  String get symptomNameRequired;
+
+  /// No description provided for @symptomCodeExists.
+  ///
+  /// In en, this message translates to:
+  /// **'Symptom code already exists'**
+  String get symptomCodeExists;
+
+  /// No description provided for @symptomAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Symptom added'**
+  String get symptomAdded;
+
+  /// No description provided for @symptomAddError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error adding symptom'**
+  String get symptomAddError;
+
+  /// No description provided for @symptomUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Symptom updated'**
+  String get symptomUpdated;
+
+  /// No description provided for @symptomUpdateError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error updating symptom'**
+  String get symptomUpdateError;
+
+  /// No description provided for @fillAllFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill all fields'**
+  String get fillAllFields;
+
+  /// No description provided for @deleteSymptomTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Symptom'**
+  String get deleteSymptomTitle;
+
+  /// No description provided for @deleteSymptomMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete symptom \"{name}\"?'**
+  String deleteSymptomMessage(Object name);
+
+  /// No description provided for @symptomDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Symptom deleted'**
+  String get symptomDeleted;
+
+  /// No description provided for @symptomDeleteError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error deleting symptom'**
+  String get symptomDeleteError;
+
+  /// No description provided for @editButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get editButton;
 
   /// No description provided for @addMedicationTitle.
   ///
