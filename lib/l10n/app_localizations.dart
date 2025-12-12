@@ -98,7 +98,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Calendar'**
+  /// **'Stay in Rhythm'**
   String get appTitle;
 
   /// No description provided for @refreshTooltip.
@@ -910,6 +910,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Notes opened'**
   String get menuItem5;
+
+  /// No description provided for @calendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar'**
+  String get calendar;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

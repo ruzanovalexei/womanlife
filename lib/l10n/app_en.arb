@@ -246,6 +246,7 @@
   "menuItem3": "To-Do List opened",
   "menuItem4": "Habits opened",
   "menuItem5": "Notes opened",
+  "calendar": "Calendar",
   "@medicationDeleteError": {
     "placeholders": {
       "message": {}

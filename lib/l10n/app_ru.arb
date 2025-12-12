@@ -248,6 +248,7 @@
   "menuItem3": "Список дел открыт",
   "menuItem4": "Привычки открыты",
   "menuItem5": "Заметки открыты",
+  "calendar": "Календарь",
   "@medicationDeleteError": {
     "placeholders": {
       "message": {}

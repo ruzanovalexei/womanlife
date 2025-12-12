@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Calendar';
+  String get appTitle => 'Stay in Rhythm';
 
   @override
   String get refreshTooltip => 'Refresh data';
@@ -457,4 +457,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get menuItem5 => 'Notes opened';
+
+  @override
+  String get calendar => 'Calendar';
 }

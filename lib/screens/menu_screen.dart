@@ -1,6 +1,12 @@
 //import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:period_tracker/l10n/app_localizations.dart';
+import 'package:period_tracker/database/database_helper.dart';
+import 'package:period_tracker/models/settings.dart';
+import 'package:period_tracker/models/period_record.dart';
+import 'package:period_tracker/utils/date_utils.dart';
+import 'package:period_tracker/screens/day_detail_screen.dart';
+import 'package:period_tracker/screens/settings_screen.dart';
 import 'package:yandex_mobileads/mobile_ads.dart';
 //import 'package:yandex_mobileads/ad_widget.dart';
 //import 'package:yandex_mobileads/mobile_ads.dart';
@@ -13,6 +19,11 @@ class MenuScreen extends StatefulWidget {
 }
 
 class _MenuScreenState extends State<MenuScreen> {
+  final _databaseHelper = DatabaseHelper();
+  late Settings _settings;
+  List<PeriodRecord> _periodRecords = [];
+  bool _isLoading = true;
+  
   late BannerAd banner;
   var isBannerAlreadyCreated = false;
 
@@ -37,6 +48,21 @@ class _MenuScreenState extends State<MenuScreen> {
   void initState() {
     super.initState();
     _createAdBanner();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      _settings = await _databaseHelper.getSettings();
+      _periodRecords = await _databaseHelper.getAllPeriodRecords();
+      setState(() {
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   void _createAdBanner() {
@@ -56,32 +82,56 @@ class _MenuScreenState extends State<MenuScreen> {
 
   void _onMenuItemTap(int index) {
     final l10n = AppLocalizations.of(context)!;
-    String message = '';
     
     switch (index) {
       case 0:
-        message = l10n.menuItem1; // Добавить в локализацию
+        // Кнопка "Здоровье" - открываем детальный экран на текущую дату
+        if (!_isLoading) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => DayDetailScreen(
+                selectedDate: MyDateUtils.getUtcToday(),
+                periodRecords: _periodRecords,
+                settings: _settings,
+              ),
+            ),
+          ).then((_) {
+            // Обновляем данные при возврате
+            _loadData();
+          });
+        }
         break;
       case 1:
-        message = l10n.menuItem2; // Добавить в локализацию
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.menuItem2)),
+        );
         break;
       case 2:
-        message = l10n.menuItem3; // Добавить в локализацию
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.menuItem3)),
+        );
         break;
       case 3:
-        message = l10n.menuItem4; // Добавить в локализацию
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.menuItem4)),
+        );
         break;
       case 4:
-        message = l10n.menuItem5; // Добавить в локализацию
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.menuItem5)),
+        );
+        break;
+      case 5:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const SettingsScreen()),
+        ).then((_) {
+          // Обновляем данные при возврате
+          _loadData();
+        });
         break;
     }
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 2),
-      ),
-    );
   }
 
   @override
@@ -91,10 +141,10 @@ class _MenuScreenState extends State<MenuScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.menuTitle), // Добавить в локализацию
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        // leading: IconButton(
+        //   icon: const Icon(Icons.arrow_back),
+        //   onPressed: () => Navigator.of(context).pop(),
+        // ),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -109,8 +159,11 @@ class _MenuScreenState extends State<MenuScreen> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : Column(
                 children: [
+                  const SizedBox(height: 12),
                   _buildMenuTile(
                     icon: Icons.favorite,
                     title: l10n.menuAnalytics,
@@ -145,10 +198,19 @@ class _MenuScreenState extends State<MenuScreen> {
                     color: Colors.pink[200]!,
                     onTap: () => _onMenuItemTap(4),
                   ),
+                  const SizedBox(height: 12),
+                  _buildMenuTile(
+                    icon: Icons.settings,
+                    title: l10n.settingsTitle,
+                    color: Colors.pink[200]!,
+                    onTap: () => _onMenuItemTap(5),
+                  ),
+                  const SizedBox(height: 12),
                 ],
               ),
             ),
           ),
+        
           
           // Блок рекламы внизу
           Container(

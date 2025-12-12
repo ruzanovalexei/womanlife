@@ -10,9 +10,12 @@ import '../models/settings.dart';
 import '../utils/period_calculator.dart';
 import '../models/medication.dart';
 import '../models/medication_taken_record.dart'; // Импортируем MedicationTakenRecord
+//import '../screens/home_screen.dart';
 
 import 'package:yandex_mobileads/mobile_ads.dart';
 import '../services/permissions_service.dart';
+import 'home_screen.dart';
+import 'menu_screen.dart';
 //import 'package:yandex_mobileads/ad_widget.dart';
 
 // Added MedicationTime class
@@ -509,8 +512,23 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const MenuScreen()),
+              (route) => false,
+            );
+          },
+        ),
         title: Text(l10n.dayDetailsTitle),
         actions: [
+          // IconButton(
+          //   icon: const Icon(Icons.calendar_month),
+          //   onPressed: _openCalendar,
+          //   tooltip: 'Календарь',
+          // ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadData,
@@ -540,14 +558,24 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                           children: [
                             // Заголовок с датой
                             Card(
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Center(
-                                  child: Text(
-                                    _formatDate(context, widget.selectedDate),
-                                    style: const TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
+                              child: InkWell(
+                                onTap: () {
+                                  Navigator.pushAndRemoveUntil(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const HomeScreen()),
+                                    (route) => false,
+                                  );
+                                },
+                                borderRadius: BorderRadius.circular(8),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Center(
+                                    child: Text(
+                                      _formatDate(context, widget.selectedDate),
+                                      style: const TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -1146,4 +1174,5 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
     _symptomController.dispose();
     super.dispose();
   }
+
 }

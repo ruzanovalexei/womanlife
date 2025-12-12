@@ -5,8 +5,8 @@ import '../widgets/calendar_widget.dart';
 import '../models/settings.dart';
 import '../models/period_record.dart';
 import 'day_detail_screen.dart';
-import 'settings_screen.dart';
-import 'menu_screen.dart';
+// import 'settings_screen.dart';
+// import 'menu_screen.dart';
 
 
 
@@ -118,23 +118,23 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _openSettings() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const SettingsScreen()),
-    );
+  // void _openSettings() async {
+  //   final result = await Navigator.push(
+  //     context,
+  //     MaterialPageRoute(builder: (context) => const SettingsScreen()),
+  //   );
     
-    if (result == true) {
-      _loadData(includeBanner: true);
-    }
-  }
+  //   if (result == true) {
+  //     _loadData(includeBanner: true);
+  //   }
+  // }
 
-  void _openMenu() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const MenuScreen()),
-    );
-  }
+  // void _openMenu() {
+  //   Navigator.push(
+  //     context,
+  //     MaterialPageRoute(builder: (context) => const MenuScreen()),
+  //   );
+  // }
 //Аналитику пока скрыли, позже к ней вернемся
   // void _openAnalytics() {
   //   Navigator.push(
@@ -180,19 +180,19 @@ class _HomeScreenState extends State<HomeScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.appTitle),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: _openMenu,
-            tooltip: l10n.menuTitle,
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: _openSettings,
-            tooltip: l10n.settingsTooltip,
-          ),
-        ],
+        title: Text(l10n.calendar),
+        // actions: [
+        //   IconButton(
+        //     icon: const Icon(Icons.menu),
+        //     onPressed: _openMenu,
+        //     tooltip: l10n.menuTitle,
+        //   ),
+        //   IconButton(
+        //     icon: const Icon(Icons.settings),
+        //     onPressed: _openSettings,
+        //     tooltip: l10n.settingsTooltip,
+        //   ),
+        // ],
       ),
       body: Container(
         decoration: BoxDecoration(

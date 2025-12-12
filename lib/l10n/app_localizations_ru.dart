@@ -457,4 +457,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get menuItem5 => 'Заметки открыты';
+
+  @override
+  String get calendar => 'Календарь';
 }
