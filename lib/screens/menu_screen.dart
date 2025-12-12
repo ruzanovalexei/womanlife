@@ -81,7 +81,7 @@ class _MenuScreenState extends State<MenuScreen> {
   }
 
   void _onMenuItemTap(int index) {
-    final l10n = AppLocalizations.of(context)!;
+    // final l10n = AppLocalizations.of(context)!;
     
     switch (index) {
       case 0:
@@ -103,26 +103,26 @@ class _MenuScreenState extends State<MenuScreen> {
           });
         }
         break;
-      case 1:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.menuItem2)),
-        );
-        break;
-      case 2:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.menuItem3)),
-        );
-        break;
-      case 3:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.menuItem4)),
-        );
-        break;
-      case 4:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.menuItem5)),
-        );
-        break;
+      // case 1:
+      //   ScaffoldMessenger.of(context).showSnackBar(
+      //     SnackBar(content: Text(l10n.menuItem2)),
+      //   );
+      //   break;
+      // case 2:
+      //   ScaffoldMessenger.of(context).showSnackBar(
+      //     SnackBar(content: Text(l10n.menuItem3)),
+      //   );
+      //   break;
+      // case 3:
+      //   ScaffoldMessenger.of(context).showSnackBar(
+      //     SnackBar(content: Text(l10n.menuItem4)),
+      //   );
+      //   break;
+      // case 4:
+      //   ScaffoldMessenger.of(context).showSnackBar(
+      //     SnackBar(content: Text(l10n.menuItem5)),
+      //   );
+      //   break;
       case 5:
         Navigator.push(
           context,

@@ -389,10 +389,29 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       );
     }
   }
-// Нужно разкомментить если вернм блок секс
-  void _updateSexualActsCount(int newCount) {
+// Новые функции для работы с полями секса
+  void _updateHadSex(bool? hadSex) {
     setState(() {
-      _dayNote = _dayNote.copyWith(sexualActsCount: newCount);
+      _dayNote = _dayNote.copyWith(
+        hadSex: hadSex,
+        // Если снимаем галку "Был секс", сбрасываем связанные поля
+        isSafeSex: hadSex == true ? _dayNote.isSafeSex : null,
+        hadOrgasm: hadSex == true ? _dayNote.hadOrgasm : null,
+      );
+    });
+    _saveDayNote();
+  }
+
+  void _updateIsSafeSex(bool? isSafeSex) {
+    setState(() {
+      _dayNote = _dayNote.copyWith(isSafeSex: isSafeSex);
+    });
+    _saveDayNote();
+  }
+
+  void _updateHadOrgasm(bool? hadOrgasm) {
+    setState(() {
+      _dayNote = _dayNote.copyWith(hadOrgasm: hadOrgasm);
     });
     _saveDayNote();
   }
@@ -874,8 +893,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       ),
     );
   }
-//Убрал на будущее, пока не особо нужен
-  // Блок "Секс"
+// Блок "Секс" с новой реализацией
   Widget _buildSexBlock(AppLocalizations l10n) {
     return Card(
       child: ExpansionTile(
@@ -895,41 +913,238 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Количество половых актов',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-                const SizedBox(height: 16),
+                // Чекбокс "Был секс"
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    IconButton(
-                      onPressed: _dayNote.sexualActsCount > 0 
-                          ? () => _updateSexualActsCount(_dayNote.sexualActsCount - 1)
-                          : null,
-                      icon: const Icon(Icons.remove_circle_outline, size: 32),
-                      color: Colors.red,
+                    Checkbox(
+                      value: _dayNote.hadSex ?? false,
+                      onChanged: _updateHadSex,
                     ),
-                    Container(
-                      width: 80,
-                      height: 60,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(8),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Был секс',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
                       ),
-                      child: Text(
-                        '${_dayNote.sexualActsCount}',
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => _updateSexualActsCount(_dayNote.sexualActsCount + 1),
-                      icon: const Icon(Icons.add_circle_outline, size: 32),
-                      color: Colors.green,
                     ),
                   ],
                 ),
+                
+                // Блок выбора типа секса (только если был секс)
+                if (_dayNote.hadSex == true) ...[
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Тип секса:',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      // Кнопка "Безопасный"
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => _updateIsSafeSex(true),
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: _dayNote.isSafeSex == true 
+                                ? Colors.green[50] 
+                                : Colors.transparent,
+                            side: BorderSide(
+                              color: _dayNote.isSafeSex == true 
+                                  ? Colors.green 
+                                  : Colors.grey,
+                              width: _dayNote.isSafeSex == true ? 2 : 1,
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.shield,
+                                color: _dayNote.isSafeSex == true 
+                                    ? Colors.green 
+                                    : Colors.grey,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Безопасный',
+                                style: TextStyle(
+                                  color: _dayNote.isSafeSex == true 
+                                      ? Colors.green 
+                                      : Colors.grey[700],
+                                  fontWeight: _dayNote.isSafeSex == true 
+                                      ? FontWeight.w600 
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Кнопка "Небезопасный"
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => _updateIsSafeSex(false),
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: _dayNote.isSafeSex == false 
+                                ? Colors.red[50] 
+                                : Colors.transparent,
+                            side: BorderSide(
+                              color: _dayNote.isSafeSex == false 
+                                  ? Colors.red 
+                                  : Colors.grey,
+                              width: _dayNote.isSafeSex == false ? 2 : 1,
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.warning,
+                                color: _dayNote.isSafeSex == false 
+                                    ? Colors.red 
+                                    : Colors.grey,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Небезопасный',
+                                style: TextStyle(
+                                  color: _dayNote.isSafeSex == false 
+                                      ? Colors.red 
+                                      : Colors.grey[700],
+                                  fontWeight: _dayNote.isSafeSex == false 
+                                      ? FontWeight.w600 
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  // Блок выбора оргазма (только если был секс)
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Оргазм:',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      // Кнопка "Был оргазм"
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => _updateHadOrgasm(true),
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: _dayNote.hadOrgasm == true 
+                                ? Colors.purple[50] 
+                                : Colors.transparent,
+                            side: BorderSide(
+                              color: _dayNote.hadOrgasm == true 
+                                  ? Colors.purple 
+                                  : Colors.grey,
+                              width: _dayNote.hadOrgasm == true ? 2 : 1,
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.star,
+                                color: _dayNote.hadOrgasm == true 
+                                    ? Colors.purple 
+                                    : Colors.grey,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Был оргазм',
+                                style: TextStyle(
+                                  color: _dayNote.hadOrgasm == true 
+                                      ? Colors.purple 
+                                      : Colors.grey[700],
+                                  fontWeight: _dayNote.hadOrgasm == true 
+                                      ? FontWeight.w600 
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Кнопка "Не было оргазма"
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => _updateHadOrgasm(false),
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: _dayNote.hadOrgasm == false 
+                                ? Colors.blue[50] 
+                                : Colors.transparent,
+                            side: BorderSide(
+                              color: _dayNote.hadOrgasm == false 
+                                  ? Colors.blue 
+                                  : Colors.grey,
+                              width: _dayNote.hadOrgasm == false ? 2 : 1,
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.cancel,
+                                color: _dayNote.hadOrgasm == false 
+                                    ? Colors.blue 
+                                    : Colors.grey,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Не было оргазма',
+                                style: TextStyle(
+                                  color: _dayNote.hadOrgasm == false 
+                                      ? Colors.blue 
+                                      : Colors.grey[700],
+                                  fontWeight: _dayNote.hadOrgasm == false 
+                                      ? FontWeight.w600 
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                
+                // Подсказка если ничего не выбрано
+                if (_dayNote.hadSex == null || _dayNote.hadSex == false) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    'Если ничего не выбрано, в базу данных записывается null',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

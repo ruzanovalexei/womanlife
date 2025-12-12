@@ -432,16 +432,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get menuAnalytics => 'Здоровье';
 
   @override
-  String get menuMedications => 'Распорядок дня';
+  String get menuMedications => 'Распорядок дня(Ожидайте в новых релизах)';
 
   @override
-  String get menuInsights => 'Список дел';
+  String get menuInsights => 'Список дел(Ожидайте в новых релизах)';
 
   @override
-  String get menuReminders => 'Привычки';
+  String get menuReminders => 'Привычки(Ожидайте в новых релизах)';
 
   @override
-  String get menuHelp => 'Заметки';
+  String get menuHelp => 'Заметки(Ожидайте в новых релизах)';
 
   @override
   String get menuItem1 => 'Здоровье открыто';

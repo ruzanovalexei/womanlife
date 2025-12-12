@@ -13,7 +13,7 @@ import '../utils/symptoms_provider.dart'; //для getDefaultSymptoms
 
 class DatabaseHelper {
   static const _databaseName = "PeriodTracker.db";
-  static const _databaseVersion = 13; // Добавляем таблицу для записей о приеме лекарств
+  static const _databaseVersion = 14; // Обновляем поля для блока секса
 
   static const settingsTable = 'settings';
   static const dayNotesTable = 'day_notes';
@@ -63,7 +63,9 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         date TEXT NOT NULL UNIQUE,
         symptoms TEXT NOT NULL,
-        sexualActsCount INTEGER DEFAULT 0
+        hadSex INTEGER,
+        isSafeSex INTEGER,
+        hadOrgasm INTEGER
       )
     ''');
 
@@ -184,6 +186,24 @@ class DatabaseHelper {
             await db.execute('''CREATE TABLE $medicationTakenRecordsTable (id INTEGER PRIMARY KEY AUTOINCREMENT, medicationId INTEGER NOT NULL, date TEXT NOT NULL, scheduledHour INTEGER NOT NULL, scheduledMinute INTEGER NOT NULL, actualTakenTime TEXT, isTaken INTEGER NOT NULL DEFAULT 0, FOREIGN KEY (medicationId) REFERENCES $medicationsTable (id) ON DELETE CASCADE)''');
           } catch (e) {
             // print('Error creating medication_taken_records table: $e');
+          }
+          break;
+        case 14:
+          try {
+            // Удаляем старое поле sexualActsCount и добавляем новые поля для секса
+            await db.execute('ALTER TABLE $dayNotesTable DROP COLUMN sexualActsCount');
+            await db.execute('ALTER TABLE $dayNotesTable ADD COLUMN hadSex INTEGER');
+            await db.execute('ALTER TABLE $dayNotesTable ADD COLUMN isSafeSex INTEGER');
+            await db.execute('ALTER TABLE $dayNotesTable ADD COLUMN hadOrgasm INTEGER');
+          } catch (e) {
+            // Если поле sexualActsCount не существует, просто добавляем новые поля
+            try {
+              await db.execute('ALTER TABLE $dayNotesTable ADD COLUMN hadSex INTEGER');
+              await db.execute('ALTER TABLE $dayNotesTable ADD COLUMN isSafeSex INTEGER');
+              await db.execute('ALTER TABLE $dayNotesTable ADD COLUMN hadOrgasm INTEGER');
+            } catch (e2) {
+              // print('Error adding new sex-related columns: $e2');
+            }
           }
           break;
       }
