@@ -414,44 +414,45 @@ class _ListsScreenState extends State<ListsScreen> {
         children: [
           // Заголовок блока
           ListTile(
-            title: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    list.name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+            title: FutureBuilder<Map<String, int>>(
+              future: _getListProgress(list.id!),
+              builder: (context, snapshot) {
+                final progress = snapshot.data ?? {'completed': 0, 'total': 0};
+                final completed = progress['completed']!;
+                final total = progress['total']!;
+                final isCompleted = total > 0 && completed == total;
+                
+                return Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        list.name,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          decoration: isCompleted ? TextDecoration.lineThrough : TextDecoration.none,
+                          color: isCompleted ? Colors.grey[600] : null,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                FutureBuilder<Map<String, int>>(
-                  future: _getListProgress(list.id!),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      final progress = snapshot.data!;
-                      final completed = progress['completed']!;
-                      final total = progress['total']!;
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.blue[100],
-                          borderRadius: BorderRadius.circular(12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: isCompleted ? Colors.green[100] : Colors.blue[100],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        l10n.listProgressFormat(completed, total),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: isCompleted ? Colors.green[700] : Colors.blue[700],
                         ),
-                        child: Text(
-                          l10n.listProgressFormat(completed, total),
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.blue[700],
-                          ),
-                        ),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-              ],
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
