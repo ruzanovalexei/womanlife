@@ -569,8 +569,8 @@ class _ListsScreenState extends State<ListsScreen> {
             icon: const Icon(Icons.add, size: 16),
             label: Text(l10n.addListItemButton),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green[100],
-              foregroundColor: Colors.green[700],
+                    backgroundColor: Colors.pink,
+                    foregroundColor: Colors.white,
             ),
           ),
           const SizedBox(height: 16),

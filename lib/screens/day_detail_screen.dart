@@ -759,7 +759,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                         SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            l10n.delayLabel1,
+                            l10n.delayLabel,
                             style: TextStyle(
                               fontWeight: FontWeight.w500,
                               color: Colors.orange,
