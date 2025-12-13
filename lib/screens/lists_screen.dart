@@ -6,6 +6,7 @@ import 'package:period_tracker/models/list_model.dart';
 import 'package:period_tracker/models/list_item_model.dart';
 // import 'package:period_tracker/utils/date_utils.dart';
 import 'menu_screen.dart';
+import 'package:yandex_mobileads/mobile_ads.dart';
 
 class ListsScreen extends StatefulWidget {
   const ListsScreen({super.key});
@@ -23,14 +24,52 @@ class _ListsScreenState extends State<ListsScreen> {
   // ID открытого списка (только один список может быть открыт одновременно)
   int? _expandedListId;
 
+  //Реклама
+  late BannerAd banner;
+  var isBannerAlreadyCreated = false;
+
+
+//Реклама
+  _createBanner() {
+    final screenWidth = MediaQuery.of(context).size.width.round();
+    final adSize = BannerAdSize.sticky(width: screenWidth);
+    
+    return BannerAd(
+      adUnitId: 'R-M-17946414-1',
+      adSize: adSize,
+      adRequest: const AdRequest(),
+      onAdLoaded: () {},
+      onAdFailedToLoad: (error) {},
+      onAdClicked: () {},
+      onLeftApplication: () {},
+      onReturnedToApplication: () {},
+      onImpression: (impressionData) {}
+    );
+  }
+
+
   @override
   void initState() {
     super.initState();
     _loadData();
   }
 
-  Future<void> _loadData() async {
+  Future<void> _loadData({bool includeBanner = false}) async {
     try {
+      if (includeBanner) {
+        banner = _createBanner();
+        
+        setState(() {
+          _isLoading = true;
+          _errorMessage = null;
+          isBannerAlreadyCreated = true;
+        });
+      } else {
+        setState(() {
+          _isLoading = true;
+          _errorMessage = null;
+        });
+      }
       setState(() {
         _isLoading = true;
         _errorMessage = null;
@@ -301,7 +340,17 @@ class _ListsScreenState extends State<ListsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-
+    // Создаем баннер только если его еще нет и мы не в процессе загрузки
+    if (!isBannerAlreadyCreated && !_isLoading) {
+      try {
+        banner = _createBanner();
+        setState(() {
+          isBannerAlreadyCreated = true;
+        });
+      } catch (e) {
+        // Игнорируем ошибки создания баннера
+      }
+    }
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -408,6 +457,12 @@ class _ListsScreenState extends State<ListsScreen> {
                                 },
                               ),
               ),
+
+                        // Виджет рекламы
+          Container(
+            alignment: Alignment.bottomCenter,
+            child: isBannerAlreadyCreated ? AdWidget(bannerAd: banner) : null,
+          ),
             ],
           ),
         ),

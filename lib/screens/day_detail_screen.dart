@@ -1220,17 +1220,17 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                 ],
                 
                 // Подсказка если ничего не выбрано
-                if (_dayNote.hadSex == null || _dayNote.hadSex == false) ...[
-                  const SizedBox(height: 16),
-                  Text(
-                    'Если ничего не выбрано, в базу данных записывается null',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ],
+                // if (_dayNote.hadSex == null || _dayNote.hadSex == false) ...[
+                //   const SizedBox(height: 16),
+                //   Text(
+                //     'Если ничего не выбрано, в базу данных записывается null',
+                //     style: TextStyle(
+                //       fontSize: 12,
+                //       color: Colors.grey[600],
+                //       fontStyle: FontStyle.italic,
+                //     ),
+                //   ),
+                // ],
               ],
             ),
           ),
