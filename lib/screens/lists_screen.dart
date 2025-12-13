@@ -330,76 +330,86 @@ class _ListsScreenState extends State<ListsScreen> {
             fit: BoxFit.cover,
           ),
         ),
-        child: Column(
-          children: [
-            // Основной контент
-            Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _errorMessage != null
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.error, size: 64, color: Colors.red[300]),
-                              const SizedBox(height: 16),
-                              Text(
-                                l10n.errorWithMessage(_errorMessage!),
-                                style: const TextStyle(fontSize: 16),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 16),
-                              ElevatedButton(
-                                onPressed: _loadData,
-                                child: Text(l10n.retry),
-                              ),
-                            ],
-                          ),
-                        )
-                      : _lists.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.checklist,
-                                    size: 64,
-                                    color: Colors.grey[400],
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    l10n.emptyListsMessage,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : ListView.builder(
-                              padding: const EdgeInsets.all(16),
-                              itemCount: _lists.length,
-                              itemBuilder: (context, index) {
-                                final list = _lists[index];
-                                return _buildListBlock(list, l10n);
-                              },
-                            ),
-            ),
-
-            // Кнопка добавления списка
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: ElevatedButton.icon(
-                onPressed: _showAddListDialog,
-                icon: const Icon(Icons.add),
-                label: Text(l10n.addListButton),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
-                ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Заголовок и кнопка добавления
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    l10n.addListTitle,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  FloatingActionButton(
+                    onPressed: _showAddListDialog,
+                    child: const Icon(Icons.add),
+                  ),
+                ],
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+
+              // Списки
+              Expanded(
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _errorMessage != null
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.error, size: 64, color: Colors.red[300]),
+                                const SizedBox(height: 16),
+                                Text(
+                                  l10n.errorWithMessage(_errorMessage!),
+                                  style: const TextStyle(fontSize: 16),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 16),
+                                ElevatedButton(
+                                  onPressed: _loadData,
+                                  child: Text(l10n.retry),
+                                ),
+                              ],
+                            ),
+                          )
+                        : _lists.isEmpty
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.checklist,
+                                      size: 64,
+                                      color: Colors.grey[400],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      l10n.emptyListsMessage,
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : ListView.builder(
+                                padding: EdgeInsets.zero,
+                                itemCount: _lists.length,
+                                itemBuilder: (context, index) {
+                                  final list = _lists[index];
+                                  return _buildListBlock(list, l10n);
+                                },
+                              ),
+              ),
+            ],
+          ),
         ),
       ),
     );
