@@ -662,4 +662,18 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get medicationTakenLabel => 'Принято:';
+
+  @override
+  String get editListTitle => 'Редактировать список';
+
+  @override
+  String get editListNameLabel => 'Название списка';
+
+  @override
+  String get listUpdated => 'Список обновлен';
+
+  @override
+  String listUpdateError(Object message) {
+    return 'Ошибка обновления списка: $message';
+  }
 }

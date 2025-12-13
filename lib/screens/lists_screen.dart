@@ -132,6 +132,50 @@ class _ListsScreenState extends State<ListsScreen> {
     );
   }
 
+  Future<void> _showEditListDialog(ListModel list) async {
+    final l10n = AppLocalizations.of(context)!;
+    final nameController = TextEditingController(text: list.name);
+
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(l10n.editListTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  labelText: l10n.editListNameLabel,
+                  border: const OutlineInputBorder(),
+                ),
+                autofocus: true,
+                onSubmitted: (_) {
+                  Navigator.pop(context);
+                  _updateList(list, nameController.text);
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(l10n.cancelButton),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _updateList(list, nameController.text);
+              },
+              child: Text(l10n.saveButton),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _saveList(String name) async {
     final l10n = AppLocalizations.of(context)!;
     final trimmedName = name.trim();
@@ -170,6 +214,51 @@ class _ListsScreenState extends State<ListsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.listSaveError(e.toString())),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+  }
+
+  Future<void> _updateList(ListModel list, String name) async {
+    final l10n = AppLocalizations.of(context)!;
+    final trimmedName = name.trim();
+    
+    if (trimmedName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.listNameRequired),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final now = DateTime.now();
+      final updatedList = ListModel(
+        id: list.id,
+        name: trimmedName,
+        createdDate: list.createdDate,
+        updatedDate: now,
+      );
+
+      await _databaseHelper.updateList(updatedList);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.listUpdated),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 1),
+        ),
+      );
+
+      await _loadData();
+    } catch (e) {
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.listUpdateError(e.toString())),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -522,6 +611,11 @@ class _ListsScreenState extends State<ListsScreen> {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                IconButton(
+                  icon: const Icon(Icons.edit, color: Colors.blue),
+                  onPressed: () => _showEditListDialog(list),
+                  tooltip: l10n.editButton,
+                ),
                 IconButton(
                   icon: const Icon(Icons.delete, color: Colors.red),
                   onPressed: () => _deleteList(list),

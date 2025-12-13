@@ -363,6 +363,11 @@
   "addSymptomButton": "Добавить симптом",
   "noMedicationRecords": "Нет записей о лекарствах на этот день.",
   "medicationTimeLabel": "Время приема:",
-  "medicationTakenLabel": "Принято:"
+  "medicationTakenLabel": "Принято:",
+  "editListTitle": "Редактировать список",
+  "editListNameLabel": "Название списка",
+  "listNameRequired": "Введите название списка",
+  "listUpdated": "Список обновлен",
+  "listUpdateError": "Ошибка обновления списка: {message}"
 }
 

@@ -1288,6 +1288,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Taken:'**
   String get medicationTakenLabel;
+
+  /// No description provided for @editListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit List'**
+  String get editListTitle;
+
+  /// No description provided for @editListNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'List Name'**
+  String get editListNameLabel;
+
+  /// No description provided for @listUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'List updated'**
+  String get listUpdated;
+
+  /// No description provided for @listUpdateError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error updating list: {message}'**
+  String listUpdateError(Object message);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

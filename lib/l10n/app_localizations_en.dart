@@ -662,4 +662,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get medicationTakenLabel => 'Taken:';
+
+  @override
+  String get editListTitle => 'Edit List';
+
+  @override
+  String get editListNameLabel => 'List Name';
+
+  @override
+  String get listUpdated => 'List updated';
+
+  @override
+  String listUpdateError(Object message) {
+    return 'Error updating list: $message';
+  }
 }

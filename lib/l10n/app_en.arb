@@ -361,5 +361,10 @@
   "addSymptomButton": "Add symptom",
   "noMedicationRecords": "No medication records for this day.",
   "medicationTimeLabel": "Medication time:",
-  "medicationTakenLabel": "Taken:"
+  "medicationTakenLabel": "Taken:",
+  "editListTitle": "Edit List",
+  "editListNameLabel": "List Name",
+  "listNameRequired": "Enter list name",
+  "listUpdated": "List updated",
+  "listUpdateError": "Error updating list: {message}"
 }

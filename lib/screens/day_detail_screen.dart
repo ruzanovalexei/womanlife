@@ -1433,6 +1433,12 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 4.0),
                         child: Row(
                           children: [
+                            Checkbox(
+                              value: event.isTaken,
+                              onChanged: (bool? newValue) {
+                                _toggleMedicationTakenStatus(event, newValue ?? false);
+                              },
+                            ),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1452,12 +1458,6 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                                     ),
                                 ],
                               ),
-                            ),
-                            Checkbox(
-                              value: event.isTaken,
-                              onChanged: (bool? newValue) {
-                                _toggleMedicationTakenStatus(event, newValue ?? false);
-                              },
                             ),
                           ],
                         ),
