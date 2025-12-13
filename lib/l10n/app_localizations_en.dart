@@ -591,6 +591,75 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String listItemDeleteError(Object message) {
-    return 'Error deleting item: $message';
+    return 'Error updating item: $message';
   }
+
+  @override
+  String get periodBlockTitle => 'Period';
+
+  @override
+  String get delayLabel => 'Delay';
+
+  @override
+  String get previousPeriodsTitle => 'Previous periods';
+
+  @override
+  String get activeLabel => '(active)';
+
+  @override
+  String get durationLabel => 'Duration:';
+
+  @override
+  String get durationDayOne => 'day';
+
+  @override
+  String get durationDayFew => 'days';
+
+  @override
+  String get cycleManagementTitle => 'Cycle Management';
+
+  @override
+  String get sexBlockTitle => 'Sex';
+
+  @override
+  String get hadSexLabel => 'Had sex';
+
+  @override
+  String get sexTypeLabel => 'Sex type:';
+
+  @override
+  String get safeSexLabel => 'Safe';
+
+  @override
+  String get unsafeSexLabel => 'Unsafe';
+
+  @override
+  String get orgasmLabel => 'Orgasm:';
+
+  @override
+  String get hadOrgasmLabel => 'Had orgasm';
+
+  @override
+  String get noOrgasmLabel => 'No orgasm';
+
+  @override
+  String get healthBlockTitle => 'Health';
+
+  @override
+  String get selectSymptomsLabel => 'Select symptoms:';
+
+  @override
+  String get noAvailableSymptoms => 'No available symptoms. Add them in settings.';
+
+  @override
+  String get addSymptomButton => 'Add symptom';
+
+  @override
+  String get noMedicationRecords => 'No medication records for this day.';
+
+  @override
+  String get medicationTimeLabel => 'Medication time:';
+
+  @override
+  String get medicationTakenLabel => 'Taken:';
 }

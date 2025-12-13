@@ -340,6 +340,29 @@
     "placeholders": {
       "message": {}
     }
-  }
+  },
+  "periodBlockTitle": "Месячные",
+  "delayLabel": "Задержка",
+  "previousPeriodsTitle": "Предыдущие месячные",
+  "activeLabel": "(активный)",
+  "durationLabel": "Продолжительность:",
+  "durationDayOne": "день",
+  "durationDayFew": "дня",
+  "cycleManagementTitle": "Управление циклом",
+  "sexBlockTitle": "Секс",
+  "hadSexLabel": "Был секс",
+  "sexTypeLabel": "Тип секса:",
+  "safeSexLabel": "Безопасный",
+  "unsafeSexLabel": "Небезопасный",
+  "orgasmLabel": "Оргазм:",
+  "hadOrgasmLabel": "Был оргазм",
+  "noOrgasmLabel": "Не было оргазма",
+  "healthBlockTitle": "Самочувствие",
+  "selectSymptomsLabel": "Выберите симптомы:",
+  "noAvailableSymptoms": "Нет доступных симптомов. Добавьте их в настройках.",
+  "addSymptomButton": "Добавить симптом",
+  "noMedicationRecords": "Нет записей о лекарствах на этот день.",
+  "medicationTimeLabel": "Время приема:",
+  "medicationTakenLabel": "Принято:"
 }
 

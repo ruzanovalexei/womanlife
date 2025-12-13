@@ -333,10 +333,33 @@
     }
   },
   "listItemDeleted": "Item deleted",
-  "listItemDeleteError": "Error deleting item: {message}",
+  "listItemDeleteError": "Error updating item: {message}",
   "@listItemDeleteError": {
     "placeholders": {
       "message": {}
     }
-  }
+  },
+  "periodBlockTitle": "Period",
+  "delayLabel": "Delay",
+  "previousPeriodsTitle": "Previous periods",
+  "activeLabel": "(active)",
+  "durationLabel": "Duration:",
+  "durationDayOne": "day",
+  "durationDayFew": "days",
+  "cycleManagementTitle": "Cycle Management",
+  "sexBlockTitle": "Sex",
+  "hadSexLabel": "Had sex",
+  "sexTypeLabel": "Sex type:",
+  "safeSexLabel": "Safe",
+  "unsafeSexLabel": "Unsafe",
+  "orgasmLabel": "Orgasm:",
+  "hadOrgasmLabel": "Had orgasm",
+  "noOrgasmLabel": "No orgasm",
+  "healthBlockTitle": "Health",
+  "selectSymptomsLabel": "Select symptoms:",
+  "noAvailableSymptoms": "No available symptoms. Add them in settings.",
+  "addSymptomButton": "Add symptom",
+  "noMedicationRecords": "No medication records for this day.",
+  "medicationTimeLabel": "Medication time:",
+  "medicationTakenLabel": "Taken:"
 }

@@ -733,9 +733,9 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
             _isPeriodBlockExpanded = expanded;
           });
         },
-        title: const Text(
-          'Месячные',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.periodBlockTitle,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         children: [
           Padding(
@@ -753,13 +753,13 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                       border: Border.all(color: Colors.orange),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
                         Icon(Icons.access_time, color: Colors.orange),
                         SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Задержка',
+                            l10n.delayLabel1,
                             style: TextStyle(
                               fontWeight: FontWeight.w500,
                               color: Colors.orange,
@@ -832,9 +832,9 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
 
                 // Информация о предыдущих месячных
                 if (_previousPeriod != null) ...[
-                  const Text(
-                    'Предыдущие месячные',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  Text(
+                    l10n.previousPeriodsTitle,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Container(
@@ -856,7 +856,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                               child: Text(
                                 _previousPeriod!.endDate != null
                                     ? '${_formatDate(context, _previousPeriod!.startDate)} - ${_formatDate(context, _previousPeriod!.endDate!)}'
-                                    : '${_formatDate(context, _previousPeriod!.startDate)} - (активный)',
+                                    : '${_formatDate(context, _previousPeriod!.startDate)} - ${l10n.activeLabel}',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w500,
                                   color: Colors.blue,
@@ -867,7 +867,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Продолжительность: ${_previousPeriod!.durationInDays} ${_previousPeriod!.durationInDays == 1 ? 'день' : 'дня'}',
+                          '${l10n.durationLabel} ${_previousPeriod!.durationInDays} ${_previousPeriod!.durationInDays == 1 ? l10n.durationDayOne : l10n.durationDayFew}',
                           style: const TextStyle(fontSize: 12, color: Colors.blue),
                         ),
                       ],
@@ -877,9 +877,9 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                 ],
 
                 // Управление периодом
-                const Text(
-                  'Управление циклом',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                Text(
+                  l10n.cycleManagementTitle,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 
@@ -989,9 +989,9 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
             _isSexBlockExpanded = expanded;
           });
         },
-        title: const Text(
-          'Секс',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.sexBlockTitle,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         children: [
           Padding(
@@ -1007,22 +1007,22 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                       onChanged: _updateHadSex,
                     ),
                     const SizedBox(width: 8),
-                    const Text(
-                      'Был секс',
-                      style: TextStyle(
+                    Text(
+                      l10n.hadSexLabel,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
-                
+
                 // Блок выбора типа секса (только если был секс)
                 if (_dayNote.hadSex == true) ...[
                   const SizedBox(height: 16),
-                  const Text(
-                    'Тип секса:',
-                    style: TextStyle(
+                  Text(
+                    l10n.sexTypeLabel,
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
@@ -1058,7 +1058,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                'Безопасный',
+                                l10n.safeSexLabel,
                                 style: TextStyle(
                                   color: _dayNote.isSafeSex == true 
                                       ? Colors.green 
@@ -1101,7 +1101,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                'Небезопасный',
+                                l10n.unsafeSexLabel,
                                 style: TextStyle(
                                   color: _dayNote.isSafeSex == false 
                                       ? Colors.red 
@@ -1120,8 +1120,8 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                   
                   // Блок выбора оргазма (только если был секс)
                   const SizedBox(height: 16),
-                  const Text(
-                    'Оргазм:',
+                  Text(
+                    l10n.orgasmLabel,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -1158,7 +1158,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                'Был оргазм',
+                                l10n.hadOrgasmLabel,
                                 style: TextStyle(
                                   color: _dayNote.hadOrgasm == true 
                                       ? Colors.purple 
@@ -1201,7 +1201,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                'Не было оргазма',
+                                l10n.noOrgasmLabel,
                                 style: TextStyle(
                                   color: _dayNote.hadOrgasm == false 
                                       ? Colors.blue 
@@ -1249,9 +1249,9 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
             _isHealthBlockExpanded = expanded;
           });
         },
-        title: const Text(
-          'Самочувствие',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.healthBlockTitle,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         children: [
           Padding(
@@ -1271,7 +1271,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                 // Список доступных симптомов с чекбоксами
                 if (_allSymptoms.isNotEmpty) ...[
                   Text(
-                    'Выберите симптомы:',
+                    l10n.selectSymptomsLabel,
                     style: const TextStyle(fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(height: 8),
@@ -1306,7 +1306,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                   ),
                 ] else
                   Text(
-                    'Нет доступных симптомов. Добавьте их в настройках.',
+                    l10n.noAvailableSymptoms,
                     style: const TextStyle(color: Colors.grey),
                   ),
                 
@@ -1316,7 +1316,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                 ElevatedButton.icon(
                   onPressed: _showQuickAddSymptomDialog,
                   icon: const Icon(Icons.add),
-                  label: const Text('Добавить симптом'),
+                  label: Text(l10n.addSymptomButton),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.pink,
                     foregroundColor: Colors.white,
@@ -1407,9 +1407,9 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
             _isMedicineBlockExpanded = expanded;
           });
         },
-        title: const Text(
-          'Лекарства',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.addMedicationTitle,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         children: [
           Padding(
@@ -1418,8 +1418,8 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (medicationEvents.isEmpty)
-                  const Text(
-                    'Нет записей о лекарствах на этот день.',
+                  Text(
+                    l10n.noMedicationRecords,
                     style: TextStyle(color: Colors.grey),
                   )
                 else
@@ -1442,12 +1442,12 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                                   ),
                                   Text(
-                                    'Время приема: ${DateFormat('HH:mm').format(event.scheduledTime)}',
+                                    '${l10n.medicationTimeLabel} ${DateFormat('HH:mm').format(event.scheduledTime)}',
                                     style: const TextStyle(fontSize: 14, color: Colors.grey),
                                   ),
                                   if (event.isTaken && event.actualTakenTime != null)
                                     Text(
-                                      'Принято: ${DateFormat('HH:mm').format(event.actualTakenTime!.toLocal())}',
+                                      '${l10n.medicationTakenLabel} ${DateFormat('HH:mm').format(event.actualTakenTime!.toLocal())}',
                                       style: const TextStyle(fontSize: 12, color: Colors.green),
                                     ),
                                 ],

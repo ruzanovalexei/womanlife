@@ -593,4 +593,73 @@ class AppLocalizationsRu extends AppLocalizations {
   String listItemDeleteError(Object message) {
     return 'Ошибка удаления записи: $message';
   }
+
+  @override
+  String get periodBlockTitle => 'Месячные';
+
+  @override
+  String get delayLabel => 'Задержка';
+
+  @override
+  String get previousPeriodsTitle => 'Предыдущие месячные';
+
+  @override
+  String get activeLabel => '(активный)';
+
+  @override
+  String get durationLabel => 'Продолжительность:';
+
+  @override
+  String get durationDayOne => 'день';
+
+  @override
+  String get durationDayFew => 'дня';
+
+  @override
+  String get cycleManagementTitle => 'Управление циклом';
+
+  @override
+  String get sexBlockTitle => 'Секс';
+
+  @override
+  String get hadSexLabel => 'Был секс';
+
+  @override
+  String get sexTypeLabel => 'Тип секса:';
+
+  @override
+  String get safeSexLabel => 'Безопасный';
+
+  @override
+  String get unsafeSexLabel => 'Небезопасный';
+
+  @override
+  String get orgasmLabel => 'Оргазм:';
+
+  @override
+  String get hadOrgasmLabel => 'Был оргазм';
+
+  @override
+  String get noOrgasmLabel => 'Не было оргазма';
+
+  @override
+  String get healthBlockTitle => 'Самочувствие';
+
+  @override
+  String get selectSymptomsLabel => 'Выберите симптомы:';
+
+  @override
+  String get noAvailableSymptoms => 'Нет доступных симптомов. Добавьте их в настройках.';
+
+  @override
+  String get addSymptomButton => 'Добавить симптом';
+
+  @override
+  String get noMedicationRecords => 'Нет записей о лекарствах на этот день.';
+
+  @override
+  String get medicationTimeLabel => 'Время приема:';
+
+  @override
+  String get medicationTakenLabel => 'Принято:';
 }

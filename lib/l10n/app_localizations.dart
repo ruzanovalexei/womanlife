@@ -1148,8 +1148,146 @@ abstract class AppLocalizations {
   /// No description provided for @listItemDeleteError.
   ///
   /// In en, this message translates to:
-  /// **'Error deleting item: {message}'**
+  /// **'Error updating item: {message}'**
   String listItemDeleteError(Object message);
+
+  /// No description provided for @periodBlockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Period'**
+  String get periodBlockTitle;
+
+  /// No description provided for @delayLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Delay'**
+  String get delayLabel;
+
+  /// No description provided for @previousPeriodsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous periods'**
+  String get previousPeriodsTitle;
+
+  /// No description provided for @activeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'(active)'**
+  String get activeLabel;
+
+  /// No description provided for @durationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration:'**
+  String get durationLabel;
+
+  /// No description provided for @durationDayOne.
+  ///
+  /// In en, this message translates to:
+  /// **'day'**
+  String get durationDayOne;
+
+  /// No description provided for @durationDayFew.
+  ///
+  /// In en, this message translates to:
+  /// **'days'**
+  String get durationDayFew;
+
+  /// No description provided for @cycleManagementTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle Management'**
+  String get cycleManagementTitle;
+
+  /// No description provided for @sexBlockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sex'**
+  String get sexBlockTitle;
+
+  /// No description provided for @hadSexLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Had sex'**
+  String get hadSexLabel;
+
+  /// No description provided for @sexTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sex type:'**
+  String get sexTypeLabel;
+
+  /// No description provided for @safeSexLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Safe'**
+  String get safeSexLabel;
+
+  /// No description provided for @unsafeSexLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsafe'**
+  String get unsafeSexLabel;
+
+  /// No description provided for @orgasmLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Orgasm:'**
+  String get orgasmLabel;
+
+  /// No description provided for @hadOrgasmLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Had orgasm'**
+  String get hadOrgasmLabel;
+
+  /// No description provided for @noOrgasmLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'No orgasm'**
+  String get noOrgasmLabel;
+
+  /// No description provided for @healthBlockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get healthBlockTitle;
+
+  /// No description provided for @selectSymptomsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Select symptoms:'**
+  String get selectSymptomsLabel;
+
+  /// No description provided for @noAvailableSymptoms.
+  ///
+  /// In en, this message translates to:
+  /// **'No available symptoms. Add them in settings.'**
+  String get noAvailableSymptoms;
+
+  /// No description provided for @addSymptomButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add symptom'**
+  String get addSymptomButton;
+
+  /// No description provided for @noMedicationRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'No medication records for this day.'**
+  String get noMedicationRecords;
+
+  /// No description provided for @medicationTimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Medication time:'**
+  String get medicationTimeLabel;
+
+  /// No description provided for @medicationTakenLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Taken:'**
+  String get medicationTakenLabel;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
