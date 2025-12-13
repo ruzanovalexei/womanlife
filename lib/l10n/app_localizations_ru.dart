@@ -482,7 +482,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get menuMedications => 'Распорядок дня(Ожидайте в новых релизах)';
 
   @override
-  String get menuInsights => 'Списки/Чек-листы(Ожидайте в новых релизах)';
+  String get menuInsights => 'Списки';
 
   @override
   String get menuReminders => 'Привычки(Ожидайте в новых релизах)';
@@ -507,4 +507,90 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get calendar => 'Календарь';
+
+  @override
+  String get listsTitle => 'Списки';
+
+  @override
+  String get addListButton => 'Добавить список';
+
+  @override
+  String get addListTitle => 'Добавить список';
+
+  @override
+  String get listNameLabel => 'Название списка';
+
+  @override
+  String get listNameRequired => 'Введите название списка';
+
+  @override
+  String get deleteListConfirmTitle => 'Удалить список';
+
+  @override
+  String deleteListConfirmMessage(Object name) {
+    return 'Вы уверены, что хотите удалить список \"$name\"?';
+  }
+
+  @override
+  String get addListItemButton => 'Добавить запись';
+
+  @override
+  String listProgressFormat(int completed, int total) {
+    return '$completed/$total';
+  }
+
+  @override
+  String get emptyListsMessage => 'Создайте первый список';
+
+  @override
+  String get emptyListItemsMessage => 'Записей пока нет';
+
+  @override
+  String get addListItemTitle => 'Добавить запись';
+
+  @override
+  String get listItemTextLabel => 'Текст записи';
+
+  @override
+  String get listItemTextRequired => 'Введите текст записи';
+
+  @override
+  String get listSaved => 'Список сохранен';
+
+  @override
+  String listSaveError(Object message) {
+    return 'Ошибка сохранения списка: $message';
+  }
+
+  @override
+  String get listDeleted => 'Список удален';
+
+  @override
+  String listDeleteError(Object message) {
+    return 'Ошибка удаления списка: $message';
+  }
+
+  @override
+  String get listItemAdded => 'Запись добавлена';
+
+  @override
+  String listItemAddError(Object message) {
+    return 'Ошибка добавления записи: $message';
+  }
+
+  @override
+  String get listItemUpdated => 'Запись обновлена';
+
+  @override
+  String listItemUpdateError(Object message) {
+    return 'Ошибка обновления записи: $message';
+  }
+
+  @override
+  String get listItemDeleted => 'Запись удалена';
+
+  @override
+  String listItemDeleteError(Object message) {
+    return 'Ошибка удаления записи: $message';
+  }
 }

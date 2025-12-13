@@ -956,7 +956,7 @@ abstract class AppLocalizations {
   /// No description provided for @menuInsights.
   ///
   /// In en, this message translates to:
-  /// **'To-Do List'**
+  /// **'Lists'**
   String get menuInsights;
 
   /// No description provided for @menuReminders.
@@ -1006,6 +1006,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Calendar'**
   String get calendar;
+
+  /// No description provided for @listsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lists'**
+  String get listsTitle;
+
+  /// No description provided for @addListButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add List'**
+  String get addListButton;
+
+  /// No description provided for @addListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add List'**
+  String get addListTitle;
+
+  /// No description provided for @listNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'List Name'**
+  String get listNameLabel;
+
+  /// No description provided for @listNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter list name'**
+  String get listNameRequired;
+
+  /// No description provided for @deleteListConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete List'**
+  String get deleteListConfirmTitle;
+
+  /// No description provided for @deleteListConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete the list \"{name}\"?'**
+  String deleteListConfirmMessage(Object name);
+
+  /// No description provided for @addListItemButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Item'**
+  String get addListItemButton;
+
+  /// No description provided for @listProgressFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'{completed}/{total}'**
+  String listProgressFormat(int completed, int total);
+
+  /// No description provided for @emptyListsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first list'**
+  String get emptyListsMessage;
+
+  /// No description provided for @emptyListItemsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No items yet'**
+  String get emptyListItemsMessage;
+
+  /// No description provided for @addListItemTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Item'**
+  String get addListItemTitle;
+
+  /// No description provided for @listItemTextLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Item Text'**
+  String get listItemTextLabel;
+
+  /// No description provided for @listItemTextRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter item text'**
+  String get listItemTextRequired;
+
+  /// No description provided for @listSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'List saved'**
+  String get listSaved;
+
+  /// No description provided for @listSaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error saving list: {message}'**
+  String listSaveError(Object message);
+
+  /// No description provided for @listDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'List deleted'**
+  String get listDeleted;
+
+  /// No description provided for @listDeleteError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error deleting list: {message}'**
+  String listDeleteError(Object message);
+
+  /// No description provided for @listItemAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Item added'**
+  String get listItemAdded;
+
+  /// No description provided for @listItemAddError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error adding item: {message}'**
+  String listItemAddError(Object message);
+
+  /// No description provided for @listItemUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Item updated'**
+  String get listItemUpdated;
+
+  /// No description provided for @listItemUpdateError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error updating item: {message}'**
+  String listItemUpdateError(Object message);
+
+  /// No description provided for @listItemDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Item deleted'**
+  String get listItemDeleted;
+
+  /// No description provided for @listItemDeleteError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error deleting item: {message}'**
+  String listItemDeleteError(Object message);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

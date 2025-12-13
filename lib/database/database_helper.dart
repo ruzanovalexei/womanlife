@@ -10,11 +10,13 @@ import '../models/medication_taken_record.dart'; // Импортируем Medic
 import '../utils/date_utils.dart'; // Импортируем MyDateUtils
 import '../utils/symptoms_provider.dart'; //для getDefaultSymptoms
 import '../models/symptom.dart'; // Импортируем модель Symptom
+import '../models/list_model.dart'; // Импортируем модель списка
+import '../models/list_item_model.dart'; // Импортируем модель элемента списка
 //import '../utils/date_utils.dart';
 
 class DatabaseHelper {
   static const _databaseName = "PeriodTracker.db";
-  static const _databaseVersion = 15; // Добавляем поддержку кодов симптомов
+  static const _databaseVersion = 16; // Добавляем поддержку списков
 
   static const settingsTable = 'settings';
   static const dayNotesTable = 'day_notes';
@@ -22,6 +24,8 @@ class DatabaseHelper {
   static const symptomsTable = 'symptoms';
   static const medicationsTable = 'medications';
   static const medicationTakenRecordsTable = 'medication_taken_records';
+  static const listsTable = 'lists';
+  static const listItemsTable = 'list_items';
 
   // Singleton
   DatabaseHelper._privateConstructor();
@@ -106,6 +110,27 @@ class DatabaseHelper {
         actualTakenTime TEXT,
         isTaken INTEGER NOT NULL DEFAULT 0,
         FOREIGN KEY (medicationId) REFERENCES $medicationsTable (id) ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE $listsTable (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        createdDate TEXT NOT NULL,
+        updatedDate TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE $listItemsTable (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        listId INTEGER NOT NULL,
+        text TEXT NOT NULL,
+        isCompleted INTEGER NOT NULL DEFAULT 0,
+        createdDate TEXT NOT NULL,
+        updatedDate TEXT NOT NULL,
+        FOREIGN KEY (listId) REFERENCES $listsTable (id) ON DELETE CASCADE
       )
     ''');
 
@@ -235,6 +260,33 @@ class DatabaseHelper {
             await db.execute('ALTER TABLE $symptomsTable ADD COLUMN isDefault INTEGER DEFAULT 0');
           } catch (e) {
             // print('Error adding isDefault column: $e');
+          }
+          break;
+        case 16:
+          try {
+            // Создаем таблицы для списков
+            await db.execute('''
+              CREATE TABLE $listsTable (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                createdDate TEXT NOT NULL,
+                updatedDate TEXT NOT NULL
+              )
+            ''');
+            
+            await db.execute('''
+              CREATE TABLE $listItemsTable (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                listId INTEGER NOT NULL,
+                text TEXT NOT NULL,
+                isCompleted INTEGER NOT NULL DEFAULT 0,
+                createdDate TEXT NOT NULL,
+                updatedDate TEXT NOT NULL,
+                FOREIGN KEY (listId) REFERENCES $listsTable (id) ON DELETE CASCADE
+              )
+            ''');
+          } catch (e) {
+            // print('Error creating lists tables: $e');
           }
           break;
       }
@@ -424,5 +476,99 @@ class DatabaseHelper {
         'isDefault': 1,
       });
     }
+  }
+
+  // List methods
+  Future<int> insertList(ListModel list) async {
+    Database db = await database;
+    return await db.insert(listsTable, list.toMap());
+  }
+
+  Future<int> updateList(ListModel list) async {
+    Database db = await database;
+    return await db.update(listsTable, list.toMap(), where: 'id = ?', whereArgs: [list.id]);
+  }
+
+  Future<int> deleteList(int id) async {
+    Database db = await database;
+    return await db.delete(listsTable, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<ListModel>> getAllLists() async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query(listsTable, orderBy: 'updatedDate DESC');
+    return maps.map((map) => ListModel.fromMap(map)).toList();
+  }
+
+  Future<ListModel?> getListById(int id) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query(listsTable, where: 'id = ?', whereArgs: [id], limit: 1);
+    return maps.isNotEmpty ? ListModel.fromMap(maps[0]) : null;
+  }
+
+  // ListItem methods
+  Future<int> insertListItem(ListItemModel item) async {
+    Database db = await database;
+    return await db.insert(listItemsTable, item.toMap());
+  }
+
+  Future<int> updateListItem(ListItemModel item) async {
+    Database db = await database;
+    return await db.update(listItemsTable, item.toMap(), where: 'id = ?', whereArgs: [item.id]);
+  }
+
+  Future<int> deleteListItem(int id) async {
+    Database db = await database;
+    return await db.delete(listItemsTable, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<ListItemModel>> getAllListItems() async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query(listItemsTable, orderBy: 'createdDate ASC');
+    return maps.map((map) => ListItemModel.fromMap(map)).toList();
+  }
+
+  Future<List<ListItemModel>> getListItemsByListId(int listId) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query(
+      listItemsTable,
+      where: 'listId = ?',
+      whereArgs: [listId],
+      orderBy: 'createdDate ASC',
+    );
+    return maps.map((map) => ListItemModel.fromMap(map)).toList();
+  }
+
+  Future<int> toggleListItemStatus(int itemId, bool isCompleted) async {
+    Database db = await database;
+    return await db.update(
+      listItemsTable,
+      {
+        'isCompleted': isCompleted ? 1 : 0,
+        'updatedDate': MyDateUtils.toUtcDateString(DateTime.now()),
+      },
+      where: 'id = ?',
+      whereArgs: [itemId],
+    );
+  }
+
+  Future<Map<String, int>> getListProgress(int listId) async {
+    Database db = await database;
+    final result = await db.rawQuery('''
+      SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN isCompleted = 1 THEN 1 ELSE 0 END) as completed
+      FROM $listItemsTable 
+      WHERE listId = ?
+    ''', [listId]);
+    
+    if (result.isNotEmpty) {
+      final row = result.first;
+      return {
+        'total': row['total'] as int? ?? 0,
+        'completed': row['completed'] as int? ?? 0,
+      };
+    }
+    return {'total': 0, 'completed': 0};
   }
 }

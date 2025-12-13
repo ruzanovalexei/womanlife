@@ -7,6 +7,7 @@ import 'package:period_tracker/models/period_record.dart';
 import 'package:period_tracker/utils/date_utils.dart';
 import 'package:period_tracker/screens/day_detail_screen.dart';
 import 'package:period_tracker/screens/settings_screen.dart';
+import 'package:period_tracker/screens/lists_screen.dart';
 import 'package:yandex_mobileads/mobile_ads.dart';
 //import 'package:yandex_mobileads/ad_widget.dart';
 //import 'package:yandex_mobileads/mobile_ads.dart';
@@ -103,26 +104,30 @@ class _MenuScreenState extends State<MenuScreen> {
           });
         }
         break;
-      // case 1:
-      //   ScaffoldMessenger.of(context).showSnackBar(
-      //     SnackBar(content: Text(l10n.menuItem2)),
-      //   );
-      //   break;
-      // case 2:
-      //   ScaffoldMessenger.of(context).showSnackBar(
-      //     SnackBar(content: Text(l10n.menuItem3)),
-      //   );
-      //   break;
-      // case 3:
-      //   ScaffoldMessenger.of(context).showSnackBar(
-      //     SnackBar(content: Text(l10n.menuItem4)),
-      //   );
-      //   break;
-      // case 4:
-      //   ScaffoldMessenger.of(context).showSnackBar(
-      //     SnackBar(content: Text(l10n.menuItem5)),
-      //   );
-      //   break;
+      case 1:
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(content: Text(l10n.menuItem2)),
+        // );
+        break;
+      case 2:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const ListsScreen()),
+        ).then((_) {
+          // Обновляем данные при возврате
+          _loadData();
+        });
+        break;
+      case 3:
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(content: Text(l10n.menuItem4)),
+        // );
+        break;
+      case 4:
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(content: Text(l10n.menuItem5)),
+        // );
+        break;
       case 5:
         Navigator.push(
           context,

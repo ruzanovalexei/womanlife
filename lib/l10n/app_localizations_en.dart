@@ -482,7 +482,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuMedications => 'Daily Schedule';
 
   @override
-  String get menuInsights => 'To-Do List';
+  String get menuInsights => 'Lists';
 
   @override
   String get menuReminders => 'Habits';
@@ -507,4 +507,90 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calendar => 'Calendar';
+
+  @override
+  String get listsTitle => 'Lists';
+
+  @override
+  String get addListButton => 'Add List';
+
+  @override
+  String get addListTitle => 'Add List';
+
+  @override
+  String get listNameLabel => 'List Name';
+
+  @override
+  String get listNameRequired => 'Enter list name';
+
+  @override
+  String get deleteListConfirmTitle => 'Delete List';
+
+  @override
+  String deleteListConfirmMessage(Object name) {
+    return 'Are you sure you want to delete the list \"$name\"?';
+  }
+
+  @override
+  String get addListItemButton => 'Add Item';
+
+  @override
+  String listProgressFormat(int completed, int total) {
+    return '$completed/$total';
+  }
+
+  @override
+  String get emptyListsMessage => 'Create your first list';
+
+  @override
+  String get emptyListItemsMessage => 'No items yet';
+
+  @override
+  String get addListItemTitle => 'Add Item';
+
+  @override
+  String get listItemTextLabel => 'Item Text';
+
+  @override
+  String get listItemTextRequired => 'Enter item text';
+
+  @override
+  String get listSaved => 'List saved';
+
+  @override
+  String listSaveError(Object message) {
+    return 'Error saving list: $message';
+  }
+
+  @override
+  String get listDeleted => 'List deleted';
+
+  @override
+  String listDeleteError(Object message) {
+    return 'Error deleting list: $message';
+  }
+
+  @override
+  String get listItemAdded => 'Item added';
+
+  @override
+  String listItemAddError(Object message) {
+    return 'Error adding item: $message';
+  }
+
+  @override
+  String get listItemUpdated => 'Item updated';
+
+  @override
+  String listItemUpdateError(Object message) {
+    return 'Error updating item: $message';
+  }
+
+  @override
+  String get listItemDeleted => 'Item deleted';
+
+  @override
+  String listItemDeleteError(Object message) {
+    return 'Error deleting item: $message';
+  }
 }
