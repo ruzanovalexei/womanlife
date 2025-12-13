@@ -20,8 +20,8 @@ class _ListsScreenState extends State<ListsScreen> {
   bool _isLoading = true;
   String? _errorMessage;
 
-  // Состояние блоков (по умолчанию все раскрыты)
-  final Map<int, bool> _expandedStates = {};
+  // ID открытого списка (только один список может быть открыт одновременно)
+  int? _expandedListId;
 
   @override
   void initState() {
@@ -406,108 +406,135 @@ class _ListsScreenState extends State<ListsScreen> {
   }
 
   Widget _buildListBlock(ListModel list, AppLocalizations l10n) {
-    final isExpanded = _expandedStates[list.id] ?? true;
+    final isExpanded = _expandedListId == list.id;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      child: ExpansionTile(
-        initiallyExpanded: isExpanded,
-        onExpansionChanged: (expanded) {
-          setState(() {
-            _expandedStates[list.id!] = expanded;
-          });
-        },
-        title: Row(
-          children: [
-            Expanded(
-              child: Text(
-                list.name,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-            FutureBuilder<Map<String, int>>(
-              future: _getListProgress(list.id!),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  final progress = snapshot.data!;
-                  final completed = progress['completed']!;
-                  final total = progress['total']!;
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[100],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      l10n.listProgressFormat(completed, total),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.blue[700],
-                      ),
-                    ),
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-            ),
-          ],
-        ),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete, color: Colors.red),
-          onPressed: () => _deleteList(list),
-          tooltip: l10n.deleteButton,
-        ),
+      child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          // Заголовок блока
+          ListTile(
+            title: Row(
               children: [
-                // Кнопка добавления записи
-                ElevatedButton.icon(
-                  onPressed: () => _showAddListItemDialog(list.id!),
-                  icon: const Icon(Icons.add, size: 16),
-                  label: Text(l10n.addListItemButton),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green[100],
-                    foregroundColor: Colors.green[700],
+                Expanded(
+                  child: Text(
+                    list.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 16),
-
-                // Список записей
-                FutureBuilder<List<ListItemModel>>(
-                  future: _getListItems(list.id!),
+                FutureBuilder<Map<String, int>>(
+                  future: _getListProgress(list.id!),
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
-                      final items = snapshot.data!;
-                      if (items.isEmpty) {
-                        return Center(
-                          child: Text(
-                            l10n.emptyListItemsMessage,
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontStyle: FontStyle.italic,
-                            ),
+                      final progress = snapshot.data!;
+                      final completed = progress['completed']!;
+                      final total = progress['total']!;
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.blue[100],
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          l10n.listProgressFormat(completed, total),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.blue[700],
                           ),
-                        );
-                      }
-
-                      return Column(
-                        children: items.map((item) {
-                          return _buildListItem(item, l10n);
-                        }).toList(),
+                        ),
                       );
                     }
-                    return const Center(child: CircularProgressIndicator());
+                    return const SizedBox.shrink();
                   },
                 ),
               ],
             ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () => _deleteList(list),
+                  tooltip: l10n.deleteButton,
+                ),
+                Icon(
+                  isExpanded ? Icons.expand_less : Icons.expand_more,
+                ),
+              ],
+            ),
+            onTap: () {
+              setState(() {
+                if (isExpanded) {
+                  // Если список открыт, закрываем его
+                  _expandedListId = null;
+                } else {
+                  // Если список закрыт, открываем только его
+                  _expandedListId = list.id;
+                }
+              });
+            },
+          ),
+          
+          // Содержимое блока с анимацией
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            height: isExpanded ? null : 0,
+            child: isExpanded ? _buildListContent(list, l10n) : null,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildListContent(ListModel list, AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Кнопка добавления записи
+          ElevatedButton.icon(
+            onPressed: () => _showAddListItemDialog(list.id!),
+            icon: const Icon(Icons.add, size: 16),
+            label: Text(l10n.addListItemButton),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green[100],
+              foregroundColor: Colors.green[700],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Список записей
+          FutureBuilder<List<ListItemModel>>(
+            future: _getListItems(list.id!),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                final items = snapshot.data!;
+                if (items.isEmpty) {
+                  return Center(
+                    child: Text(
+                      l10n.emptyListItemsMessage,
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  );
+                }
+
+                return Column(
+                  children: items.map((item) {
+                    return _buildListItem(item, l10n);
+                  }).toList(),
+                );
+              }
+              return const Center(child: CircularProgressIndicator());
+            },
           ),
         ],
       ),
