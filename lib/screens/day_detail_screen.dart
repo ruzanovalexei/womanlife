@@ -74,7 +74,7 @@ class DayDetailScreen extends StatefulWidget {
 class _DayDetailScreenState extends State<DayDetailScreen> {
   final _databaseHelper = DatabaseHelper();
   late DayNote _dayNote;
-  final _symptomController = TextEditingController();
+  //final _symptomController = TextEditingController();
   bool _isLoading = true;
   String? _errorMessage;
   
@@ -466,6 +466,90 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       );
     });
     _saveDayNote();
+  }
+
+  Future<void> _showQuickAddSymptomDialog() async {
+    final l10n = AppLocalizations.of(context)!;
+    final nameController = TextEditingController();
+
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Добавить новый симптом'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Название симптома',
+                  border: OutlineInputBorder(),
+                ),
+                autofocus: true,
+                onSubmitted: (_) {
+                  Navigator.pop(context);
+                  _quickAddSymptom(nameController.text);
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(l10n.cancelButton),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _quickAddSymptom(nameController.text);
+              },
+              child: const Text('Добавить'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _quickAddSymptom(String symptomText) async {
+    final symptom = symptomText.trim();
+    if (symptom.isEmpty) return;
+
+    try {
+      // Добавляем симптом в глобальный список
+      if (!_allSymptoms.any((s) => s.toLowerCase() == symptom.toLowerCase())) {
+        final newSymptom = Symptom(name: symptom, isDefault: false);
+        await _databaseHelper.insertSymptom(newSymptom);
+        await _loadAllSymptoms(); // Перезагружаем список всех симптомов
+      }
+
+      // Добавляем симптом в текущий день
+      _addSymptom(symptom);
+
+      // Показываем уведомление об успехе
+      //final l10n = AppLocalizations.of(context)!;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Симптом "$symptom" добавлен'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      // Показываем ошибку
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ошибка при добавлении симптома: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _toggleMedicationTakenStatus(MedicationEvent event, bool isTaken) async {
@@ -1184,69 +1268,64 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                 ),
                 const SizedBox(height: 12),
                 
-                // Поле ввода симптома
-                Row(
-                  children: [
-                    Expanded(
-                      child: Autocomplete<String>(
-                        optionsBuilder: (TextEditingValue textEditingValue) {
-                          if (textEditingValue.text == '') {
-                            return _allSymptoms.where((String option) {
-                              return !_dayNote.symptoms.contains(option);
-                            });
-                          }
-                          return _allSymptoms.where((String option) {
-                            return !(_dayNote.symptoms.contains(option)) &&
-                                option.toLowerCase().contains(textEditingValue.text.toLowerCase());
-                          });
-                        },
-                        onSelected: (String selection) async {
-                          _addSymptom(selection); // Добавляем симптом
-                          _symptomController.clear(); // Очищаем наш контроллер
-                        },
-                        fieldViewBuilder: (BuildContext context, TextEditingController textEditingController, FocusNode focusNode, VoidCallback onFieldSubmitted) {
-                          // Используем _symptomController в TextField
-                          return TextField(
-                            controller: _symptomController,
-                            focusNode: focusNode,
-                            keyboardType: TextInputType.multiline,
-                            textInputAction: TextInputAction.done,
-                            maxLines: 1,
-                            autocorrect: true,
-                            enableSuggestions: true,
-                            smartDashesType: SmartDashesType.enabled,
-                            smartQuotesType: SmartQuotesType.enabled,
-                            textCapitalization: TextCapitalization.none,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(RegExp(r'.*')), // Разрешить любые символы
-                            ],
-                            decoration: InputDecoration(
-                              hintText: l10n.addSymptomHint,
-                              border: const OutlineInputBorder(),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                            ),
-                            onSubmitted: (_) {
-                              _addSymptom(_symptomController.text); // Передаем текст из нашего контроллера
-                              _symptomController.clear(); // Очищаем наш контроллер
-                            },
-                          );
-                        },
-                      ),
+                // Список доступных симптомов с чекбоксами
+                if (_allSymptoms.isNotEmpty) ...[
+                  Text(
+                    'Выберите симптомы:',
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    constraints: const BoxConstraints(maxHeight: 200),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(Icons.add_circle, size: 40),
-                      color: Colors.pink,
-                      onPressed: () {
-                        _addSymptom(_symptomController.text);
-                        _symptomController.clear();
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: _allSymptoms.length,
+                      itemBuilder: (context, index) {
+                        final symptom = _allSymptoms[index];
+                        final isSelected = _dayNote.symptoms.contains(symptom);
+                        return CheckboxListTile(
+                          title: Text(symptom),
+                          value: isSelected,
+                          onChanged: (bool? value) {
+                            if (value == true) {
+                              _addSymptom(symptom);
+                            } else {
+                              _removeSymptom(symptom);
+                            }
+                          },
+                          controlAffinity: ListTileControlAffinity.leading,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                          dense: true,
+                        );
                       },
                     ),
-                  ],
-                ),
+                  ),
+                ] else
+                  Text(
+                    'Нет доступных симптомов. Добавьте их в настройках.',
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                
                 const SizedBox(height: 16),
                 
-                // Список симптомов
+                // Кнопка быстрого добавления симптома
+                ElevatedButton.icon(
+                  onPressed: _showQuickAddSymptomDialog,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Добавить симптом'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.pink,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Список выбранных симптомов
                 if (_dayNote.symptoms.isNotEmpty) ...[
                   Text(
                     l10n.currentSymptomsTitle,
@@ -1260,6 +1339,8 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                       label: Text(symptom),
                       onDeleted: () => _removeSymptom(symptom),
                       deleteIcon: const Icon(Icons.clear, size: 18),
+                      backgroundColor: Colors.pink.shade50,
+                      side: BorderSide(color: Colors.pink.shade200),
                     )).toList(),
                   ),
                 ] else
@@ -1393,7 +1474,6 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
 
   @override
   void dispose() {
-    _symptomController.dispose();
     super.dispose();
   }
 

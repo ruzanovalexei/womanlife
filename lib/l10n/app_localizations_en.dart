@@ -307,51 +307,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get symptomInsomnia => 'Insomnia';
 
   @override
-  String get symptomBackPain => 'Back pain';
-
-  @override
-  String get symptomMoodSwings => 'Mood swings';
-
-  @override
-  String get symptomConstipation => 'Constipation';
-
-  @override
-  String get symptomDiarrhea => 'Diarrhea';
-
-  @override
-  String get symptomHotFlashes => 'Hot flashes';
-
-  @override
-  String get symptomNightSweats => 'Night sweats';
-
-  @override
-  String get symptomDizziness => 'Dizziness';
-
-  @override
-  String get symptomFoodAversions => 'Food aversions';
-
-  @override
-  String get symptomFoodCravings => 'Food cravings';
-
-  @override
-  String get symptomBreastTenderness => 'Breast tenderness';
-
-  @override
-  String get symptomPelvicPain => 'Pelvic pain';
-
-  @override
-  String get symptomJointPain => 'Joint pain';
-
-  @override
-  String get symptomMuscleTension => 'Muscle tension';
-
-  @override
-  String get symptomLowLibido => 'Low libido';
-
-  @override
-  String get symptomVaginalDryness => 'Vaginal dryness';
-
-  @override
   String get addSymptomTitle => 'Add Symptom';
 
   @override
@@ -361,13 +316,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get symptomNameLabel => 'Symptom Name';
 
   @override
-  String get symptomCodeLabel => 'Symptom Code';
-
-  @override
   String get symptomNameRequired => 'Enter symptom name';
-
-  @override
-  String get symptomCodeExists => 'Symptom code already exists';
 
   @override
   String get symptomAdded => 'Symptom added';

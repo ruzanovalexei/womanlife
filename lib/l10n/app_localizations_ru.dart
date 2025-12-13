@@ -307,51 +307,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get symptomInsomnia => 'Бессонница';
 
   @override
-  String get symptomBackPain => 'Боль в спине';
-
-  @override
-  String get symptomMoodSwings => 'Перепады настроения';
-
-  @override
-  String get symptomConstipation => 'Запор';
-
-  @override
-  String get symptomDiarrhea => 'Диарея';
-
-  @override
-  String get symptomHotFlashes => 'Приливы';
-
-  @override
-  String get symptomNightSweats => 'Ночная потливость';
-
-  @override
-  String get symptomDizziness => 'Головокружение';
-
-  @override
-  String get symptomFoodAversions => 'Отвращение к еде';
-
-  @override
-  String get symptomFoodCravings => 'Тяга к определенной еде';
-
-  @override
-  String get symptomBreastTenderness => 'Болезненность груди';
-
-  @override
-  String get symptomPelvicPain => 'Тазовая боль';
-
-  @override
-  String get symptomJointPain => 'Боль в суставах';
-
-  @override
-  String get symptomMuscleTension => 'Мышечное напряжение';
-
-  @override
-  String get symptomLowLibido => 'Снижение либидо';
-
-  @override
-  String get symptomVaginalDryness => 'Сухость влагалища';
-
-  @override
   String get addSymptomTitle => 'Добавить симптом';
 
   @override
@@ -361,13 +316,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get symptomNameLabel => 'Название симптома';
 
   @override
-  String get symptomCodeLabel => 'Код симптома';
-
-  @override
   String get symptomNameRequired => 'Введите название симптома';
-
-  @override
-  String get symptomCodeExists => 'Код симптома уже существует';
 
   @override
   String get symptomAdded => 'Симптом добавлен';
@@ -533,7 +482,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get menuMedications => 'Распорядок дня(Ожидайте в новых релизах)';
 
   @override
-  String get menuInsights => 'Список дел(Ожидайте в новых релизах)';
+  String get menuInsights => 'Списки/Чек-листы(Ожидайте в новых релизах)';
 
   @override
   String get menuReminders => 'Привычки(Ожидайте в новых релизах)';
