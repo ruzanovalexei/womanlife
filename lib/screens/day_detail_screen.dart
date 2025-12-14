@@ -1033,6 +1033,28 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                     style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ],
+
+                // Кнопка "Календарь месячных"
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => HomeScreen(
+                          calledFromDetailScreen: true,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.calendar_month),
+                  label: const Text('Календарь месячных'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.pink,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  ),
+                ),
               ],
             ),
           ),
