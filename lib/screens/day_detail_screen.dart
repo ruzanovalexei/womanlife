@@ -180,6 +180,40 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
     );
   }
 
+  // Переключить на предыдущий день
+  void _goToPreviousDay() {
+    final previousDate = widget.selectedDate.subtract(const Duration(days: 1));
+    
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DayDetailScreen(
+          selectedDate: previousDate,
+          periodRecords: widget.periodRecords,
+          settings: widget.settings,
+          shouldReturnResult: widget.shouldReturnResult,
+        ),
+      ),
+    );
+  }
+
+  // Переключить на следующий день
+  void _goToNextDay() {
+    final nextDate = widget.selectedDate.add(const Duration(days: 1));
+    
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DayDetailScreen(
+          selectedDate: nextDate,
+          periodRecords: widget.periodRecords,
+          settings: widget.settings,
+          shouldReturnResult: widget.shouldReturnResult,
+        ),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -719,31 +753,63 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Заголовок с датой
+                            // Элемент переключения дат
                             Card(
-                              child: InkWell(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => HomeScreen(
-                                        calledFromDetailScreen: true,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8),
+                                child: Row(
+                                  children: [
+                                    // Кнопка "предыдущая"
+                                    IconButton(
+                                      onPressed: _goToPreviousDay,
+                                      icon: const Icon(Icons.chevron_left),
+                                      tooltip: 'Предыдущий день',
+                                      constraints: const BoxConstraints(
+                                        minWidth: 44,
+                                        minHeight: 44,
                                       ),
                                     ),
-                                  );
-                                },
-                                borderRadius: BorderRadius.circular(8),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16),
-                                  child: Center(
-                                    child: Text(
-                                      _formatDate(context, widget.selectedDate),
-                                      style: const TextStyle(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.bold,
+                                    
+                                    // Центральная часть с датой
+                                    Expanded(
+                                      child: InkWell(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => HomeScreen(
+                                                calledFromDetailScreen: true,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                                          child: Center(
+                                            child: Text(
+                                              _formatDate(context, widget.selectedDate),
+                                              style: const TextStyle(
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
                                       ),
                                     ),
-                                  ),
+                                    
+                                    // Кнопка "следующая"
+                                    IconButton(
+                                      onPressed: _goToNextDay,
+                                      icon: const Icon(Icons.chevron_right),
+                                      tooltip: 'Следующий день',
+                                      constraints: const BoxConstraints(
+                                        minWidth: 44,
+                                        minHeight: 44,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
