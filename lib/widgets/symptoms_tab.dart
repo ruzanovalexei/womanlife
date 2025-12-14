@@ -43,152 +43,86 @@ class _SymptomsTabState extends State<SymptomsTab> {
   }
 
   Future<void> _showAddSymptomDialog() async {
-    final l10n = AppLocalizations.of(context)!;
-    final nameController = TextEditingController();
-
-    return showDialog(
+    final result = await showDialog<String>(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text(l10n.addSymptomTitle),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  labelText: l10n.symptomNameLabel,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(l10n.cancelButton),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final name = nameController.text.trim();
-
-                if (name.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.symptomNameRequired),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                  return;
-                }
-
-                try {
-                  final newSymptom = Symptom(
-                    name: name,
-                    isDefault: false,
-                  );
-
-                  await _databaseHelper.insertSymptom(newSymptom);
-                  Navigator.pop(context);
-                  await _loadSymptoms();
-
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(l10n.symptomAdded),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                  }
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.symptomAddError),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              },
-              child: Text(l10n.saveButton),
-            ),
-          ],
-        );
+        return const AddSymptomDialog();
       },
     );
+
+    // Если пользователь добавил симптом, обрабатываем его
+    if (result != null && result.isNotEmpty) {
+      try {
+        final newSymptom = Symptom(
+          name: result,
+          isDefault: false,
+        );
+
+        await _databaseHelper.insertSymptom(newSymptom);
+        await _loadSymptoms();
+
+        if (mounted) {
+          final l10n = AppLocalizations.of(context)!;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.symptomAdded),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          final l10n = AppLocalizations.of(context)!;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.symptomAddError),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
   }
 
   Future<void> _showEditSymptomDialog(Symptom symptom) async {
-    final l10n = AppLocalizations.of(context)!;
-    final nameController = TextEditingController(text: symptom.name);
-
-    return showDialog(
+    final result = await showDialog<String>(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text(l10n.editSymptomTitle),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  labelText: l10n.symptomNameLabel,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(l10n.cancelButton),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final name = nameController.text.trim();
-
-                if (name.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.fillAllFields),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                  return;
-                }
-
-                try {
-                  final updatedSymptom = symptom.copyWith(
-                    name: name,
-                  );
-
-                  await _databaseHelper.updateSymptom(updatedSymptom);
-                  Navigator.pop(context);
-                  await _loadSymptoms();
-
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(l10n.symptomUpdated),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                  }
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.symptomUpdateError),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              },
-              child: Text(l10n.saveButton),
-            ),
-          ],
-        );
+        return EditSymptomDialog(initialName: symptom.name);
       },
     );
+
+    // Если пользователь обновил симптом, обрабатываем его
+    if (result != null && result.isNotEmpty) {
+      try {
+        final updatedSymptom = symptom.copyWith(
+          name: result,
+        );
+
+        await _databaseHelper.updateSymptom(updatedSymptom);
+        await _loadSymptoms();
+
+        if (mounted) {
+          final l10n = AppLocalizations.of(context)!;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.symptomUpdated),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          final l10n = AppLocalizations.of(context)!;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.symptomUpdateError),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
   }
 
   Future<void> _showDeleteSymptomDialog(Symptom symptom) async {
@@ -237,8 +171,6 @@ class _SymptomsTabState extends State<SymptomsTab> {
       },
     );
   }
-
-  
 
   @override
   Widget build(BuildContext context) {
@@ -359,5 +291,196 @@ class _SymptomsTabState extends State<SymptomsTab> {
         ),
       ),
     );
+  }
+}
+
+// Отдельный виджет для диалога добавления симптома
+class AddSymptomDialog extends StatefulWidget {
+  const AddSymptomDialog({super.key});
+
+  @override
+  State<AddSymptomDialog> createState() => _AddSymptomDialogState();
+}
+
+class _AddSymptomDialogState extends State<AddSymptomDialog> {
+  late TextEditingController nameController;
+  bool isAtStart = true; // Отслеживаем, находится ли курсор в начале
+
+  @override
+  void initState() {
+    super.initState();
+    nameController = TextEditingController();
+    
+    // Добавляем listener для отслеживания позиции курсора
+    nameController.addListener(_updateKeyboardState);
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    super.dispose();
+  }
+
+  // Функция для обновления состояния клавиатуры
+  void _updateKeyboardState() {
+    final currentPosition = nameController.selection.extentOffset;
+    final newIsAtStart = currentPosition == 0;
+    
+    if (newIsAtStart != isAtStart) {
+      setState(() {
+        isAtStart = newIsAtStart;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return AlertDialog(
+      title: Text(l10n.addSymptomTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: nameController,
+            decoration: InputDecoration(
+              labelText: l10n.symptomNameLabel,
+              border: const OutlineInputBorder(),
+            ),
+            autofocus: true,
+            textCapitalization: isAtStart 
+                ? TextCapitalization.sentences // Первая буква заглавная, остальные строчные
+                : TextCapitalization.none,      // Все строчные буквы в середине
+            keyboardType: TextInputType.text,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _saveSymptom(),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancelButton),
+        ),
+        ElevatedButton(
+          onPressed: _saveSymptom,
+          child: Text(l10n.saveButton),
+        ),
+      ],
+    );
+  }
+
+  void _saveSymptom() {
+    final name = nameController.text.trim();
+
+    if (name.isEmpty) {
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.symptomNameRequired),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    Navigator.pop(context, name);
+  }
+}
+
+// Отдельный виджет для диалога редактирования симптома
+class EditSymptomDialog extends StatefulWidget {
+  final String initialName;
+  
+  const EditSymptomDialog({super.key, required this.initialName});
+
+  @override
+  State<EditSymptomDialog> createState() => _EditSymptomDialogState();
+}
+
+class _EditSymptomDialogState extends State<EditSymptomDialog> {
+  late TextEditingController nameController;
+  bool isAtStart = true; // Отслеживаем, находится ли курсор в начале
+
+  @override
+  void initState() {
+    super.initState();
+    nameController = TextEditingController(text: widget.initialName);
+    
+    // Добавляем listener для отслеживания позиции курсора
+    nameController.addListener(_updateKeyboardState);
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    super.dispose();
+  }
+
+  // Функция для обновления состояния клавиатуры
+  void _updateKeyboardState() {
+    final currentPosition = nameController.selection.extentOffset;
+    final newIsAtStart = currentPosition == 0;
+    
+    if (newIsAtStart != isAtStart) {
+      setState(() {
+        isAtStart = newIsAtStart;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return AlertDialog(
+      title: Text(l10n.editSymptomTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: nameController,
+            decoration: InputDecoration(
+              labelText: l10n.symptomNameLabel,
+              border: const OutlineInputBorder(),
+            ),
+            textCapitalization: isAtStart 
+                ? TextCapitalization.sentences // Первая буква заглавная, остальные строчные
+                : TextCapitalization.none,      // Все строчные буквы в середине
+            keyboardType: TextInputType.text,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _saveSymptom(),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancelButton),
+        ),
+        ElevatedButton(
+          onPressed: _saveSymptom,
+          child: Text(l10n.saveButton),
+        ),
+      ],
+    );
+  }
+
+  void _saveSymptom() {
+    final name = nameController.text.trim();
+
+    if (name.isEmpty) {
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.fillAllFields),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    Navigator.pop(context, name);
   }
 }
