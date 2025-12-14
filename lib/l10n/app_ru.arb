@@ -262,7 +262,7 @@
   "menu2": "Распорядок дня(Ожидайте в новых релизах)",
   "menu3": "Списки",
   "menu4": "Привычки(Ожидайте в новых релизах)",
-  "menu5": "Заметки(Ожидайте в новых релизах)",
+  "menu5": "Заметки",
   "menuItem1": "Здоровье открыто",
   "menuItem2": "Распорядок дня открыт",
   "menuItem3": "Список дел открыт",
@@ -373,6 +373,42 @@
   "notificationChannelName": "Напоминания о лекарствах",
   "notificationChannelDescription": "Уведомления о приеме лекарств",
   "notificationTitle": "Скоро принимать лекарства!",
-  "notificationBody": "Не забудьте принять:"
+  "notificationBody": "Не забудьте принять:",
+  "notesTitle": "Заметки",
+  "addNoteTitle": "Добавить заметку",
+  "editNoteTitle": "Редактировать заметку",
+  "noteTitleLabel": "Заголовок заметки",
+  "noteContentLabel": "Содержимое заметки",
+  "noteDateLabel": "Дата заметки",
+  "noteRequired": "Введите заголовок или содержимое заметки",
+  "noteSaved": "Заметка сохранена",
+  "noteUpdated": "Заметка обновлена",
+  "noteDeleted": "Заметка удалена",
+  "noteSaveError": "Ошибка сохранения заметки: {message}",
+  "@noteSaveError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "noteUpdateError": "Ошибка обновления заметки: {message}",
+  "@noteUpdateError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "noteDeleteError": "Ошибка удаления заметки: {message}",
+  "@noteDeleteError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "deleteNoteConfirmTitle": "Удалить заметку",
+  "deleteNoteConfirmMessage": "Вы уверены, что хотите удалить заметку \"{title}\"?",
+  "@deleteNoteConfirmMessage": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "emptyNotesMessage": "Создайте первую заметку"
 }
 

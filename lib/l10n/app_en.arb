@@ -371,5 +371,41 @@
   "notificationChannelName": "Medication Reminders",
   "notificationChannelDescription": "Medication intake notifications",
   "notificationTitle": "Time to take medications!",
-  "notificationBody": "Don't forget to take:"
+  "notificationBody": "Don't forget to take:",
+  "notesTitle": "Notes",
+  "addNoteTitle": "Add Note",
+  "editNoteTitle": "Edit Note",
+  "noteTitleLabel": "Note Title",
+  "noteContentLabel": "Note Content",
+  "noteDateLabel": "Note Date",
+  "noteRequired": "Enter note title or content",
+  "noteSaved": "Note saved",
+  "noteUpdated": "Note updated",
+  "noteDeleted": "Note deleted",
+  "noteSaveError": "Error saving note: {message}",
+  "@noteSaveError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "noteUpdateError": "Error updating note: {message}",
+  "@noteUpdateError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "noteDeleteError": "Error deleting note: {message}",
+  "@noteDeleteError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "deleteNoteConfirmTitle": "Delete Note",
+  "deleteNoteConfirmMessage": "Are you sure you want to delete the note \"{title}\"?",
+  "@deleteNoteConfirmMessage": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "emptyNotesMessage": "Create your first note"
 }

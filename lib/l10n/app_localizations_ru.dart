@@ -488,7 +488,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get menu4 => 'Привычки(Ожидайте в новых релизах)';
 
   @override
-  String get menu5 => 'Заметки(Ожидайте в новых релизах)';
+  String get menu5 => 'Заметки';
 
   @override
   String get menuItem1 => 'Здоровье открыто';
@@ -679,4 +679,72 @@ class AppLocalizationsRu extends AppLocalizations {
   String listUpdateError(Object message) {
     return 'Ошибка обновления списка: $message';
   }
+
+  @override
+  String get notificationChannelName => 'Напоминания о лекарствах';
+
+  @override
+  String get notificationChannelDescription => 'Уведомления о приеме лекарств';
+
+  @override
+  String get notificationTitle => 'Скоро принимать лекарства!';
+
+  @override
+  String get notificationBody => 'Не забудьте принять:';
+
+  @override
+  String get notesTitle => 'Заметки';
+
+  @override
+  String get addNoteTitle => 'Добавить заметку';
+
+  @override
+  String get editNoteTitle => 'Редактировать заметку';
+
+  @override
+  String get noteTitleLabel => 'Заголовок заметки';
+
+  @override
+  String get noteContentLabel => 'Содержимое заметки';
+
+  @override
+  String get noteDateLabel => 'Дата заметки';
+
+  @override
+  String get noteRequired => 'Введите заголовок или содержимое заметки';
+
+  @override
+  String get noteSaved => 'Заметка сохранена';
+
+  @override
+  String get noteUpdated => 'Заметка обновлена';
+
+  @override
+  String get noteDeleted => 'Заметка удалена';
+
+  @override
+  String noteSaveError(Object message) {
+    return 'Ошибка сохранения заметки: $message';
+  }
+
+  @override
+  String noteUpdateError(Object message) {
+    return 'Ошибка обновления заметки: $message';
+  }
+
+  @override
+  String noteDeleteError(Object message) {
+    return 'Ошибка удаления заметки: $message';
+  }
+
+  @override
+  String get deleteNoteConfirmTitle => 'Удалить заметку';
+
+  @override
+  String deleteNoteConfirmMessage(Object title) {
+    return 'Вы уверены, что хотите удалить заметку \"$title\"?';
+  }
+
+  @override
+  String get emptyNotesMessage => 'Создайте первую заметку';
 }

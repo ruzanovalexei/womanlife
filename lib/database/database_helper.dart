@@ -12,11 +12,12 @@ import '../utils/symptoms_provider.dart'; //для getDefaultSymptoms
 import '../models/symptom.dart'; // Импортируем модель Symptom
 import '../models/list_model.dart'; // Импортируем модель списка
 import '../models/list_item_model.dart'; // Импортируем модель элемента списка
+import '../models/note_model.dart'; // Импортируем модель заметки
 //import '../utils/date_utils.dart';
 
 class DatabaseHelper {
   static const _databaseName = "PeriodTracker.db";
-  static const _databaseVersion = 16; // Добавляем поддержку списков
+  static const _databaseVersion = 17; // Добавляем поддержку заметок
 
   static const settingsTable = 'settings';
   static const dayNotesTable = 'day_notes';
@@ -26,6 +27,7 @@ class DatabaseHelper {
   static const medicationTakenRecordsTable = 'medication_taken_records';
   static const listsTable = 'lists';
   static const listItemsTable = 'list_items';
+  static const notesTable = 'notes';
 
   // Singleton
   DatabaseHelper._privateConstructor();
@@ -131,6 +133,16 @@ class DatabaseHelper {
         createdDate TEXT NOT NULL,
         updatedDate TEXT NOT NULL,
         FOREIGN KEY (listId) REFERENCES $listsTable (id) ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE $notesTable (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        createdDate TEXT NOT NULL,
+        updatedDate TEXT NOT NULL
       )
     ''');
 
@@ -287,6 +299,22 @@ class DatabaseHelper {
             ''');
           } catch (e) {
             // print('Error creating lists tables: $e');
+          }
+          break;
+        case 17:
+          try {
+            // Создаем таблицу для заметок
+            await db.execute('''
+              CREATE TABLE $notesTable (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                content TEXT NOT NULL,
+                createdDate TEXT NOT NULL,
+                updatedDate TEXT NOT NULL
+              )
+            ''');
+          } catch (e) {
+            // print('Error creating notes table: $e');
           }
           break;
       }
@@ -570,5 +598,33 @@ class DatabaseHelper {
       };
     }
     return {'total': 0, 'completed': 0};
+  }
+
+  // Note methods
+  Future<int> insertNote(NoteModel note) async {
+    Database db = await database;
+    return await db.insert(notesTable, note.toMap());
+  }
+
+  Future<int> updateNote(NoteModel note) async {
+    Database db = await database;
+    return await db.update(notesTable, note.toMap(), where: 'id = ?', whereArgs: [note.id]);
+  }
+
+  Future<int> deleteNote(int id) async {
+    Database db = await database;
+    return await db.delete(notesTable, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<NoteModel>> getAllNotes() async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query(notesTable, orderBy: 'updatedDate DESC');
+    return maps.map((map) => NoteModel.fromMap(map)).toList();
+  }
+
+  Future<NoteModel?> getNoteById(int id) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query(notesTable, where: 'id = ?', whereArgs: [id], limit: 1);
+    return maps.isNotEmpty ? NoteModel.fromMap(maps[0]) : null;
   }
 }

@@ -679,4 +679,72 @@ class AppLocalizationsEn extends AppLocalizations {
   String listUpdateError(Object message) {
     return 'Error updating list: $message';
   }
+
+  @override
+  String get notificationChannelName => 'Medication Reminders';
+
+  @override
+  String get notificationChannelDescription => 'Medication intake notifications';
+
+  @override
+  String get notificationTitle => 'Time to take medications!';
+
+  @override
+  String get notificationBody => 'Don\'t forget to take:';
+
+  @override
+  String get notesTitle => 'Notes';
+
+  @override
+  String get addNoteTitle => 'Add Note';
+
+  @override
+  String get editNoteTitle => 'Edit Note';
+
+  @override
+  String get noteTitleLabel => 'Note Title';
+
+  @override
+  String get noteContentLabel => 'Note Content';
+
+  @override
+  String get noteDateLabel => 'Note Date';
+
+  @override
+  String get noteRequired => 'Enter note title or content';
+
+  @override
+  String get noteSaved => 'Note saved';
+
+  @override
+  String get noteUpdated => 'Note updated';
+
+  @override
+  String get noteDeleted => 'Note deleted';
+
+  @override
+  String noteSaveError(Object message) {
+    return 'Error saving note: $message';
+  }
+
+  @override
+  String noteUpdateError(Object message) {
+    return 'Error updating note: $message';
+  }
+
+  @override
+  String noteDeleteError(Object message) {
+    return 'Error deleting note: $message';
+  }
+
+  @override
+  String get deleteNoteConfirmTitle => 'Delete Note';
+
+  @override
+  String deleteNoteConfirmMessage(Object title) {
+    return 'Are you sure you want to delete the note \"$title\"?';
+  }
+
+  @override
+  String get emptyNotesMessage => 'Create your first note';
 }

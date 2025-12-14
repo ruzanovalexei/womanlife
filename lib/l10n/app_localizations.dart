@@ -1318,6 +1318,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error updating list: {message}'**
   String listUpdateError(Object message);
+
+  /// No description provided for @notificationChannelName.
+  ///
+  /// In en, this message translates to:
+  /// **'Medication Reminders'**
+  String get notificationChannelName;
+
+  /// No description provided for @notificationChannelDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Medication intake notifications'**
+  String get notificationChannelDescription;
+
+  /// No description provided for @notificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Time to take medications!'**
+  String get notificationTitle;
+
+  /// No description provided for @notificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t forget to take:'**
+  String get notificationBody;
+
+  /// No description provided for @notesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get notesTitle;
+
+  /// No description provided for @addNoteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Note'**
+  String get addNoteTitle;
+
+  /// No description provided for @editNoteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Note'**
+  String get editNoteTitle;
+
+  /// No description provided for @noteTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Note Title'**
+  String get noteTitleLabel;
+
+  /// No description provided for @noteContentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Note Content'**
+  String get noteContentLabel;
+
+  /// No description provided for @noteDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Note Date'**
+  String get noteDateLabel;
+
+  /// No description provided for @noteRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter note title or content'**
+  String get noteRequired;
+
+  /// No description provided for @noteSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Note saved'**
+  String get noteSaved;
+
+  /// No description provided for @noteUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Note updated'**
+  String get noteUpdated;
+
+  /// No description provided for @noteDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Note deleted'**
+  String get noteDeleted;
+
+  /// No description provided for @noteSaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error saving note: {message}'**
+  String noteSaveError(Object message);
+
+  /// No description provided for @noteUpdateError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error updating note: {message}'**
+  String noteUpdateError(Object message);
+
+  /// No description provided for @noteDeleteError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error deleting note: {message}'**
+  String noteDeleteError(Object message);
+
+  /// No description provided for @deleteNoteConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Note'**
+  String get deleteNoteConfirmTitle;
+
+  /// No description provided for @deleteNoteConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete the note \"{title}\"?'**
+  String deleteNoteConfirmMessage(Object title);
+
+  /// No description provided for @emptyNotesMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first note'**
+  String get emptyNotesMessage;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

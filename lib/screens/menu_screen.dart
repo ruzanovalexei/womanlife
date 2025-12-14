@@ -8,6 +8,7 @@ import 'package:period_tracker/utils/date_utils.dart';
 import 'package:period_tracker/screens/day_detail_screen.dart';
 import 'package:period_tracker/screens/settings_screen.dart';
 import 'package:period_tracker/screens/lists_screen.dart';
+import 'package:period_tracker/screens/notes_screen.dart';
 import 'package:yandex_mobileads/mobile_ads.dart';
 //import 'package:yandex_mobileads/ad_widget.dart';
 //import 'package:yandex_mobileads/mobile_ads.dart';
@@ -124,9 +125,13 @@ class _MenuScreenState extends State<MenuScreen> {
         // );
         break;
       case 4:
-        // ScaffoldMessenger.of(context).showSnackBar(
-        //   SnackBar(content: Text(l10n.menuItem5)),
-        // );
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const NotesScreen()),
+        ).then((_) {
+          // Обновляем данные при возврате
+          _loadData();
+        });
         break;
       case 5:
         Navigator.push(
@@ -201,7 +206,7 @@ class _MenuScreenState extends State<MenuScreen> {
                   _buildMenuTile(
                     icon: Icons.note,
                     title: l10n.menu5,
-                    color: const Color.fromARGB(255, 116, 114, 115),
+                    color: Colors.pink[200]!,
                     onTap: () => _onMenuItemTap(4),
                   ),
                   const SizedBox(height: 12),
