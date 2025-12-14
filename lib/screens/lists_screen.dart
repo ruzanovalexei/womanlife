@@ -383,13 +383,13 @@ class _ListsScreenState extends State<ListsScreen> {
 
       await _databaseHelper.insertListItem(newItem);
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.listItemAdded),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 1),
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text(l10n.listItemAdded),
+      //     backgroundColor: Colors.green,
+      //     duration: const Duration(seconds: 1),
+      //   ),
+      // );
 
       await _loadData();
     } catch (e) {
