@@ -369,6 +369,10 @@
   "editListNameLabel": "Название списка",
   "listNameRequired": "Введите название списка",
   "listUpdated": "Список обновлен",
-  "listUpdateError": "Ошибка обновления списка: {message}"
+  "listUpdateError": "Ошибка обновления списка: {message}",
+  "notificationChannelName": "Напоминания о лекарствах",
+  "notificationChannelDescription": "Уведомления о приеме лекарств",
+  "notificationTitle": "Скоро принимать лекарства!",
+  "notificationBody": "Не забудьте принять:"
 }
 

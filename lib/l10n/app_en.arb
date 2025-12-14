@@ -367,5 +367,9 @@
   "editListNameLabel": "List Name",
   "listNameRequired": "Enter list name",
   "listUpdated": "List updated",
-  "listUpdateError": "Error updating list: {message}"
+  "listUpdateError": "Error updating list: {message}",
+  "notificationChannelName": "Medication Reminders",
+  "notificationChannelDescription": "Medication intake notifications",
+  "notificationTitle": "Time to take medications!",
+  "notificationBody": "Don't forget to take:"
 }

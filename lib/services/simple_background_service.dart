@@ -1,6 +1,7 @@
 import 'package:workmanager/workmanager.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:period_tracker/database/database_helper.dart';
+import 'package:period_tracker/utils/background_localizations.dart';
 //import 'package:period_tracker/models/medication.dart';
 //import 'package:period_tracker/models/medication_time.dart';
 
@@ -8,7 +9,7 @@ import 'package:period_tracker/database/database_helper.dart';
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     final DatabaseHelper databaseHelper = DatabaseHelper(); // Инициализация DatabaseHelper
-
+    
     // Инициализируем уведомления
     const AndroidInitializationSettings androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -75,8 +76,8 @@ void callbackDispatcher() {
     }
 
     if (upcomingMedications.isNotEmpty) {
-      const title = "Скоро принимать лекарства!";
-      final body = "Не забудьте принять:\n${upcomingMedications.join('\n')}";
+      final title = BackgroundLocalizations.getNotificationTitle();
+      final body = "${BackgroundLocalizations.getNotificationBody()}\n${upcomingMedications.join('\n')}";
 
       await notifications.show(
         DateTime.now().millisecondsSinceEpoch.remainder(100000), 
