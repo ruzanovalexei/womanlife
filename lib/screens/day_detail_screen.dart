@@ -534,88 +534,60 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
   }
 
   Future<void> _showQuickAddSymptomDialog() async {
-    final l10n = AppLocalizations.of(context)!;
-    final nameController = TextEditingController();
+    // final l10n = AppLocalizations.of(context)!;
 
-    return showDialog(
+    final result = await showDialog<String>(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Добавить новый симптом'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Название симптома',
-                  border: OutlineInputBorder(),
-                ),
-                autofocus: true,
-                onSubmitted: (_) {
-                  Navigator.pop(context);
-                  _quickAddSymptom(nameController.text);
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(l10n.cancelButton),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _quickAddSymptom(nameController.text);
-              },
-              child: const Text('Добавить'),
-            ),
-          ],
-        );
+        return const AddSymptomDialog();
       },
     );
-  }
 
-  Future<void> _quickAddSymptom(String symptomText) async {
-    final symptom = symptomText.trim();
-    if (symptom.isEmpty) return;
-
-    try {
-      // Добавляем симптом в глобальный список
-      if (!_allSymptoms.any((s) => s.toLowerCase() == symptom.toLowerCase())) {
-        final newSymptom = Symptom(name: symptom, isDefault: false);
-        await _databaseHelper.insertSymptom(newSymptom);
-        await _loadAllSymptoms(); // Перезагружаем список всех симптомов
-      }
-
-      // Добавляем симптом в текущий день
-      _addSymptom(symptom);
-
-      // Показываем уведомление об успехе
-      //final l10n = AppLocalizations.of(context)!;
-      if (mounted) {
-        // ScaffoldMessenger.of(context).showSnackBar(
-        //   SnackBar(
-        //     content: Text('Симптом "$symptom" добавлен'),
-        //     backgroundColor: Colors.green,
-        //     duration: const Duration(seconds: 2),
-        //   ),
-        // );
-      }
-    } catch (e) {
-      // Показываем ошибку
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Ошибка при добавлении симптома: $e'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
+    // Если пользователь добавил симптом, обрабатываем его
+    if (result != null && result.isNotEmpty) {
+      _addSymptom(result);
     }
   }
+
+  // Future<void> _quickAddSymptom(String symptomText) async {
+  //   final symptom = symptomText.trim();
+  //   if (symptom.isEmpty) return;
+
+  //   try {
+  //     // Добавляем симптом в глобальный список
+  //     if (!_allSymptoms.any((s) => s.toLowerCase() == symptom.toLowerCase())) {
+  //       final newSymptom = Symptom(name: symptom, isDefault: false);
+  //       await _databaseHelper.insertSymptom(newSymptom);
+  //       await _loadAllSymptoms(); // Перезагружаем список всех симптомов
+  //     }
+
+  //     // Добавляем симптом в текущий день
+  //     _addSymptom(symptom);
+
+  //     // Показываем уведомление об успехе
+  //     //final l10n = AppLocalizations.of(context)!;
+  //     if (mounted) {
+  //       // ScaffoldMessenger.of(context).showSnackBar(
+  //       //   SnackBar(
+  //       //     content: Text('Симптом "$symptom" добавлен'),
+  //       //     backgroundColor: Colors.green,
+  //       //     duration: const Duration(seconds: 2),
+  //       //   ),
+  //       // );
+  //     }
+  //   } catch (e) {
+  //     // Показываем ошибку
+  //     if (mounted) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(
+  //           content: Text('Ошибка при добавлении симптома: $e'),
+  //           backgroundColor: Colors.red,
+  //           duration: const Duration(seconds: 3),
+  //         ),
+  //       );
+  //     }
+  //   }
+  // }
 
   Future<void> _toggleMedicationTakenStatus(MedicationEvent event, bool isTaken) async {
     try {
@@ -1628,4 +1600,115 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
     super.dispose();
   }
 
+}
+
+// Отдельный виджет для диалога добавления симптома
+class AddSymptomDialog extends StatefulWidget {
+  const AddSymptomDialog({super.key});
+
+  @override
+  State<AddSymptomDialog> createState() => _AddSymptomDialogState();
+}
+
+class _AddSymptomDialogState extends State<AddSymptomDialog> {
+  late TextEditingController nameController;
+  bool isAtStart = true; // Отслеживаем, находится ли курсор в начале
+
+  @override
+  void initState() {
+    super.initState();
+    nameController = TextEditingController();
+    
+    // Добавляем listener для отслеживания позиции курсора
+    nameController.addListener(_updateKeyboardState);
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    super.dispose();
+  }
+
+  // Функция для обновления состояния клавиатуры
+  void _updateKeyboardState() {
+    final currentPosition = nameController.selection.extentOffset;
+    final newIsAtStart = currentPosition == 0;
+    
+    if (newIsAtStart != isAtStart) {
+      setState(() {
+        isAtStart = newIsAtStart;
+      });
+    }
+  }
+
+  Future<void> _addSymptom() async {
+    final symptom = nameController.text.trim();
+    if (symptom.isEmpty) return;
+
+    try {
+      // Получаем доступ к базе данных через контекст
+      final databaseHelper = DatabaseHelper();
+      
+      // Проверяем, есть ли уже такой симптом в глобальном списке
+      final allSymptoms = await databaseHelper.getAllSymptoms();
+      if (!allSymptoms.any((s) => s.toLowerCase() == symptom.toLowerCase())) {
+        final newSymptom = Symptom(name: symptom, isDefault: false);
+        await databaseHelper.insertSymptom(newSymptom);
+      }
+
+      // Закрываем диалог и передаем результат
+      if (mounted) {
+        Navigator.pop(context, symptom);
+      }
+    } catch (e) {
+      // Показываем ошибку
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ошибка при добавлении симптома: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return AlertDialog(
+      title: const Text('Добавить новый симптом'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: nameController,
+            decoration: const InputDecoration(
+              labelText: 'Название симптома',
+              border: OutlineInputBorder(),
+            ),
+            autofocus: true,
+            textCapitalization: isAtStart 
+                ? TextCapitalization.sentences // Первая буква заглавная, остальные строчные
+                : TextCapitalization.none,      // Все строчные буквы в середине
+            keyboardType: TextInputType.text,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _addSymptom(),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancelButton),
+        ),
+        ElevatedButton(
+          onPressed: _addSymptom,
+          child: const Text('Добавить'),
+        ),
+      ],
+    );
+  }
 }
