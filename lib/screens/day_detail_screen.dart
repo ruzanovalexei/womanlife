@@ -57,7 +57,7 @@ class DayDetailScreen extends StatefulWidget {
   final DateTime selectedDate;
   final List<PeriodRecord> periodRecords;
   final Settings settings;
-  final bool shouldReturnResult; // Нужно ли возвращать результат
+  final bool shouldReturnResult;
 
   const DayDetailScreen({
     super.key, 
@@ -74,12 +74,10 @@ class DayDetailScreen extends StatefulWidget {
 class _DayDetailScreenState extends State<DayDetailScreen> {
   final _databaseHelper = DatabaseHelper();
   late DayNote _dayNote;
-  //final _symptomController = TextEditingController();
   bool _isLoading = true;
   String? _errorMessage;
   
-  
-  //Реклама
+  // Реклама
   late BannerAd banner;
   var isBannerAlreadyCreated = false;
 
@@ -106,23 +104,6 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
 
 
 
-//Реклама
-  _createBanner() {
-    final screenWidth = MediaQuery.of(context).size.width.round();
-    final adSize = BannerAdSize.sticky(width: screenWidth);
-    
-    return BannerAd(
-      adUnitId: 'R-M-17946414-1',
-      adSize: adSize,
-      adRequest: const AdRequest(),
-      onAdLoaded: () {},
-      onAdFailedToLoad: (error) {},
-      onAdClicked: () {},
-      onLeftApplication: () {},
-      onReturnedToApplication: () {},
-      onImpression: (impressionData) {}
-    );
-  }
 
 
 
@@ -217,31 +198,58 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
   @override
   void initState() {
     super.initState();
+    _initializeScreen();
+  }
+
+  // Оптимизированная инициализация экрана
+  void _initializeScreen() {
+    _createAdBanner();
     _loadData();
   }
 
-  Future<void> _loadData({bool includeBanner = false}) async {
-    try {
+  // Создание баннера
+  BannerAd _createBanner() {
+    final screenWidth = MediaQuery.of(context).size.width.round();
+    final adSize = BannerAdSize.sticky(width: screenWidth);
+    
+    return BannerAd(
+      adUnitId: 'R-M-17946414-1',
+      adSize: adSize,
+      adRequest: const AdRequest(),
+      onAdLoaded: () {
+        if (mounted) {
+          setState(() {}); // Обновляем только для показа баннера
+        }
+      },
+      onAdFailedToLoad: (error) {
+        debugPrint('Ad failed to load: $error');
+      },
+      onAdClicked: () {},
+      onLeftApplication: () {},
+      onReturnedToApplication: () {},
+      onImpression: (impressionData) {}
+    );
+  }
 
-      if (includeBanner) {
-        banner = _createBanner();
-        
-        setState(() {
-          _isLoading = true;
-          _errorMessage = null;
-          isBannerAlreadyCreated = true;
-        });
-      } else {
-        setState(() {
-          _isLoading = true;
-          _errorMessage = null;
-        });
+  // Оптимизированное создание баннера
+  void _createAdBanner() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !isBannerAlreadyCreated) {
+        try {
+          banner = _createBanner();
+          setState(() {
+            isBannerAlreadyCreated = true;
+          });
+        } catch (e) {
+          debugPrint('Banner creation failed: $e');
+        }
       }
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
+    });
+  }
 
+  // Оптимизированная загрузка данных - один setState
+  Future<void> _loadData() async {
+    try {
       // Загружаем заметку дня
       DayNote? note = await _databaseHelper.getDayNote(widget.selectedDate);
       _dayNote = note ?? DayNote(
@@ -256,25 +264,27 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       _lastPeriod = await _databaseHelper.getLastPeriodRecord();
       _activePeriod = await _databaseHelper.getActivePeriodRecord();
 
-      await _loadAllSymptoms(); // Загружаем все симптомы через новую функцию
-      // Загружаем все лекарства
+      await _loadAllSymptoms();
       _allMedications = await _databaseHelper.getAllMedications();
-      // Загружаем записи о приеме лекарств для выбранного дня
       _takenRecords = await _databaseHelper.getMedicationTakenRecordsForDay(widget.selectedDate);
-
-      setState(() {
-        _isLoading = false;
-      });
       
-      // Проверяем разрешения после загрузки данных
       if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = null;
+        });
+        
+        // Проверяем разрешения после загрузки данных
         await PermissionsService.checkAndRequestPermissions(context);
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+        debugPrint('Error loading day detail data: $e');
+      }
     }
   }
 
@@ -666,38 +676,21 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
 @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-
-    // Создаем баннер только если его еще нет и мы не в процессе загрузки
-    if (!isBannerAlreadyCreated && !_isLoading) {
-      try {
-        banner = _createBanner();
-        setState(() {
-          isBannerAlreadyCreated = true;
-        });
-      } catch (e) {
-        // Игнорируем ошибки создания баннера
-      }
-    }
-
+    
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
             Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => const MenuScreen()),
-                (route) => false,
-              );
+              context,
+              MaterialPageRoute(builder: (context) => const MenuScreen()),
+              (route) => false,
+            );
           },
         ),
         title: Text(l10n.dayDetailsTitle),
         actions: [
-          // IconButton(
-          //   icon: const Icon(Icons.calendar_month),
-          //   onPressed: _openCalendar,
-          //   tooltip: 'Календарь',
-          // ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _refreshToCurrentDate,
@@ -713,109 +706,156 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
           ),
         ),
         child: Column(
-        children: [
-          // Основной контент
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _errorMessage != null
-                    ? Center(child: Text(l10n.errorWithMessage(_errorMessage!)))
-                    : SingleChildScrollView(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Элемент переключения дат
-                            Card(
-                              child: Padding(
-                                padding: const EdgeInsets.all(8),
-                                child: Row(
-                                  children: [
-                                    // Кнопка "предыдущая"
-                                    IconButton(
-                                      onPressed: _goToPreviousDay,
-                                      icon: const Icon(Icons.chevron_left),
-                                      tooltip: 'Предыдущий день',
-                                      constraints: const BoxConstraints(
-                                        minWidth: 44,
-                                        minHeight: 44,
-                                      ),
-                                    ),
-                                    
-                                    // Центральная часть с датой
-                                    Expanded(
-                                      child: InkWell(
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => HomeScreen(
-                                                calledFromDetailScreen: true,
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                                          child: Center(
-                                            child: Text(
-                                              _formatDate(context, widget.selectedDate),
-                                              style: const TextStyle(
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    
-                                    // Кнопка "следующая"
-                                    IconButton(
-                                      onPressed: _goToNextDay,
-                                      icon: const Icon(Icons.chevron_right),
-                                      tooltip: 'Следующий день',
-                                      constraints: const BoxConstraints(
-                                        minWidth: 44,
-                                        minHeight: 44,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-
-                            // Блок "Месячные"
-                            _buildPeriodBlock(l10n),
-                            const SizedBox(height: 8),
-//Убрал на будущее, пока не особо нужен
-                            // Блок "Секс"
-                            _buildSexBlock(l10n),
-                            const SizedBox(height: 8),
-
-                            // Блок "Самочувствие"
-                            _buildHealthBlock(l10n),
-                            const SizedBox(height: 8),
-
-                            // Блок "Лекарства"
-                            _buildMedicineBlock(l10n),
-                          ],
-                        ),
-                      ),
-          ),
-          
-          // Виджет рекламы
-          Container(
-            alignment: Alignment.bottomCenter,
-            child: isBannerAlreadyCreated ? AdWidget(bannerAd: banner) : null,
-          ),
-        ],
-      ),
+          children: [
+            // Основной контент
+            Expanded(
+              child: _buildMainContent(l10n),
+            ),
+            
+            // Блок рекламы
+            _buildBannerWidget(),
+          ],
+        ),
       ),
     );
   }
+
+  // Вынесенный основной контент
+  Widget _buildMainContent(AppLocalizations l10n) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    
+    if (_errorMessage != null) {
+      return _buildErrorWidget(l10n);
+    }
+    
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Элемент переключения дат
+          _buildDateNavigation(),
+          const SizedBox(height: 16),
+
+          // Блок "Месячные"
+          _buildPeriodBlock(l10n),
+          const SizedBox(height: 8),
+
+          // Блок "Секс"
+          _buildSexBlock(l10n),
+          const SizedBox(height: 8),
+
+          // Блок "Самочувствие"
+          _buildHealthBlock(l10n),
+          const SizedBox(height: 8),
+
+          // Блок "Лекарства"
+          _buildMedicineBlock(l10n),
+        ],
+      ),
+    );
+  }
+
+  // Виджет навигации по датам
+  Widget _buildDateNavigation() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Row(
+          children: [
+            // Кнопка "предыдущая"
+            IconButton(
+              onPressed: _goToPreviousDay,
+              icon: const Icon(Icons.chevron_left),
+              tooltip: 'Предыдущий день',
+              constraints: const BoxConstraints(
+                minWidth: 44,
+                minHeight: 44,
+              ),
+            ),
+            
+            // Центральная часть с датой
+            Expanded(
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => HomeScreen(
+                        calledFromDetailScreen: true,
+                      ),
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  child: Center(
+                    child: Text(
+                      _formatDate(context, widget.selectedDate),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            
+            // Кнопка "следующая"
+            IconButton(
+              onPressed: _goToNextDay,
+              icon: const Icon(Icons.chevron_right),
+              tooltip: 'Следующий день',
+              constraints: const BoxConstraints(
+                minWidth: 44,
+                minHeight: 44,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Виджет ошибки
+  Widget _buildErrorWidget(AppLocalizations l10n) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error, size: 64, color: Colors.red[300]),
+          const SizedBox(height: 16),
+          Text(
+            l10n.errorWithMessage(_errorMessage!),
+            style: const TextStyle(fontSize: 16),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _loadData,
+            child: Text(l10n.retry),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Вынесенный виджет баннера
+  Widget _buildBannerWidget() {
+    return Container(
+      alignment: Alignment.bottomCenter,
+      padding: const EdgeInsets.only(bottom: 8),
+      height: isBannerAlreadyCreated ? 60 : 0, // Фиксированная высота
+      child: isBannerAlreadyCreated 
+          ? AdWidget(bannerAd: banner)
+          : const SizedBox.shrink(),
+    );
+  }
+
 
   // Блок "Месячные"
   Widget _buildPeriodBlock(AppLocalizations l10n) {

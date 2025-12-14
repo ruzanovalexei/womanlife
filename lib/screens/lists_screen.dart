@@ -24,13 +24,24 @@ class _ListsScreenState extends State<ListsScreen> {
   // ID открытого списка (только один список может быть открыт одновременно)
   int? _expandedListId;
 
-  //Реклама
+  // Реклама
   late BannerAd banner;
   var isBannerAlreadyCreated = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _initializeScreen();
+  }
 
-//Реклама
-  _createBanner() {
+  // Оптимизированная инициализация экрана
+  void _initializeScreen() {
+    _createAdBanner();
+    _loadData();
+  }
+
+  // Создание баннера
+  BannerAd _createBanner() {
     final screenWidth = MediaQuery.of(context).size.width.round();
     final adSize = BannerAdSize.sticky(width: screenWidth);
     
@@ -38,8 +49,14 @@ class _ListsScreenState extends State<ListsScreen> {
       adUnitId: 'R-M-17946414-1',
       adSize: adSize,
       adRequest: const AdRequest(),
-      onAdLoaded: () {},
-      onAdFailedToLoad: (error) {},
+      onAdLoaded: () {
+        if (mounted) {
+          setState(() {}); // Обновляем только для показа баннера
+        }
+      },
+      onAdFailedToLoad: (error) {
+        debugPrint('Ad failed to load: $error');
+      },
       onAdClicked: () {},
       onLeftApplication: () {},
       onReturnedToApplication: () {},
@@ -47,44 +64,42 @@ class _ListsScreenState extends State<ListsScreen> {
     );
   }
 
-
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
+  // Оптимизированное создание баннера
+  void _createAdBanner() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !isBannerAlreadyCreated) {
+        try {
+          banner = _createBanner();
+          setState(() {
+            isBannerAlreadyCreated = true;
+          });
+        } catch (e) {
+          debugPrint('Banner creation failed: $e');
+        }
+      }
+    });
   }
 
-  Future<void> _loadData({bool includeBanner = false}) async {
+  // Оптимизированная загрузка данных - один setState
+  Future<void> _loadData() async {
     try {
-      if (includeBanner) {
-        banner = _createBanner();
-        
+      final lists = await _databaseHelper.getAllLists();
+      
+      if (mounted) {
         setState(() {
-          _isLoading = true;
-          _errorMessage = null;
-          isBannerAlreadyCreated = true;
-        });
-      } else {
-        setState(() {
-          _isLoading = true;
+          _lists = lists;
+          _isLoading = false;
           _errorMessage = null;
         });
       }
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
-
-      _lists = await _databaseHelper.getAllLists();
-
-      setState(() {
-        _isLoading = false;
-      });
     } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+        debugPrint('Error loading lists: $e');
+      }
     }
   }
 
@@ -130,16 +145,17 @@ class _ListsScreenState extends State<ListsScreen> {
       return;
     }
 
-    try {
-      final now = DateTime.now();
-      final newList = ListModel(
-        name: trimmedName,
-        createdDate: now,
-        updatedDate: now,
-      );
+  try {
+    final now = DateTime.now();
+    final newList = ListModel(
+      name: trimmedName,
+      createdDate: now,
+      updatedDate: now,
+    );
 
-      await _databaseHelper.insertList(newList);
-      
+    await _databaseHelper.insertList(newList);
+    
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.listSaved),
@@ -149,7 +165,9 @@ class _ListsScreenState extends State<ListsScreen> {
       );
 
       await _loadData();
-    } catch (e) {
+    }
+  } catch (e) {
+    if (mounted) {
       final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -157,8 +175,10 @@ class _ListsScreenState extends State<ListsScreen> {
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
+      debugPrint('Error saving list: $e');
     }
   }
+}
 
   Future<void> _updateList(ListModel list, String name) async {
     final l10n = AppLocalizations.of(context)!;
@@ -339,17 +359,7 @@ class _ListsScreenState extends State<ListsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    // Создаем баннер только если его еще нет и мы не в процессе загрузки
-    if (!isBannerAlreadyCreated && !_isLoading) {
-      try {
-        banner = _createBanner();
-        setState(() {
-          isBannerAlreadyCreated = true;
-        });
-      } catch (e) {
-        // Игнорируем ошибки создания баннера
-      }
-    }
+    
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -378,94 +388,136 @@ class _ListsScreenState extends State<ListsScreen> {
             fit: BoxFit.cover,
           ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Заголовок и кнопка добавления
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    l10n.addListTitle,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  FloatingActionButton(
-                    onPressed: _showAddListDialog,
-                    child: const Icon(Icons.add),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Списки
-              Expanded(
-                child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _errorMessage != null
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.error, size: 64, color: Colors.red[300]),
-                                const SizedBox(height: 16),
-                                Text(
-                                  l10n.errorWithMessage(_errorMessage!),
-                                  style: const TextStyle(fontSize: 16),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 16),
-                                ElevatedButton(
-                                  onPressed: _loadData,
-                                  child: Text(l10n.retry),
-                                ),
-                              ],
-                            ),
-                          )
-                        : _lists.isEmpty
-                            ? Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.checklist,
-                                      size: 64,
-                                      color: Colors.grey[400],
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      l10n.emptyListsMessage,
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            : ListView.builder(
-                                padding: EdgeInsets.zero,
-                                itemCount: _lists.length,
-                                itemBuilder: (context, index) {
-                                  final list = _lists[index];
-                                  return _buildListBlock(list, l10n);
-                                },
-                              ),
-              ),
-
-                        // Виджет рекламы
-          Container(
-            alignment: Alignment.bottomCenter,
-            child: isBannerAlreadyCreated ? AdWidget(bannerAd: banner) : null,
-          ),
-            ],
-          ),
+        child: Column(
+          children: [
+            // Основной контент
+            Expanded(
+              child: _buildMainContent(l10n),
+            ),
+            
+            // Блок рекламы
+            _buildBannerWidget(),
+          ],
         ),
       ),
+    );
+  }
+
+  // Вынесенный основной контент
+  Widget _buildMainContent(AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Заголовок и кнопка добавления
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                l10n.addListTitle,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              FloatingActionButton(
+                onPressed: _showAddListDialog,
+                child: const Icon(Icons.add),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Списки
+          Expanded(
+            child: _buildListsContent(l10n),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Вынесенный контент списков
+  Widget _buildListsContent(AppLocalizations l10n) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    
+    if (_errorMessage != null) {
+      return _buildErrorWidget(l10n);
+    }
+    
+    if (_lists.isEmpty) {
+      return _buildEmptyWidget(l10n);
+    }
+    
+    return ListView.builder(
+      padding: EdgeInsets.zero,
+      itemCount: _lists.length,
+      itemBuilder: (context, index) {
+        final list = _lists[index];
+        return _buildListBlock(list, l10n);
+      },
+    );
+  }
+
+  // Виджет ошибки
+  Widget _buildErrorWidget(AppLocalizations l10n) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error, size: 64, color: Colors.red[300]),
+          const SizedBox(height: 16),
+          Text(
+            l10n.errorWithMessage(_errorMessage!),
+            style: const TextStyle(fontSize: 16),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _loadData,
+            child: Text(l10n.retry),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Виджет пустого состояния
+  Widget _buildEmptyWidget(AppLocalizations l10n) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.checklist,
+            size: 64,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            l10n.emptyListsMessage,
+            style: const TextStyle(
+              fontSize: 18,
+              color: Colors.grey,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Вынесенный виджет баннера
+  Widget _buildBannerWidget() {
+    return Container(
+      alignment: Alignment.bottomCenter,
+      padding: const EdgeInsets.only(bottom: 8),
+      // height: isBannerAlreadyCreated ? 60 : 0, // Фиксированная высота
+      child: isBannerAlreadyCreated 
+          ? AdWidget(bannerAd: banner)
+          : const SizedBox.shrink(),
     );
   }
 

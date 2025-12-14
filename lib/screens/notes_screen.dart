@@ -20,11 +20,24 @@ class _NotesScreenState extends State<NotesScreen> {
   bool _isLoading = true;
   String? _errorMessage;
 
-  //Реклама
+  // Реклама
   late BannerAd banner;
   var isBannerAlreadyCreated = false;
 
-  _createBanner() {
+  @override
+  void initState() {
+    super.initState();
+    _initializeScreen();
+  }
+
+  // Оптимизированная инициализация экрана
+  void _initializeScreen() {
+    _createAdBanner();
+    _loadData();
+  }
+
+  // Создание баннера
+  BannerAd _createBanner() {
     final screenWidth = MediaQuery.of(context).size.width.round();
     final adSize = BannerAdSize.sticky(width: screenWidth);
     
@@ -32,8 +45,14 @@ class _NotesScreenState extends State<NotesScreen> {
       adUnitId: 'R-M-17946414-3',
       adSize: adSize,
       adRequest: const AdRequest(),
-      onAdLoaded: () {},
-      onAdFailedToLoad: (error) {},
+      onAdLoaded: () {
+        if (mounted) {
+          setState(() {}); // Обновляем только для показа баннера
+        }
+      },
+      onAdFailedToLoad: (error) {
+        debugPrint('Ad failed to load: $error');
+      },
       onAdClicked: () {},
       onLeftApplication: () {},
       onReturnedToApplication: () {},
@@ -41,47 +60,48 @@ class _NotesScreenState extends State<NotesScreen> {
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
+  // Оптимизированное создание баннера
+  void _createAdBanner() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !isBannerAlreadyCreated) {
+        try {
+          banner = _createBanner();
+          setState(() {
+            isBannerAlreadyCreated = true;
+          });
+        } catch (e) {
+          debugPrint('Banner creation failed: $e');
+        }
+      }
+    });
   }
 
-  Future<void> _loadData({bool includeBanner = false}) async {
+  // Оптимизированная загрузка данных - один setState
+  Future<void> _loadData() async {
     try {
-      if (includeBanner) {
-        banner = _createBanner();
-        
+      final notes = await _databaseHelper.getAllNotes();
+      
+      if (mounted) {
         setState(() {
-          _isLoading = true;
-          _errorMessage = null;
-          isBannerAlreadyCreated = true;
-        });
-      } else {
-        setState(() {
-          _isLoading = true;
+          _notes = notes;
+          _isLoading = false;
           _errorMessage = null;
         });
       }
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
-
-      _notes = await _databaseHelper.getAllNotes();
-
-      setState(() {
-        _isLoading = false;
-      });
     } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+        debugPrint('Error loading notes: $e');
+      }
     }
   }
 
   Future<void> _showAddNoteDialog() async {
+    if (!mounted) return;
+    
     final result = await showDialog<NoteModel>(
       context: context,
       builder: (context) {
@@ -90,12 +110,14 @@ class _NotesScreenState extends State<NotesScreen> {
     );
 
     // Если пользователь добавил заметку, обрабатываем её
-    if (result != null) {
+    if (result != null && mounted) {
       await _saveNote(result);
     }
   }
 
   Future<void> _showEditNoteDialog(NoteModel note) async {
+    if (!mounted) return;
+    
     final result = await showDialog<NoteModel>(
       context: context,
       builder: (context) {
@@ -104,7 +126,7 @@ class _NotesScreenState extends State<NotesScreen> {
     );
 
     // Если пользователь обновил заметку, обрабатываем её
-    if (result != null) {
+    if (result != null && mounted) {
       await _updateNote(result);
     }
   }
@@ -230,140 +252,170 @@ class _NotesScreenState extends State<NotesScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    
-    // Создаем баннер только если его еще нет и мы не в процессе загрузки
-    if (!isBannerAlreadyCreated && !_isLoading) {
-      try {
-        banner = _createBanner();
-        setState(() {
-          isBannerAlreadyCreated = true;
-        });
-      } catch (e) {
-        // Игнорируем ошибки создания баннера
-      }
-    }
-    
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => const MenuScreen()),
-              (route) => false,
-            );
-          },
+@override
+Widget build(BuildContext context) {
+  final l10n = AppLocalizations.of(context)!;
+  
+  return Scaffold(
+    appBar: AppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const MenuScreen()),
+            (route) => false,
+          );
+        },
+      ),
+      title: Text(l10n.notesTitle),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh),
+          onPressed: _loadData,
+          tooltip: l10n.refreshTooltip,
         ),
-        title: Text(l10n.notesTitle),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadData,
-            tooltip: l10n.refreshTooltip,
+      ],
+    ),
+    body: Container(
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('assets/images/fon1.png'),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: Column(
+        children: [
+          // Основной контент
+          Expanded(
+            child: _buildMainContent(l10n),
           ),
+          
+          // Блок рекламы
+          _buildBannerWidget(),
         ],
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/fon1.png'),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Заголовок и кнопка добавления
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    l10n.addNoteTitle,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  FloatingActionButton(
-                    onPressed: _showAddNoteDialog,
-                    child: const Icon(Icons.add),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
+    ),
+  );
+}
 
-              // Список заметок
-              Expanded(
-                child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _errorMessage != null
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.error, size: 64, color: Colors.red[300]),
-                                const SizedBox(height: 16),
-                                Text(
-                                  l10n.errorWithMessage(_errorMessage!),
-                                  style: const TextStyle(fontSize: 16),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 16),
-                                ElevatedButton(
-                                  onPressed: _loadData,
-                                  child: Text(l10n.retry),
-                                ),
-                              ],
-                            ),
-                          )
-                        : _notes.isEmpty
-                            ? Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.sticky_note_2,
-                                      size: 64,
-                                      color: Colors.grey[400],
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      l10n.emptyNotesMessage,
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            : ListView.builder(
-                                padding: EdgeInsets.zero,
-                                itemCount: _notes.length,
-                                itemBuilder: (context, index) {
-                                  final note = _notes[index];
-                                  return _buildNoteCard(note, l10n);
-                                },
-                              ),
+// Вынесенный основной контент
+Widget _buildMainContent(AppLocalizations l10n) {
+  return Padding(
+    padding: const EdgeInsets.all(16),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Заголовок и кнопка добавления
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              l10n.addNoteTitle,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
               ),
-
-              // Виджет рекламы
-              Container(
-                alignment: Alignment.bottomCenter,
-                child: isBannerAlreadyCreated ? AdWidget(bannerAd: banner) : null,
-              ),
-            ],
-          ),
+            ),
+            FloatingActionButton(
+              onPressed: _showAddNoteDialog,
+              child: const Icon(Icons.add),
+            ),
+          ],
         ),
-      ),
-    );
+        const SizedBox(height: 16),
+
+        // Список заметок
+        Expanded(
+          child: _buildNotesList(l10n),
+        ),
+      ],
+    ),
+  );
+}
+
+// Вынесенный список заметок
+Widget _buildNotesList(AppLocalizations l10n) {
+  if (_isLoading) {
+    return const Center(child: CircularProgressIndicator());
   }
+  
+  if (_errorMessage != null) {
+    return _buildErrorWidget(l10n);
+  }
+  
+  if (_notes.isEmpty) {
+    return _buildEmptyWidget(l10n);
+  }
+  
+  return ListView.builder(
+    padding: EdgeInsets.zero,
+    itemCount: _notes.length,
+    itemBuilder: (context, index) {
+      final note = _notes[index];
+      return _buildNoteCard(note, l10n);
+    },
+  );
+}
+
+// Виджет ошибки
+Widget _buildErrorWidget(AppLocalizations l10n) {
+  return Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.error, size: 64, color: Colors.red[300]),
+        const SizedBox(height: 16),
+        Text(
+          l10n.errorWithMessage(_errorMessage!),
+          style: const TextStyle(fontSize: 16),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: _loadData,
+          child: Text(l10n.retry),
+        ),
+      ],
+    ),
+  );
+}
+
+// Виджет пустого состояния
+Widget _buildEmptyWidget(AppLocalizations l10n) {
+  return Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          Icons.sticky_note_2,
+          size: 64,
+          color: Colors.grey[400],
+        ),
+        const SizedBox(height: 16),
+        Text(
+          l10n.emptyNotesMessage,
+          style: const TextStyle(
+            fontSize: 18,
+            color: Colors.grey,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+// Виджет баннера
+Widget _buildBannerWidget() {
+  return Container(
+    alignment: Alignment.bottomCenter,
+    padding: const EdgeInsets.only(bottom: 8),
+    height: isBannerAlreadyCreated ? 60 : 0,
+    child: isBannerAlreadyCreated 
+        ? AdWidget(bannerAd: banner)
+        : const SizedBox.shrink(),
+  );
+}
 
   Widget _buildNoteCard(NoteModel note, AppLocalizations l10n) {
     final localeTag = Localizations.localeOf(context).toString();
