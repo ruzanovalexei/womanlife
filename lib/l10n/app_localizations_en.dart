@@ -476,19 +476,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuSubtitle => 'Choose the section you need';
 
   @override
-  String get menuAnalytics => 'Health';
+  String get menu1 => 'Health';
 
   @override
-  String get menuMedications => 'Daily Schedule';
+  String get menu2 => 'Daily Schedule';
 
   @override
-  String get menuInsights => 'Lists';
+  String get menu3 => 'Lists';
 
   @override
-  String get menuReminders => 'Habits';
+  String get menu4 => 'Habits';
 
   @override
-  String get menuHelp => 'Notes';
+  String get menu5 => 'Notes';
 
   @override
   String get menuItem1 => 'Health opened';

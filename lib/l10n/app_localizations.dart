@@ -941,35 +941,35 @@ abstract class AppLocalizations {
   /// **'Choose the section you need'**
   String get menuSubtitle;
 
-  /// No description provided for @menuAnalytics.
+  /// No description provided for @menu1.
   ///
   /// In en, this message translates to:
   /// **'Health'**
-  String get menuAnalytics;
+  String get menu1;
 
-  /// No description provided for @menuMedications.
+  /// No description provided for @menu2.
   ///
   /// In en, this message translates to:
   /// **'Daily Schedule'**
-  String get menuMedications;
+  String get menu2;
 
-  /// No description provided for @menuInsights.
+  /// No description provided for @menu3.
   ///
   /// In en, this message translates to:
   /// **'Lists'**
-  String get menuInsights;
+  String get menu3;
 
-  /// No description provided for @menuReminders.
+  /// No description provided for @menu4.
   ///
   /// In en, this message translates to:
   /// **'Habits'**
-  String get menuReminders;
+  String get menu4;
 
-  /// No description provided for @menuHelp.
+  /// No description provided for @menu5.
   ///
   /// In en, this message translates to:
   /// **'Notes'**
-  String get menuHelp;
+  String get menu5;
 
   /// No description provided for @menuItem1.
   ///
