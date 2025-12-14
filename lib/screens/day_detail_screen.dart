@@ -592,9 +592,11 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
         TimeOfDay(hour: event.scheduledTime.hour, minute: event.scheduledTime.minute),
       );
 
+      MedicationTakenRecord updatedRecord; // Объявляем переменную перед блоками условий
+
       if (isTaken) {
         // Отмечаем как принятое
-        final newRecord = existingRecord?.copyWith(
+        updatedRecord = existingRecord?.copyWith(
               isTaken: true,
               actualTakenTime: DateTime.now(),
             ) ??
@@ -605,22 +607,45 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
               actualTakenTime: DateTime.now(),
               isTaken: true,
             );
+        
         if (existingRecord == null) {
-          await _databaseHelper.insertMedicationTakenRecord(newRecord);
+          await _databaseHelper.insertMedicationTakenRecord(updatedRecord);
         } else {
-          await _databaseHelper.updateMedicationTakenRecord(newRecord);
+          await _databaseHelper.updateMedicationTakenRecord(updatedRecord);
         }
       } else {
-        // Отмечаем как непринятое или удаляем запись, если она была
+        // Отмечаем как непринятое
         if (existingRecord != null) {
-          final updatedRecord = existingRecord.copyWith(
+          updatedRecord = existingRecord.copyWith(
             isTaken: false,
             actualTakenTime: null, // Сбрасываем фактическое время
           );
           await _databaseHelper.updateMedicationTakenRecord(updatedRecord);
+        } else {
+          // Если записи не было, создаем новую с isTaken = false
+          updatedRecord = MedicationTakenRecord(
+            medicationId: event.medicationId,
+            date: widget.selectedDate,
+            scheduledTime: TimeOfDay(hour: event.scheduledTime.hour, minute: event.scheduledTime.minute),
+            isTaken: false,
+          );
+          await _databaseHelper.insertMedicationTakenRecord(updatedRecord);
         }
       }
-      await _loadData(); // Перезагружаем данные, чтобы обновить UI
+      // Обновляем только локальные данные без перезагрузки всего экрана
+      setState(() {
+        // Обновляем записи о приеме лекарств
+        final existingIndex = _takenRecords.indexWhere((record) =>
+            record.medicationId == event.medicationId &&
+            record.scheduledTime.hour == event.scheduledTime.hour &&
+            record.scheduledTime.minute == event.scheduledTime.minute);
+
+        if (existingIndex >= 0) {
+          _takenRecords[existingIndex] = updatedRecord;
+        } else {
+          _takenRecords.add(updatedRecord);
+        }
+      });
     } catch (e) {
       // print('Ошибка при обновлении статуса приема лекарства: $e');
       ScaffoldMessenger.of(context).showSnackBar(
