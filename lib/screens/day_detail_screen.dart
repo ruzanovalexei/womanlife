@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+//import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:period_tracker/l10n/app_localizations.dart';
 
@@ -420,6 +420,8 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
   Future<void> _loadAllSymptoms() async {
     try {
       _allSymptoms = await _databaseHelper.getAllSymptoms();
+      // Сортируем симптомы в алфавитном порядке
+      _allSymptoms.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
     } catch (e) {
       print('Error loading all symptoms: $e');
       setState(() {
@@ -1335,13 +1337,15 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: _dayNote.symptoms.map((symptom) => Chip(
-                      label: Text(symptom),
-                      onDeleted: () => _removeSymptom(symptom),
-                      deleteIcon: const Icon(Icons.clear, size: 18),
-                      backgroundColor: Colors.pink.shade50,
-                      side: BorderSide(color: Colors.pink.shade200),
-                    )).toList(),
+                    children: (_dayNote.symptoms.toList()
+                          ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase())))
+                        .map((symptom) => Chip(
+                          label: Text(symptom),
+                          onDeleted: () => _removeSymptom(symptom),
+                          deleteIcon: const Icon(Icons.clear, size: 18),
+                          backgroundColor: Colors.pink.shade50,
+                          side: BorderSide(color: Colors.pink.shade200),
+                        )).toList(),
                   ),
                 ] else
                   Text(
