@@ -342,6 +342,7 @@
   "periodBlockTitle": "Period",
   "delayLabel": "Delay",
   "previousPeriodsTitle": "Previous periods",
+  "nextPlannedPeriodsTitle": "Next planned periods",
   "activeLabel": "(active)",
   "durationLabel": "Duration:",
   "durationDayOne": "day",

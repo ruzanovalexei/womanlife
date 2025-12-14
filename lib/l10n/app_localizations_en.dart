@@ -604,6 +604,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get previousPeriodsTitle => 'Previous periods';
 
   @override
+  String get nextPlannedPeriodsTitle => 'Next planned periods';
+
+  @override
   String get activeLabel => '(active)';
 
   @override

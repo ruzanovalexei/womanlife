@@ -1169,6 +1169,12 @@ abstract class AppLocalizations {
   /// **'Previous periods'**
   String get previousPeriodsTitle;
 
+  /// No description provided for @nextPlannedPeriodsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Next planned periods'**
+  String get nextPlannedPeriodsTitle;
+
   /// No description provided for @activeLabel.
   ///
   /// In en, this message translates to:

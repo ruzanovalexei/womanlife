@@ -86,6 +86,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
 
   PeriodRecord? _lastPeriod;
   PeriodRecord? _activePeriod;
+  List<PeriodRecord> _allPeriodRecords = []; // Все записи о периодах для расчета плановых периодов
   List<String> _allSymptoms = []; // Список всех доступных симптомов
   List<Medication> _allMedications = []; // Список всех лекарств
 
@@ -99,9 +100,9 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
   bool get _canMarkStart => PeriodCalculator.canMarkPeriodStart(widget.selectedDate, _lastPeriod);
   bool get _canMarkEnd => PeriodCalculator.canMarkPeriodEnd(widget.selectedDate, _activePeriod);
   bool get _isInActivePeriod => PeriodCalculator.isDateInActivePeriod(widget.selectedDate, _activePeriod);
-  bool get _isDelayDay => PeriodCalculator.isDelayDay(widget.selectedDate, widget.settings, widget.periodRecords);
-  bool get _isOvulationDay => PeriodCalculator.isOvulationDay(widget.selectedDate, widget.settings, widget.periodRecords);
-  bool get _isFertileDay => PeriodCalculator.isFertileDay(widget.selectedDate, widget.settings, widget.periodRecords);
+  // bool get _isDelayDay => PeriodCalculator.isDelayDay(widget.selectedDate, widget.settings, _allPeriodRecords);
+  bool get _isOvulationDay => PeriodCalculator.isOvulationDay(widget.selectedDate, widget.settings, _allPeriodRecords);
+  bool get _isFertileDay => PeriodCalculator.isFertileDay(widget.selectedDate, widget.settings, _allPeriodRecords);
 
 
 
@@ -126,32 +127,57 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
 
 
 
-  // Найти предыдущий период, предшествующий выбранному дню
-  PeriodRecord? get _previousPeriod {
-    if (widget.periodRecords.isEmpty) return null;
+  // Получить следующие плановые периоды (первые после последних фактических с интервалом более 14 дней)
+  List<PeriodRange> get _nextPlannedPeriods {
+    if (_allPeriodRecords.isEmpty) return [];
     
-    // Фильтруем периоды, которые заканчиваются до выбранной даты
-    final previousPeriods = widget.periodRecords.where((period) {
-      final periodEndDate = period.endDate ?? PeriodCalculator.getToday();
-      return periodEndDate.isBefore(widget.selectedDate) || 
-             periodEndDate.isAtSameMomentAs(widget.selectedDate);
+    // Рассчитываем все плановые периоды на основе настроек и фактических записей
+    final plannedPeriods = PeriodCalculator.calculatePlannedPeriods(
+      widget.settings, 
+      _allPeriodRecords
+    );
+    
+    // Находим последний фактический период
+    final sortedActualPeriods = List<PeriodRecord>.from(_allPeriodRecords)
+      ..sort((a, b) => b.startDate.compareTo(a.startDate));
+    
+    if (sortedActualPeriods.isEmpty) return [];
+    
+    final lastActualPeriod = sortedActualPeriods.first;
+    
+    // Фильтруем плановые периоды, оставляя только те, которые начинаются 
+    // более чем через 14 дней после последнего фактического
+    final nextPlannedPeriods = plannedPeriods.where((plannedPeriod) {
+      final daysDifference = plannedPeriod.startDate.difference(lastActualPeriod.startDate).inDays;
+      return daysDifference > 14;
     }).toList();
     
-    if (previousPeriods.isEmpty) return null;
-    
-    // Сортируем по дате окончания (от новых к старым) и берем первый
-    previousPeriods.sort((a, b) {
-      final aEndDate = a.endDate ?? PeriodCalculator.getToday();
-      final bEndDate = b.endDate ?? PeriodCalculator.getToday();
-      return bEndDate.compareTo(aEndDate);
-    });
-    
-    return previousPeriods.first;
+    // Берем только первый плановый период для отображения
+    return nextPlannedPeriods.take(1).toList();
   }
 
   String _formatDate(BuildContext context, DateTime date) {
     final localeTag = Localizations.localeOf(context).toString();
     return DateFormat('dd.MM.yyyy', localeTag).format(date);
+  }
+
+  // Обновить экран с переходом к текущей дате
+  void _refreshToCurrentDate() {
+    final currentDate = PeriodCalculator.getToday();
+    
+    // Переходим к главному экрану с текущей датой
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DayDetailScreen(
+          selectedDate: currentDate,
+          periodRecords: widget.periodRecords, // Передаем текущие записи периодов
+          settings: widget.settings,
+          shouldReturnResult: false,
+        ),
+      ),
+      (route) => false,
+    );
   }
 
   @override
@@ -189,6 +215,9 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
         symptoms: [],
       );
 
+      // Загружаем все периоды из базы данных
+      _allPeriodRecords = await _databaseHelper.getAllPeriodRecords();
+      
       // Загружаем последний период и активный период
       _lastPeriod = await _databaseHelper.getLastPeriodRecord();
       _activePeriod = await _databaseHelper.getActivePeriodRecord();
@@ -217,19 +246,19 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
 
   Future<void> _startNewPeriod() async {
     try {
-      final l10n = AppLocalizations.of(context)!;
+      // final l10n = AppLocalizations.of(context)!;
       final newPeriod = PeriodRecord(
         startDate: widget.selectedDate,
       );
       
       await _databaseHelper.insertPeriodRecord(newPeriod);
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.startPeriodSuccess),
-          backgroundColor: Colors.green,
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text(l10n.startPeriodSuccess),
+      //     backgroundColor: Colors.green,
+      //   ),
+      // );
       
       await _loadData(); // Перезагружаем данные
       
@@ -268,12 +297,12 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       
       await _databaseHelper.updatePeriodRecord(updatedPeriod);
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.endPeriodSuccess),
-          backgroundColor: Colors.green,
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text(l10n.endPeriodSuccess),
+      //     backgroundColor: Colors.green,
+      //   ),
+      // );
       
       await _loadData(); // Перезагружаем данные
       
@@ -292,15 +321,15 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
     if (_activePeriod == null) return;
     
     try {
-      final l10n = AppLocalizations.of(context)!;
+      // final l10n = AppLocalizations.of(context)!;
       await _databaseHelper.deletePeriodRecord(_activePeriod!.id!);
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.cancelPeriodSuccess),
-          backgroundColor: Colors.green,
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text(l10n.cancelPeriodSuccess),
+      //     backgroundColor: Colors.green,
+      //   ),
+      // );
       
       await _loadData(); // Перезагружаем данные
       
@@ -319,16 +348,16 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
     if (_lastPeriod == null || _lastPeriod!.endDate == null) return;
     
     try {
-      final l10n = AppLocalizations.of(context)!;
+      // final l10n = AppLocalizations.of(context)!;
       final updatedPeriod = _lastPeriod!.copyWith(endDate: null, setEndDate: true);
       await _databaseHelper.updatePeriodRecord(updatedPeriod);
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.removePeriodEndSuccess),
-          backgroundColor: Colors.green,
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text(l10n.removePeriodEndSuccess),
+      //     backgroundColor: Colors.green,
+      //   ),
+      // );
       
       await _loadData();
     } catch (e) {
@@ -346,15 +375,15 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
     if (_lastPeriod == null || _lastPeriod!.id == null) return;
     
     try {
-      final l10n = AppLocalizations.of(context)!;
+      // final l10n = AppLocalizations.of(context)!;
       await _databaseHelper.deletePeriodRecord(_lastPeriod!.id!);
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.deletePeriodSuccess),
-          backgroundColor: Colors.green,
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text(l10n.deletePeriodSuccess),
+      //     backgroundColor: Colors.green,
+      //   ),
+      // );
       
       await _loadData();
     } catch (e) {
@@ -370,16 +399,16 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
 
   Future<void> _saveDayNote() async {
     try {
-      final l10n = AppLocalizations.of(context)!;
+      // final l10n = AppLocalizations.of(context)!;
       await _databaseHelper.insertOrUpdateDayNote(_dayNote);
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.symptomsSaved),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 1),
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text(l10n.symptomsSaved),
+      //     backgroundColor: Colors.green,
+      //     duration: const Duration(seconds: 1),
+      //   ),
+      // );
     } catch (e) {
       final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -423,7 +452,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       // Сортируем симптомы в алфавитном порядке
       _allSymptoms.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
     } catch (e) {
-      print('Error loading all symptoms: $e');
+      // print('Error loading all symptoms: $e');
       setState(() {
         _errorMessage = 'Error loading symptoms: ${e.toString()}';
       });
@@ -532,13 +561,13 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       // Показываем уведомление об успехе
       //final l10n = AppLocalizations.of(context)!;
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Симптом "$symptom" добавлен'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(
+        //     content: Text('Симптом "$symptom" добавлен'),
+        //     backgroundColor: Colors.green,
+        //     duration: const Duration(seconds: 2),
+        //   ),
+        // );
       }
     } catch (e) {
       // Показываем ошибку
@@ -593,7 +622,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       }
       await _loadData(); // Перезагружаем данные, чтобы обновить UI
     } catch (e) {
-      print('Ошибка при обновлении статуса приема лекарства: $e');
+      // print('Ошибка при обновлении статуса приема лекарства: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Ошибка: ${e.toString()}'),
@@ -640,7 +669,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
           // ),
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _loadData,
+            onPressed: _refreshToCurrentDate,
             tooltip: l10n.refreshTooltip,
           ),
         ],
@@ -745,34 +774,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Информация о задержке
-                if (_isDelayDay)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.orange[50],
-                      border: Border.all(color: Colors.orange),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.access_time, color: Colors.orange),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            l10n.delayLabel,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              color: Colors.orange,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 
-                if (_isDelayDay) const SizedBox(height: 16),
 
                 // Информация об овуляции
                 if (_isOvulationDay)
@@ -832,49 +834,81 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                 
                 if (_isFertileDay && !_isOvulationDay) const SizedBox(height: 16),
 
-                // Информация о предыдущих месячных
-                if (_previousPeriod != null) ...[
+                // Информация о следующих плановых месячных
+                if (_nextPlannedPeriods.isNotEmpty) ...[
                   Text(
-                    l10n.previousPeriodsTitle,
+                    l10n.nextPlannedPeriodsTitle,
                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      border: Border.all(color: Colors.blue),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.calendar_month, color: Colors.blue),
-                            const SizedBox(width: 8),
-                            Expanded(
+                  ..._nextPlannedPeriods.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final period = entry.value;
+                    final daysUntil = period.startDate.difference(PeriodCalculator.getToday()).inDays;
+                    final isDelay = daysUntil < 0;
+                    final mainColor = isDelay ? Colors.orange : Colors.green;
+                    final lightColor = isDelay ? Colors.orange[50] : Colors.green[50];
+                    final iconColor = isDelay ? Colors.orange : Colors.green;
+                    final textColor = isDelay ? Colors.orange : Colors.green;
+                    
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      margin: EdgeInsets.only(bottom: index < _nextPlannedPeriods.length - 1 ? 8 : 0),
+                      decoration: BoxDecoration(
+                        color: lightColor,
+                        border: Border.all(color: mainColor),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.calendar_month, color: iconColor),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '${_formatDate(context, period.startDate)} - ${_formatDate(context, period.endDate)}',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    color: textColor,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${l10n.durationLabel} ${widget.settings.periodLength} ${widget.settings.periodLength == 1 ? l10n.durationDayOne : l10n.durationDayFew}',
+                            style: TextStyle(fontSize: 12, color: textColor),
+                          ),
+                          if (index == 0) ...[
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: isDelay ? Colors.orange[100] : Colors.green[100],
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                               child: Text(
-                                _previousPeriod!.endDate != null
-                                    ? '${_formatDate(context, _previousPeriod!.startDate)} - ${_formatDate(context, _previousPeriod!.endDate!)}'
-                                    : '${_formatDate(context, _previousPeriod!.startDate)} - ${l10n.activeLabel}',
-                                style: const TextStyle(
+                                daysUntil > 0 
+                                    ? 'Через $daysUntil ${daysUntil == 1 ? l10n.durationDayOne : l10n.durationDayFew}'
+                                    : daysUntil == 0 
+                                        ? 'Начинается сегодня'
+                                        : 'Задержка: ${-daysUntil} ${-daysUntil == 1 ? l10n.durationDayOne : l10n.durationDayFew}',
+                                style: TextStyle(
+                                  fontSize: 12, 
+                                  color: textColor,
                                   fontWeight: FontWeight.w500,
-                                  color: Colors.blue,
                                 ),
                               ),
                             ),
                           ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${l10n.durationLabel} ${_previousPeriod!.durationInDays} ${_previousPeriod!.durationInDays == 1 ? l10n.durationDayOne : l10n.durationDayFew}',
-                          style: const TextStyle(fontSize: 12, color: Colors.blue),
-                        ),
-                      ],
-                    ),
-                  ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
                   const SizedBox(height: 16),
                 ],
 

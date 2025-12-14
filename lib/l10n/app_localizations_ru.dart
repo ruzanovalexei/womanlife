@@ -604,6 +604,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get previousPeriodsTitle => 'Предыдущие месячные';
 
   @override
+  String get nextPlannedPeriodsTitle => 'Следующие плановые месячные';
+
+  @override
   String get activeLabel => '(активный)';
 
   @override

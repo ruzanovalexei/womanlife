@@ -344,6 +344,7 @@
   "periodBlockTitle": "Месячные",
   "delayLabel": "Задержка",
   "previousPeriodsTitle": "Предыдущие месячные",
+  "nextPlannedPeriodsTitle": "Следующие плановые месячные",
   "activeLabel": "(активный)",
   "durationLabel": "Продолжительность:",
   "durationDayOne": "день",
