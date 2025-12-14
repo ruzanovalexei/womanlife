@@ -44,7 +44,7 @@ void callbackDispatcher() {
     
     // Логика проверки и отображения уведомления
     final now = DateTime.now();
-    final oneHourLater = now.add(const Duration(hours: 1));
+    final fifteenMinutesLater = now.add(const Duration(minutes: 15));
 
     // Получаем все активные лекарства
     final allMedications = await databaseHelper.getAllMedications();
@@ -63,9 +63,9 @@ void callbackDispatcher() {
             medicationTime.minute,
           );
 
-          // Проверяем, попадает ли запланированное время приема в ближайший час
+          // Проверяем, попадает ли запланированное время приема в ближайшие 15 минут
           if (medicationScheduledTime.isAfter(now) &&
-              medicationScheduledTime.isBefore(oneHourLater)) {
+              medicationScheduledTime.isBefore(fifteenMinutesLater)) {
             upcomingMedications.add(
               "${medication.name} в ${medicationTime.hour.toString().padLeft(2, '0')}:${medicationTime.minute.toString().padLeft(2, '0')}",
             );
