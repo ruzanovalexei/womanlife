@@ -485,7 +485,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get menu3 => 'Списки';
 
   @override
-  String get menu4 => 'Привычки(Ожидайте в новых релизах)';
+  String get menu4 => 'Привычки';
 
   @override
   String get menu5 => 'Заметки';
@@ -747,4 +747,115 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get emptyNotesMessage => 'Создайте первую заметку';
+
+  @override
+  String get settingsTabHabits => 'Привычки';
+
+  @override
+  String get habitsTitle => 'Привычки';
+
+  @override
+  String get noHabits => 'Нет привычек';
+
+  @override
+  String get executionHabitsTitle => 'Привычки выполнения';
+
+  @override
+  String get measurableHabitsTitle => 'Измеримые привычки';
+
+  @override
+  String get selectHabitTypeTitle => 'Выберите тип привычки';
+
+  @override
+  String get habitTypeExecution => 'Выполнение';
+
+  @override
+  String get habitTypeMeasurable => 'Измеримый результат';
+
+  @override
+  String get habitTypeExecutionDescription => 'Простая отметка выполнения привычки';
+
+  @override
+  String get habitTypeMeasurableDescription => 'Привычка с измеримым результатом';
+
+  @override
+  String get addHabitExecutionTitle => 'Добавить привычку выполнения';
+
+  @override
+  String get editHabitExecutionTitle => 'Редактировать привычку выполнения';
+
+  @override
+  String get addHabitMeasurableTitle => 'Добавить измеримую привычку';
+
+  @override
+  String get editHabitMeasurableTitle => 'Редактировать измеримую привычку';
+
+  @override
+  String get habitNameLabel => 'Название привычки';
+
+  @override
+  String get habitFrequencyLabel => 'Частота';
+
+  @override
+  String get habitStartDateLabel => 'Дата начала';
+
+  @override
+  String get habitEndDateLabel => 'Дата окончания';
+
+  @override
+  String get habitReminderTimeLabel => 'Время напоминания';
+
+  @override
+  String get habitGoalLabel => 'Цель';
+
+  @override
+  String get habitUnitLabel => 'Единица измерения';
+
+  @override
+  String get pickStartDate => 'Выберите дату начала';
+
+  @override
+  String get pickEndDate => 'Выберите дату окончания';
+
+  @override
+  String get fillAllRequiredFields => 'Заполните все обязательные поля';
+
+  @override
+  String get invalidTimeFormat => 'Неверный формат времени (используйте ЧЧ:ММ)';
+
+  @override
+  String get invalidGoalValue => 'Введите корректное значение цели';
+
+  @override
+  String get habitExecutionAdded => 'Привычка выполнения добавлена';
+
+  @override
+  String get habitExecutionUpdated => 'Привычка выполнения обновлена';
+
+  @override
+  String get habitMeasurableAdded => 'Измеримая привычка добавлена';
+
+  @override
+  String get habitMeasurableUpdated => 'Измеримая привычка обновлена';
+
+  @override
+  String habitSaveError(Object message) {
+    return 'Ошибка сохранения привычки: $message';
+  }
+
+  @override
+  String get deleteHabitTitle => 'Удалить привычку';
+
+  @override
+  String deleteHabitConfirmMessage(Object name) {
+    return 'Вы уверены, что хотите удалить привычку \"$name\"?';
+  }
+
+  @override
+  String get habitDeleted => 'Привычка удалена';
+
+  @override
+  String habitDeleteError(Object message) {
+    return 'Ошибка удаления привычки: $message';
+  }
 }

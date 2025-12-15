@@ -261,7 +261,7 @@
   "menu1": "Здоровье",
   "menu2": "Распорядок дня(Ожидайте в новых релизах)",
   "menu3": "Списки",
-  "menu4": "Привычки(Ожидайте в новых релизах)",
+  "menu4": "Привычки",
   "menu5": "Заметки",
   "menuItem1": "Здоровье открыто",
   "menuItem2": "Распорядок дня открыт",
@@ -409,6 +409,56 @@
       "title": {}
     }
   },
-  "emptyNotesMessage": "Создайте первую заметку"
+  "emptyNotesMessage": "Создайте первую заметку",
+  "settingsTabHabits": "Привычки",
+  "habitsTitle": "Привычки",
+  "noHabits": "Нет привычек",
+  "executionHabitsTitle": "Привычки выполнения",
+  "measurableHabitsTitle": "Измеримые привычки",
+  "selectHabitTypeTitle": "Выберите тип привычки",
+  "habitTypeExecution": "Выполнение",
+  "habitTypeMeasurable": "Измеримый результат",
+  "habitTypeExecutionDescription": "Простая отметка выполнения привычки",
+  "habitTypeMeasurableDescription": "Привычка с измеримым результатом",
+  "addHabitExecutionTitle": "Добавить привычку выполнения",
+  "editHabitExecutionTitle": "Редактировать привычку выполнения",
+  "addHabitMeasurableTitle": "Добавить измеримую привычку",
+  "editHabitMeasurableTitle": "Редактировать измеримую привычку",
+  "habitNameLabel": "Название привычки",
+  "habitFrequencyLabel": "Частота",
+  "habitStartDateLabel": "Дата начала",
+  "habitEndDateLabel": "Дата окончания",
+  "habitReminderTimeLabel": "Время напоминания",
+  "habitGoalLabel": "Цель",
+  "habitUnitLabel": "Единица измерения",
+  "pickStartDate": "Выберите дату начала",
+  "pickEndDate": "Выберите дату окончания",
+  "fillAllRequiredFields": "Заполните все обязательные поля",
+  "invalidTimeFormat": "Неверный формат времени (используйте ЧЧ:ММ)",
+  "invalidGoalValue": "Введите корректное значение цели",
+  "habitExecutionAdded": "Привычка выполнения добавлена",
+  "habitExecutionUpdated": "Привычка выполнения обновлена",
+  "habitMeasurableAdded": "Измеримая привычка добавлена",
+  "habitMeasurableUpdated": "Измеримая привычка обновлена",
+  "habitSaveError": "Ошибка сохранения привычки: {message}",
+  "@habitSaveError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "deleteHabitTitle": "Удалить привычку",
+  "deleteHabitConfirmMessage": "Вы уверены, что хотите удалить привычку \"{name}\"?",
+  "@deleteHabitConfirmMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "habitDeleted": "Привычка удалена",
+  "habitDeleteError": "Ошибка удаления привычки: {message}",
+  "@habitDeleteError": {
+    "placeholders": {
+      "message": {}
+    }
+  }
 }
 

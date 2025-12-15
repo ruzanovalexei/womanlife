@@ -13,11 +13,16 @@ import '../models/symptom.dart'; // Импортируем модель Symptom
 import '../models/list_model.dart'; // Импортируем модель списка
 import '../models/list_item_model.dart'; // Импортируем модель элемента списка
 import '../models/note_model.dart'; // Импортируем модель заметки
+import '../models/frequency_type.dart'; // Импортируем модель типов частоты
+import '../models/habit_execution.dart'; // Импортируем модель привычек типа выполнение
+import '../models/habit_measurable.dart'; // Импортируем модель привычек типа измеримый результат
+import '../models/habit_execution_record.dart'; // Импортируем модель записей выполнения привычек
+import '../models/habit_measurable_record.dart'; // Импортируем модель записей выполнения измеримых привычек
 //import '../utils/date_utils.dart';
 
 class DatabaseHelper {
   static const _databaseName = "PeriodTracker.db";
-  static const _databaseVersion = 17; // Добавляем поддержку заметок
+  static const _databaseVersion = 20; // Добавляем поддержку привычек + исправление полей intervalValue и selectedDaysOfWeek + дополнительная проверка
 
   static const settingsTable = 'settings';
   static const dayNotesTable = 'day_notes';
@@ -28,6 +33,11 @@ class DatabaseHelper {
   static const listsTable = 'lists';
   static const listItemsTable = 'list_items';
   static const notesTable = 'notes';
+  static const frequencyTypesTable = 'frequency_types'; // Таблица для типов частоты
+  static const habitsExecutionTable = 'habits_execution'; // Таблица для привычек типа выполнение
+  static const habitsMeasurableTable = 'habits_measurable'; // Таблица для привычек типа измеримый результат
+  static const habitExecutionRecordsTable = 'habit_execution_records'; // Таблица для записей выполнения привычек
+  static const habitMeasurableRecordsTable = 'habit_measurable_records'; // Таблица для записей выполнения измеримых привычек
 
   // Singleton
   DatabaseHelper._privateConstructor();
@@ -146,6 +156,69 @@ class DatabaseHelper {
       )
     ''');
 
+    // Создание таблицы для типов частоты привычек
+    await db.execute('''
+      CREATE TABLE $frequencyTypesTable (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type INTEGER NOT NULL,
+        intervalValue INTEGER,
+        selectedDaysOfWeek TEXT
+      )
+    ''');
+
+    // Создание таблицы для привычек типа выполнение
+    await db.execute('''
+      CREATE TABLE $habitsExecutionTable (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        frequencyId INTEGER NOT NULL,
+        reminderTime TEXT NOT NULL,
+        startDate TEXT NOT NULL,
+        endDate TEXT,
+        FOREIGN KEY (frequencyId) REFERENCES $frequencyTypesTable (id) ON DELETE CASCADE
+      )
+    ''');
+
+    // Создание таблицы для привычек типа измеримый результат
+    await db.execute('''
+      CREATE TABLE $habitsMeasurableTable (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        goal REAL NOT NULL,
+        unit TEXT NOT NULL,
+        frequencyId INTEGER NOT NULL,
+        reminderTime TEXT NOT NULL,
+        startDate TEXT NOT NULL,
+        endDate TEXT,
+        FOREIGN KEY (frequencyId) REFERENCES $frequencyTypesTable (id) ON DELETE CASCADE
+      )
+    ''');
+
+    // Создание таблицы для записей выполнения привычек типа выполнение
+    await db.execute('''
+      CREATE TABLE $habitExecutionRecordsTable (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        habitId INTEGER NOT NULL,
+        isCompleted INTEGER NOT NULL,
+        executionDate TEXT NOT NULL,
+        createdAt TEXT NOT NULL,
+        FOREIGN KEY (habitId) REFERENCES $habitsExecutionTable (id) ON DELETE CASCADE
+      )
+    ''');
+
+    // Создание таблицы для записей выполнения привычек типа измеримый результат
+    await db.execute('''
+      CREATE TABLE $habitMeasurableRecordsTable (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        habitId INTEGER NOT NULL,
+        isCompleted INTEGER NOT NULL,
+        actualValue REAL,
+        executionDate TEXT NOT NULL,
+        createdAt TEXT NOT NULL,
+        FOREIGN KEY (habitId) REFERENCES $habitsMeasurableTable (id) ON DELETE CASCADE
+      )
+    ''');
+
     // Insert default settings
     await db.insert(settingsTable, {
       'cycleLength': 28,
@@ -158,6 +231,9 @@ class DatabaseHelper {
 
     // Initialize default symptoms with codes
     await _initializeDefaultSymptoms(db);
+    
+    // Initialize default frequency types
+    await _initializeDefaultFrequencyTypes(db);
   }
 
   // Вспомогательная функция для генерации кода симптома
@@ -188,6 +264,239 @@ class DatabaseHelper {
         'isDefault': 1,
       }, conflictAlgorithm: ConflictAlgorithm.ignore);
     }
+  }
+
+  // ===================== FREQUENCY TYPE METHODS =====================
+  
+  Future<int> insertFrequencyType(FrequencyType frequencyType) async {
+    Database db = await database;
+    return await db.insert(frequencyTypesTable, frequencyType.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<int> updateFrequencyType(FrequencyType frequencyType) async {
+    Database db = await database;
+    return await db.update(frequencyTypesTable, frequencyType.toMap(), where: 'id = ?', whereArgs: [frequencyType.id]);
+  }
+
+  Future<int> deleteFrequencyType(int id) async {
+    Database db = await database;
+    return await db.delete(frequencyTypesTable, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<FrequencyType>> getAllFrequencyTypes() async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query(frequencyTypesTable, orderBy: 'type ASC, value ASC, daysOfWeek ASC');
+    return maps.map((map) => FrequencyType.fromMap(map)).toList();
+  }
+
+  Future<FrequencyType?> getFrequencyTypeById(int id) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query(frequencyTypesTable, where: 'id = ?', whereArgs: [id], limit: 1);
+    return maps.isNotEmpty ? FrequencyType.fromMap(maps[0]) : null;
+  }
+
+  Future<List<FrequencyType>> getFrequencyTypesByType(int type) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query(frequencyTypesTable, where: 'type = ?', whereArgs: [type], orderBy: 'value ASC, daysOfWeek ASC');
+    return maps.map((map) => FrequencyType.fromMap(map)).toList();
+  }
+
+  // ===================== HABIT EXECUTION METHODS =====================
+  
+  Future<int> insertHabitExecution(HabitExecution habit) async {
+    Database db = await database;
+    return await db.insert(habitsExecutionTable, habit.toMap());
+  }
+
+  Future<int> updateHabitExecution(HabitExecution habit) async {
+    Database db = await database;
+    return await db.update(habitsExecutionTable, habit.toMap(), where: 'id = ?', whereArgs: [habit.id]);
+  }
+
+  Future<int> deleteHabitExecution(int id) async {
+    Database db = await database;
+    return await db.delete(habitsExecutionTable, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<HabitExecution>> getAllHabitExecutions() async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query(habitsExecutionTable, orderBy: 'name ASC');
+    return maps.map((map) => HabitExecution.fromMap(map)).toList();
+  }
+
+  Future<HabitExecution?> getHabitExecutionById(int id) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query(habitsExecutionTable, where: 'id = ?', whereArgs: [id], limit: 1);
+    return maps.isNotEmpty ? HabitExecution.fromMap(maps[0]) : null;
+  }
+
+  Future<List<HabitExecution>> getActiveHabitExecutions(DateTime date) async {
+    Database db = await database;
+    final dateStr = MyDateUtils.toUtcDateString(date);
+    List<Map<String, dynamic>> maps = await db.query(
+      habitsExecutionTable,
+      where: '(startDate <= ? AND (endDate IS NULL OR endDate >= ?))',
+      whereArgs: [dateStr, dateStr],
+      orderBy: 'name ASC',
+    );
+    return maps.map((map) => HabitExecution.fromMap(map)).toList();
+  }
+
+  // ===================== HABIT MEASURABLE METHODS =====================
+  
+  Future<int> insertHabitMeasurable(HabitMeasurable habit) async {
+    Database db = await database;
+    return await db.insert(habitsMeasurableTable, habit.toMap());
+  }
+
+  Future<int> updateHabitMeasurable(HabitMeasurable habit) async {
+    Database db = await database;
+    return await db.update(habitsMeasurableTable, habit.toMap(), where: 'id = ?', whereArgs: [habit.id]);
+  }
+
+  Future<int> deleteHabitMeasurable(int id) async {
+    Database db = await database;
+    return await db.delete(habitsMeasurableTable, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<HabitMeasurable>> getAllHabitMeasurables() async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query(habitsMeasurableTable, orderBy: 'name ASC');
+    return maps.map((map) => HabitMeasurable.fromMap(map)).toList();
+  }
+
+  Future<HabitMeasurable?> getHabitMeasurableById(int id) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query(habitsMeasurableTable, where: 'id = ?', whereArgs: [id], limit: 1);
+    return maps.isNotEmpty ? HabitMeasurable.fromMap(maps[0]) : null;
+  }
+
+  Future<List<HabitMeasurable>> getActiveHabitMeasurables(DateTime date) async {
+    Database db = await database;
+    final dateStr = MyDateUtils.toUtcDateString(date);
+    List<Map<String, dynamic>> maps = await db.query(
+      habitsMeasurableTable,
+      where: '(startDate <= ? AND (endDate IS NULL OR endDate >= ?))',
+      whereArgs: [dateStr, dateStr],
+      orderBy: 'name ASC',
+    );
+    return maps.map((map) => HabitMeasurable.fromMap(map)).toList();
+  }
+
+  // ===================== HABIT EXECUTION RECORD METHODS =====================
+  
+  Future<int> insertHabitExecutionRecord(HabitExecutionRecord record) async {
+    Database db = await database;
+    return await db.insert(habitExecutionRecordsTable, record.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<int> updateHabitExecutionRecord(HabitExecutionRecord record) async {
+    Database db = await database;
+    return await db.update(habitExecutionRecordsTable, record.toMap(), where: 'id = ?', whereArgs: [record.id]);
+  }
+
+  Future<int> deleteHabitExecutionRecord(int id) async {
+    Database db = await database;
+    return await db.delete(habitExecutionRecordsTable, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<HabitExecutionRecord?> getHabitExecutionRecordById(int id) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query(habitExecutionRecordsTable, where: 'id = ?', whereArgs: [id], limit: 1);
+    return maps.isNotEmpty ? HabitExecutionRecord.fromMap(maps[0]) : null;
+  }
+
+  Future<HabitExecutionRecord?> getHabitExecutionRecord(int habitId, DateTime executionDate) async {
+    Database db = await database;
+    final dateStr = MyDateUtils.toUtcDateString(executionDate);
+    List<Map<String, dynamic>> maps = await db.query(
+      habitExecutionRecordsTable,
+      where: 'habitId = ? AND executionDate = ?',
+      whereArgs: [habitId, dateStr],
+      limit: 1,
+    );
+    return maps.isNotEmpty ? HabitExecutionRecord.fromMap(maps[0]) : null;
+  }
+
+  Future<List<HabitExecutionRecord>> getHabitExecutionRecordsByHabitId(int habitId) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query(
+      habitExecutionRecordsTable,
+      where: 'habitId = ?',
+      whereArgs: [habitId],
+      orderBy: 'executionDate DESC',
+    );
+    return maps.map((map) => HabitExecutionRecord.fromMap(map)).toList();
+  }
+
+  Future<List<HabitExecutionRecord>> getHabitExecutionRecordsForDate(DateTime date) async {
+    Database db = await database;
+    final dateStr = MyDateUtils.toUtcDateString(date);
+    List<Map<String, dynamic>> maps = await db.query(
+      habitExecutionRecordsTable,
+      where: 'executionDate = ?',
+      whereArgs: [dateStr],
+      orderBy: 'createdAt DESC',
+    );
+    return maps.map((map) => HabitExecutionRecord.fromMap(map)).toList();
+  }
+
+  // ===================== HABIT MEASURABLE RECORD METHODS =====================
+  
+  Future<int> insertHabitMeasurableRecord(HabitMeasurableRecord record) async {
+    Database db = await database;
+    return await db.insert(habitMeasurableRecordsTable, record.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<int> updateHabitMeasurableRecord(HabitMeasurableRecord record) async {
+    Database db = await database;
+    return await db.update(habitMeasurableRecordsTable, record.toMap(), where: 'id = ?', whereArgs: [record.id]);
+  }
+
+  Future<int> deleteHabitMeasurableRecord(int id) async {
+    Database db = await database;
+    return await db.delete(habitMeasurableRecordsTable, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<HabitMeasurableRecord?> getHabitMeasurableRecordById(int id) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query(habitMeasurableRecordsTable, where: 'id = ?', whereArgs: [id], limit: 1);
+    return maps.isNotEmpty ? HabitMeasurableRecord.fromMap(maps[0]) : null;
+  }
+
+  Future<HabitMeasurableRecord?> getHabitMeasurableRecord(int habitId, DateTime executionDate) async {
+    Database db = await database;
+    final dateStr = MyDateUtils.toUtcDateString(executionDate);
+    List<Map<String, dynamic>> maps = await db.query(
+      habitMeasurableRecordsTable,
+      where: 'habitId = ? AND executionDate = ?',
+      whereArgs: [habitId, dateStr],
+      limit: 1,
+    );
+    return maps.isNotEmpty ? HabitMeasurableRecord.fromMap(maps[0]) : null;
+  }
+
+  Future<List<HabitMeasurableRecord>> getHabitMeasurableRecordsByHabitId(int habitId) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query(
+      habitMeasurableRecordsTable,
+      where: 'habitId = ?',
+      whereArgs: [habitId],
+      orderBy: 'executionDate DESC',
+    );
+    return maps.map((map) => HabitMeasurableRecord.fromMap(map)).toList();
+  }
+
+  Future<List<HabitMeasurableRecord>> getHabitMeasurableRecordsForDate(DateTime date) async {
+    Database db = await database;
+    final dateStr = MyDateUtils.toUtcDateString(date);
+    List<Map<String, dynamic>> maps = await db.query(
+      habitMeasurableRecordsTable,
+      where: 'executionDate = ?',
+      whereArgs: [dateStr],
+      orderBy: 'createdAt DESC',
+    );
+    return maps.map((map) => HabitMeasurableRecord.fromMap(map)).toList();
   }
 
   static Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -315,6 +624,111 @@ class DatabaseHelper {
             ''');
           } catch (e) {
             // print('Error creating notes table: $e');
+          }
+          break;
+        case 18:
+          try {
+            // Создание таблицы для типов частоты привычек
+            await db.execute('''
+              CREATE TABLE $frequencyTypesTable (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                type INTEGER NOT NULL,
+                intervalValue INTEGER,
+                selectedDaysOfWeek TEXT
+              )
+            ''');
+
+            // Создание таблицы для привычек типа выполнение
+            await db.execute('''
+              CREATE TABLE $habitsExecutionTable (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                frequencyId INTEGER NOT NULL,
+                reminderTime TEXT NOT NULL,
+                startDate TEXT NOT NULL,
+                endDate TEXT,
+                FOREIGN KEY (frequencyId) REFERENCES $frequencyTypesTable (id) ON DELETE CASCADE
+              )
+            ''');
+
+            // Создание таблицы для привычек типа измеримый результат
+            await db.execute('''
+              CREATE TABLE $habitsMeasurableTable (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                goal REAL NOT NULL,
+                unit TEXT NOT NULL,
+                frequencyId INTEGER NOT NULL,
+                reminderTime TEXT NOT NULL,
+                startDate TEXT NOT NULL,
+                endDate TEXT,
+                FOREIGN KEY (frequencyId) REFERENCES $frequencyTypesTable (id) ON DELETE CASCADE
+              )
+            ''');
+
+            // Создание таблицы для записей выполнения привычек типа выполнение
+            await db.execute('''
+              CREATE TABLE $habitExecutionRecordsTable (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                habitId INTEGER NOT NULL,
+                isCompleted INTEGER NOT NULL,
+                executionDate TEXT NOT NULL,
+                createdAt TEXT NOT NULL,
+                FOREIGN KEY (habitId) REFERENCES $habitsExecutionTable (id) ON DELETE CASCADE
+              )
+            ''');
+
+            // Создание таблицы для записей выполнения привычек типа измеримый результат
+            await db.execute('''
+              CREATE TABLE $habitMeasurableRecordsTable (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                habitId INTEGER NOT NULL,
+                isCompleted INTEGER NOT NULL,
+                actualValue REAL,
+                executionDate TEXT NOT NULL,
+                createdAt TEXT NOT NULL,
+                FOREIGN KEY (habitId) REFERENCES $habitsMeasurableTable (id) ON DELETE CASCADE
+              )
+            ''');
+
+            // Инициализируем типы частоты по умолчанию
+            await _initializeDefaultFrequencyTypes(db);
+          } catch (e) {
+            // print('Error creating habits tables: $e');
+          }
+          break;
+        case 19:
+          try {
+            // Добавляем недостающие поля в таблицу frequency_types с проверкой существования
+            await db.execute('ALTER TABLE $frequencyTypesTable ADD COLUMN intervalValue INTEGER');
+          } catch (e) {
+            // Игнорируем ошибку, если колонка уже существует
+          }
+          
+          try {
+            await db.execute('ALTER TABLE $frequencyTypesTable ADD COLUMN selectedDaysOfWeek TEXT');
+          } catch (e) {
+            // Игнорируем ошибку, если колонка уже существует
+          }
+          break;
+        case 20:
+          try {
+            // Дополнительная проверка и исправление структуры таблицы frequency_types
+            // Проверяем, существует ли таблица и какие у неё колонки
+            final tableInfo = await db.rawQuery("PRAGMA table_info($frequencyTypesTable)");
+            final columns = tableInfo.map((row) => row['name'] as String).toList();
+            
+            // Добавляем intervalValue, если его нет
+            if (!columns.contains('intervalValue')) {
+              await db.execute('ALTER TABLE $frequencyTypesTable ADD COLUMN intervalValue INTEGER');
+            }
+            
+            // Добавляем selectedDaysOfWeek, если его нет
+            if (!columns.contains('selectedDaysOfWeek')) {
+              await db.execute('ALTER TABLE $frequencyTypesTable ADD COLUMN selectedDaysOfWeek TEXT');
+            }
+          } catch (e) {
+            // print('Error checking/fixing frequency_types table structure: $e');
           }
           break;
       }
@@ -626,5 +1040,36 @@ class DatabaseHelper {
     Database db = await database;
     List<Map<String, dynamic>> maps = await db.query(notesTable, where: 'id = ?', whereArgs: [id], limit: 1);
     return maps.isNotEmpty ? NoteModel.fromMap(maps[0]) : null;
+  }
+
+  // Метод для инициализации типов частоты по умолчанию
+  static Future<void> _initializeDefaultFrequencyTypes(Database db) async {
+    // Тип 1: Каждый день
+    await db.insert(frequencyTypesTable, {
+      'type': 1,
+      'intervalValue': null,
+      'selectedDaysOfWeek': null,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+
+    // Тип 2: Каждый X день
+    await db.insert(frequencyTypesTable, {
+      'type': 2,
+      'intervalValue': 2, // Значение по умолчанию, будет изменено пользователем
+      'selectedDaysOfWeek': null,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    
+    // Тип 3: По дням недели
+    await db.insert(frequencyTypesTable, {
+      'type': 3,
+      'intervalValue': null,
+      'selectedDaysOfWeek': '[1,3,5]', // По умолчанию понедельник, среда, пятница
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    
+    // Тип 4: X раз в неделю
+    await db.insert(frequencyTypesTable, {
+      'type': 4,
+      'intervalValue': 3, // Значение по умолчанию, будет изменено пользователем
+      'selectedDaysOfWeek': null,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 }

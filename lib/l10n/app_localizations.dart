@@ -1438,6 +1438,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Create your first note'**
   String get emptyNotesMessage;
+
+  /// No description provided for @settingsTabHabits.
+  ///
+  /// In en, this message translates to:
+  /// **'Habits'**
+  String get settingsTabHabits;
+
+  /// No description provided for @habitsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Habits'**
+  String get habitsTitle;
+
+  /// No description provided for @noHabits.
+  ///
+  /// In en, this message translates to:
+  /// **'No habits'**
+  String get noHabits;
+
+  /// No description provided for @executionHabitsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Execution Habits'**
+  String get executionHabitsTitle;
+
+  /// No description provided for @measurableHabitsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Measurable Habits'**
+  String get measurableHabitsTitle;
+
+  /// No description provided for @selectHabitTypeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Habit Type'**
+  String get selectHabitTypeTitle;
+
+  /// No description provided for @habitTypeExecution.
+  ///
+  /// In en, this message translates to:
+  /// **'Execution'**
+  String get habitTypeExecution;
+
+  /// No description provided for @habitTypeMeasurable.
+  ///
+  /// In en, this message translates to:
+  /// **'Measurable Result'**
+  String get habitTypeMeasurable;
+
+  /// No description provided for @habitTypeExecutionDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Simple habit completion tracking'**
+  String get habitTypeExecutionDescription;
+
+  /// No description provided for @habitTypeMeasurableDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Habit with measurable result'**
+  String get habitTypeMeasurableDescription;
+
+  /// No description provided for @addHabitExecutionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Execution Habit'**
+  String get addHabitExecutionTitle;
+
+  /// No description provided for @editHabitExecutionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Execution Habit'**
+  String get editHabitExecutionTitle;
+
+  /// No description provided for @addHabitMeasurableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Measurable Habit'**
+  String get addHabitMeasurableTitle;
+
+  /// No description provided for @editHabitMeasurableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Measurable Habit'**
+  String get editHabitMeasurableTitle;
+
+  /// No description provided for @habitNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Habit Name'**
+  String get habitNameLabel;
+
+  /// No description provided for @habitFrequencyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency'**
+  String get habitFrequencyLabel;
+
+  /// No description provided for @habitStartDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Date'**
+  String get habitStartDateLabel;
+
+  /// No description provided for @habitEndDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'End Date'**
+  String get habitEndDateLabel;
+
+  /// No description provided for @habitReminderTimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder Time'**
+  String get habitReminderTimeLabel;
+
+  /// No description provided for @habitGoalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal'**
+  String get habitGoalLabel;
+
+  /// No description provided for @habitUnitLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit'**
+  String get habitUnitLabel;
+
+  /// No description provided for @pickStartDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick start date'**
+  String get pickStartDate;
+
+  /// No description provided for @pickEndDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick end date'**
+  String get pickEndDate;
+
+  /// No description provided for @fillAllRequiredFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill all required fields'**
+  String get fillAllRequiredFields;
+
+  /// No description provided for @invalidTimeFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid time format (use HH:MM)'**
+  String get invalidTimeFormat;
+
+  /// No description provided for @invalidGoalValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid goal value'**
+  String get invalidGoalValue;
+
+  /// No description provided for @habitExecutionAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Execution habit added'**
+  String get habitExecutionAdded;
+
+  /// No description provided for @habitExecutionUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Execution habit updated'**
+  String get habitExecutionUpdated;
+
+  /// No description provided for @habitMeasurableAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Measurable habit added'**
+  String get habitMeasurableAdded;
+
+  /// No description provided for @habitMeasurableUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Measurable habit updated'**
+  String get habitMeasurableUpdated;
+
+  /// No description provided for @habitSaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error saving habit: {message}'**
+  String habitSaveError(Object message);
+
+  /// No description provided for @deleteHabitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Habit'**
+  String get deleteHabitTitle;
+
+  /// No description provided for @deleteHabitConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete habit \"{name}\"?'**
+  String deleteHabitConfirmMessage(Object name);
+
+  /// No description provided for @habitDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Habit deleted'**
+  String get habitDeleted;
+
+  /// No description provided for @habitDeleteError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error deleting habit: {message}'**
+  String habitDeleteError(Object message);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

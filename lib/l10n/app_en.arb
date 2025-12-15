@@ -407,5 +407,55 @@
       "title": {}
     }
   },
-  "emptyNotesMessage": "Create your first note"
+  "emptyNotesMessage": "Create your first note",
+  "settingsTabHabits": "Habits",
+  "habitsTitle": "Habits",
+  "noHabits": "No habits",
+  "executionHabitsTitle": "Execution Habits",
+  "measurableHabitsTitle": "Measurable Habits",
+  "selectHabitTypeTitle": "Select Habit Type",
+  "habitTypeExecution": "Execution",
+  "habitTypeMeasurable": "Measurable Result",
+  "habitTypeExecutionDescription": "Simple habit completion tracking",
+  "habitTypeMeasurableDescription": "Habit with measurable result",
+  "addHabitExecutionTitle": "Add Execution Habit",
+  "editHabitExecutionTitle": "Edit Execution Habit",
+  "addHabitMeasurableTitle": "Add Measurable Habit",
+  "editHabitMeasurableTitle": "Edit Measurable Habit",
+  "habitNameLabel": "Habit Name",
+  "habitFrequencyLabel": "Frequency",
+  "habitStartDateLabel": "Start Date",
+  "habitEndDateLabel": "End Date",
+  "habitReminderTimeLabel": "Reminder Time",
+  "habitGoalLabel": "Goal",
+  "habitUnitLabel": "Unit",
+  "pickStartDate": "Pick start date",
+  "pickEndDate": "Pick end date",
+  "fillAllRequiredFields": "Fill all required fields",
+  "invalidTimeFormat": "Invalid time format (use HH:MM)",
+  "invalidGoalValue": "Enter a valid goal value",
+  "habitExecutionAdded": "Execution habit added",
+  "habitExecutionUpdated": "Execution habit updated",
+  "habitMeasurableAdded": "Measurable habit added",
+  "habitMeasurableUpdated": "Measurable habit updated",
+  "habitSaveError": "Error saving habit: {message}",
+  "@habitSaveError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "deleteHabitTitle": "Delete Habit",
+  "deleteHabitConfirmMessage": "Are you sure you want to delete habit \"{name}\"?",
+  "@deleteHabitConfirmMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "habitDeleted": "Habit deleted",
+  "habitDeleteError": "Error deleting habit: {message}",
+  "@habitDeleteError": {
+    "placeholders": {
+      "message": {}
+    }
+  }
 }

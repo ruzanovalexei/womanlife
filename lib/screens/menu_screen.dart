@@ -8,6 +8,7 @@ import 'package:period_tracker/screens/day_detail_screen.dart';
 import 'package:period_tracker/screens/settings_screen.dart';
 import 'package:period_tracker/screens/lists_screen.dart';
 import 'package:period_tracker/screens/notes_screen.dart';
+import 'package:period_tracker/screens/habits_screen.dart';
 import 'package:yandex_mobileads/mobile_ads.dart';
 // import 'package:yandex_mobileads/ad_widget.dart'; // Добавляем импорт AdWidget
 
@@ -162,7 +163,12 @@ class _MenuScreenState extends State<MenuScreen> {
         });
         break;
       case 3:
-        // Планируется реализация
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const HabitsScreen()),
+        ).then((_) {
+          _loadData();
+        });
         break;
       case 4:
         Navigator.push(
@@ -246,7 +252,7 @@ static const _backgroundImage = AssetImage('assets/images/fon1.png');
           _buildMenuTile(
             icon: Icons.loop,
             title: l10n.menu4,
-            color: const Color.fromARGB(255, 116, 114, 115),
+            color:  Colors.pink[200]!,
             onTap: () => _onMenuItemTap(3),
           ),
           const SizedBox(height: 12),
