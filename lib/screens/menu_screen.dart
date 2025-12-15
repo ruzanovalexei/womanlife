@@ -182,7 +182,7 @@ class _MenuScreenState extends State<MenuScreen> {
         break;
     }
   }
-
+static const _backgroundImage = AssetImage('assets/images/fon1.png');
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -192,9 +192,9 @@ class _MenuScreenState extends State<MenuScreen> {
         title: Text(l10n.menuTitle),
       ),
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/images/fon1.png'),
+            image: _backgroundImage,
             fit: BoxFit.cover,
           ),
         ),

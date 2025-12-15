@@ -20,7 +20,7 @@ class _ListsScreenState extends State<ListsScreen> {
   late List<ListModel> _lists;
   bool _isLoading = true;
   String? _errorMessage;
-
+  static const _backgroundImage = AssetImage('assets/images/fon1.png');
   // ID открытого списка (только один список может быть открыт одновременно)
   int? _expandedListId;
 
@@ -382,9 +382,9 @@ class _ListsScreenState extends State<ListsScreen> {
         ],
       ),
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/images/fon1.png'),
+            image: _backgroundImage,
             fit: BoxFit.cover,
           ),
         ),

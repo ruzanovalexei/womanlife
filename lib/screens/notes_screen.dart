@@ -19,7 +19,7 @@ class _NotesScreenState extends State<NotesScreen> {
   late List<NoteModel> _notes;
   bool _isLoading = true;
   String? _errorMessage;
-
+  static const _backgroundImage = AssetImage('assets/images/fon1.png');
   // Реклама
   late BannerAd banner;
   var isBannerAlreadyCreated = false;
@@ -277,11 +277,11 @@ Widget build(BuildContext context) {
         ),
       ],
     ),
-    body: Container(
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/images/fon1.png'),
-          fit: BoxFit.cover,
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: _backgroundImage,
+            fit: BoxFit.cover,
         ),
       ),
       child: Column(

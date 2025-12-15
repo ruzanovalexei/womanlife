@@ -80,7 +80,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
   // Реклама
   late BannerAd banner;
   var isBannerAlreadyCreated = false;
-
+  static const _backgroundImage = AssetImage('assets/images/fon1.png');
 
   PeriodRecord? _lastPeriod;
   PeriodRecord? _activePeriod;
@@ -699,9 +699,9 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
         ],
       ),
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/images/fon1.png'),
+            image: _backgroundImage,
             fit: BoxFit.cover,
           ),
         ),

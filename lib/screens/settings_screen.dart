@@ -23,7 +23,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late Settings _settings;
   bool _isLoading = true;
   String? _errorMessage;
-
+  static const _backgroundImage = AssetImage('assets/images/fon1.png');
   late BannerAd banner;
   var isBannerAlreadyCreated = false;
 
@@ -164,11 +164,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
         ),
-        body: Container(
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/images/fon1.png'),
-              fit: BoxFit.cover,
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: _backgroundImage,
+            fit: BoxFit.cover,
             ),
           ),
           child: Column(
