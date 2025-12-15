@@ -24,8 +24,10 @@ class _MenuScreenState extends State<MenuScreen> {
   List<PeriodRecord> _periodRecords = [];
   bool _isLoading = true;
   
-  late BannerAd banner;
-  var isBannerAlreadyCreated = false;
+  // Исправлено: правильное объявление баннера и флага
+  BannerAd? _bannerAd;
+  bool _isBannerLoading = false;
+  bool _isBannerLoaded = false;
 
   @override
   void initState() {
@@ -33,10 +35,17 @@ class _MenuScreenState extends State<MenuScreen> {
     _initializeScreen();
   }
 
+  @override
+  void dispose() {
+    // Очищаем баннер при уничтожении виджета
+    _bannerAd?.destroy();
+    super.dispose();
+  }
+
   // Оптимизированная инициализация экрана
   void _initializeScreen() {
-    _createAdBanner();
     _loadData();
+    _createAdBanner();
   }
 
   // Оптимизированная загрузка данных - один setState
@@ -57,25 +66,38 @@ class _MenuScreenState extends State<MenuScreen> {
         setState(() {
           _isLoading = false;
         });
-        // Логирование ошибки
         debugPrint('Error loading data: $e');
       }
     }
   }
 
-  // Оптимизированное создание баннера
+  // Исправленное создание баннера с защитой от повторного вызова
   void _createAdBanner() {
+    // Проверяем, не создается ли уже баннер
+    if (_isBannerLoading || _isBannerLoaded || _bannerAd != null) {
+      return;
+    }
+
+    _isBannerLoading = true;
+    
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !isBannerAlreadyCreated) {
-        try {
-          banner = _createBanner();
+      if (!mounted) {
+        _isBannerLoading = false;
+        return;
+      }
+
+      try {
+        final bannerAd = _createBanner();
+        if (mounted) {
           setState(() {
-            isBannerAlreadyCreated = true;
+            _bannerAd = bannerAd;
+            _isBannerLoading = false;
+            _isBannerLoaded = true;
           });
-        } catch (e) {
-          // Логирование ошибки, но не прерываем работу
-          debugPrint('Banner creation failed: $e');
         }
+      } catch (e) {
+        _isBannerLoading = false;
+        debugPrint('Banner creation failed: $e');
       }
     });
   }
@@ -86,16 +108,20 @@ class _MenuScreenState extends State<MenuScreen> {
     final adSize = BannerAdSize.sticky(width: screenWidth);
     
     return BannerAd(
-      adUnitId: 'R-M-17946414-1',
+      adUnitId: 'R-M-17946414-3',
       adSize: adSize,
       adRequest: const AdRequest(),
       onAdLoaded: () {
-        if (mounted) {
-          setState(() {}); // Обновляем только для показа баннера
-        }
+        debugPrint('Banner loaded successfully');
       },
       onAdFailedToLoad: (error) {
         debugPrint('Ad failed to load: $error');
+        if (mounted) {
+          setState(() {
+            _isBannerLoaded = false;
+            _bannerAd = null;
+          });
+        }
       },
       onAdClicked: () {},
       onLeftApplication: () {},
@@ -243,14 +269,14 @@ class _MenuScreenState extends State<MenuScreen> {
     );
   }
 
-  // Вынесенный в отдельный метод виджет баннера
+  // Исправленный виджет баннера
   Widget _buildBannerWidget() {
     return Container(
       alignment: Alignment.bottomCenter,
       padding: const EdgeInsets.only(bottom: 8),
-      // height: isBannerAlreadyCreated ? 60 : 0, // Фиксированная высота для предотвращения сдвига
-      child: isBannerAlreadyCreated 
-          ? AdWidget(bannerAd: banner)
+      height: _isBannerLoaded ? 60 : 0,
+      child: _bannerAd != null && _isBannerLoaded
+          ? AdWidget(bannerAd: _bannerAd!)
           : const SizedBox.shrink(),
     );
   }

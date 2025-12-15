@@ -45,7 +45,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final adSize = BannerAdSize.sticky(width: screenWidth);
     
     return BannerAd(
-      adUnitId: 'R-M-17946414-1',
+      adUnitId: 'R-M-17946414-5',
       adSize: adSize,
       adRequest: const AdRequest(),
       onAdLoaded: () {
@@ -237,7 +237,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       alignment: Alignment.bottomCenter,
       padding: const EdgeInsets.only(bottom: 8),
-      // height: isBannerAlreadyCreated ? 60 : 0, // Фиксированная высота
+      height: isBannerAlreadyCreated ? 60 : 0, // Фиксированная высота
       child: isBannerAlreadyCreated 
           ? AdWidget(bannerAd: banner)
           : const SizedBox.shrink(),

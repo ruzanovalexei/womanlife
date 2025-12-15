@@ -53,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final adSize = BannerAdSize.sticky(width: screenWidth);
     
     return BannerAd(
-      adUnitId: 'R-M-17946414-1',
+      adUnitId: 'R-M-17946414-4',
       adSize: adSize,
       adRequest: const AdRequest(),
       onAdLoaded: () {},
@@ -267,10 +267,20 @@ Widget _buildErrorWidget(AppLocalizations l10n) {
   );
 }
 
-Widget _buildBanner() {
-  return Container(
-    alignment: Alignment.bottomCenter,
-    child: isBannerAlreadyCreated ? AdWidget(bannerAd: banner) : const SizedBox.shrink(),
-  );
-}
+// Widget _buildBanner() {
+//   return Container(
+//     alignment: Alignment.bottomCenter,
+//     child: isBannerAlreadyCreated ? AdWidget(bannerAd: banner) : const SizedBox.shrink(),
+//   );
+// }
+  Widget _buildBanner() {
+    return Container(
+      alignment: Alignment.bottomCenter,
+      padding: const EdgeInsets.only(bottom: 8),
+      height: isBannerAlreadyCreated ? 60 : 0, // Фиксированная высота
+      child: isBannerAlreadyCreated 
+          ? AdWidget(bannerAd: banner)
+          : const SizedBox.shrink(),
+    );
+  }
 }

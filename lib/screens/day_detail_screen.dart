@@ -213,7 +213,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
     final adSize = BannerAdSize.sticky(width: screenWidth);
     
     return BannerAd(
-      adUnitId: 'R-M-17946414-1',
+      adUnitId: 'R-M-17946414-3',
       adSize: adSize,
       adRequest: const AdRequest(),
       onAdLoaded: () {

@@ -42,7 +42,7 @@ class _NotesScreenState extends State<NotesScreen> {
     final adSize = BannerAdSize.sticky(width: screenWidth);
     
     return BannerAd(
-      adUnitId: 'R-M-17946414-3',
+      adUnitId: 'R-M-17946414-4',
       adSize: adSize,
       adRequest: const AdRequest(),
       onAdLoaded: () {

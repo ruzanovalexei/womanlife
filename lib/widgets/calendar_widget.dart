@@ -274,7 +274,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
             child: Icon(
               Icons.access_time,
               size: 16,
-              color: Colors.orangeAccent,
+              color: Colors.red,
             ),
           ),
         if (cycleDayNumber != null)
@@ -452,9 +452,9 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                           decoration: BoxDecoration(
                             color: Colors.transparent,
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.orangeAccent),
+                            border: Border.all(color: Colors.red),
                           ),
-                          child: const Icon(Icons.access_time, size: 12, color: Colors.orangeAccent),
+                          child: const Icon(Icons.access_time, size: 12, color: Colors.red),
                         ),
                         const SizedBox(width: 4),
                         Text(l10n.calendarLegendOverdue),
