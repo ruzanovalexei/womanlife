@@ -6,6 +6,7 @@ import 'package:period_tracker/database/database_helper.dart';
 import 'package:period_tracker/models/note_model.dart';
 import 'menu_screen.dart';
 import 'package:yandex_mobileads/mobile_ads.dart';
+import 'package:period_tracker/services/speech_service.dart';
 
 class NotesScreen extends StatefulWidget {
   const NotesScreen({super.key});
@@ -16,10 +17,17 @@ class NotesScreen extends StatefulWidget {
 
 class _NotesScreenState extends State<NotesScreen> {
   final _databaseHelper = DatabaseHelper();
+  final _speechService = SpeechService();
   late List<NoteModel> _notes;
   bool _isLoading = true;
   String? _errorMessage;
   static const _backgroundImage = AssetImage('assets/images/fon1.png');
+  
+  // Состояние распознавания речи
+  bool _isSpeechListening = false;
+  String _speechWords = '';
+  String _selectedLanguage = 'ru_RU';
+  
   // Реклама
   late BannerAd banner;
   var isBannerAlreadyCreated = false;
@@ -32,8 +40,419 @@ class _NotesScreenState extends State<NotesScreen> {
 
   // Оптимизированная инициализация экрана
   void _initializeScreen() {
-    _createAdBanner();
-    _loadData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _createAdBanner();
+      _loadData();
+      _initializeSpeechService();
+    });
+  }
+
+  // Переинициализация сервиса распознавания речи
+  Future<void> _reinitializeSpeechService() async {
+    final l10n = AppLocalizations.of(context)!;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Переинициализация speech recognition...'),
+        backgroundColor: Colors.blue,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+
+    await _initializeSpeechService();
+    
+    if (_speechService.isAvailable) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Speech recognition успешно инициализирован'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  // Инициализация сервиса распознавания речи
+  Future<void> _initializeSpeechService() async {
+    final l10n = AppLocalizations.of(context)!;
+
+    debugPrint('Initializing speech service...');
+    final initialized = await _speechService.initialize();
+    
+    if (initialized) {
+      debugPrint('Speech service initialized successfully');
+      setState(() {
+        _selectedLanguage = _speechService.selectedLanguage;
+      });
+      
+      // Проверяем разрешения после инициализации
+      final hasPermissions = await _speechService.hasPermissions();
+      if (!hasPermissions) {
+        debugPrint('No microphone permissions, requesting...');
+        final granted = await _speechService.requestPermissions();
+        if (!granted) {
+          debugPrint('Microphone permissions not granted');
+          // Показываем предупреждение, но не блокируем интерфейс
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Для использования голосовых заметок необходимо разрешение на микрофон'),
+              backgroundColor: Colors.orange,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      }
+    } else {
+      debugPrint('Failed to initialize speech service');
+      
+      // Показываем ошибку пользователю
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Распознавание речи недоступно. Проверьте разрешения микрофона в настройках приложения.'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
+          action: SnackBarAction(
+            label: 'Настройки',
+            textColor: Colors.white,
+            onPressed: () {
+              _speechService.openAppSettings();
+            },
+          ),
+        ),
+      );
+    }
+  }
+
+  // Запуск распознавания речи
+  Future<void> _startSpeechRecognition() async {
+    final l10n = AppLocalizations.of(context)!;
+
+    // Показываем индикатор загрузки
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Запуск распознавания речи...'),
+        backgroundColor: Colors.blue,
+        duration: const Duration(seconds: 1),
+      ),
+    );
+
+    // Проверяем разрешения
+    final hasPermissions = await _speechService.hasPermissions();
+    if (!hasPermissions) {
+      final granted = await _speechService.requestPermissions();
+      if (!granted) {
+        _showErrorDialog(l10n.noMicrophonePermission);
+        return;
+      }
+    }
+
+    // Проверяем доступность сервиса
+    if (!_speechService.isAvailable) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Распознавание речи недоступно'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    debugPrint('Starting speech recognition with language: $_selectedLanguage');
+
+    // Запускаем распознавание
+    final success = await _speechService.startListening(
+      onResult: (words) {
+        setState(() {
+          _speechWords = words;
+        });
+      },
+      onListeningStarted: () {
+        setState(() {
+          _isSpeechListening = true;
+          _speechWords = '';
+        });
+      },
+      onListeningStopped: () {
+        setState(() {
+          _isSpeechListening = false;
+        });
+        // Если есть распознанный текст, создаем заметку
+        if (_speechWords.isNotEmpty) {
+          _createNoteFromSpeech();
+        }
+      },
+      onError: (error) {
+        setState(() {
+          _isSpeechListening = false;
+        });
+        
+        debugPrint('Speech recognition error details: $error');
+        
+        String errorMessage;
+        if (error.contains('error_no_match')) {
+          errorMessage = 'Речь не распознана. Попробуйте говорить громче и четче.';
+        } else if (error.contains('error_not_available')) {
+          errorMessage = 'Распознавание речи недоступно на этом устройстве.';
+        } else if (error.contains('error_permission')) {
+          errorMessage = 'Нет разрешения на использование микрофона.';
+        } else {
+          errorMessage = 'Ошибка распознавания речи: $error';
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      },
+    );
+
+    if (!success) {
+      setState(() {
+        _isSpeechListening = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.speechRecognitionError),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // Остановка распознавания речи
+  Future<void> _stopSpeechRecognition() async {
+    debugPrint('Stopping speech recognition...');
+    
+    // Показываем индикатор остановки
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Остановка записи...'),
+        backgroundColor: Colors.orange,
+        duration: const Duration(seconds: 1),
+      ),
+    );
+
+    try {
+      debugPrint('About to call _speechService.stopListening...');
+      
+      await _speechService.stopListening(
+        onListeningStopped: () {
+          debugPrint('=== Speech recognition stopped callback received ===');
+          setState(() {
+            _isSpeechListening = false;
+          });
+          
+          // Если есть распознанный текст, создаем заметку
+          if (_speechWords.isNotEmpty) {
+            debugPrint('Creating note from speech: "$_speechWords"');
+            _createNoteFromSpeech();
+          } else {
+            debugPrint('No speech text to create note from');
+            // Показываем сообщение если не удалось распознать речь
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Речь не распознана. Попробуйте говорить громче и четче.'),
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+        },
+      );
+      
+      debugPrint('_speechService.stopListening completed');
+      
+    } catch (e, stackTrace) {
+      debugPrint('=== Error in _stopSpeechRecognition ===');
+      debugPrint('Error: $e');
+      debugPrint('Stack trace: $stackTrace');
+      
+      setState(() {
+        _isSpeechListening = false;
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Ошибка при остановке записи: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  // Создание заметки из распознанного текста
+  Future<void> _createNoteFromSpeech() async {
+    if (_speechWords.trim().isEmpty) return;
+
+    final l10n = AppLocalizations.of(context)!;
+    final now = DateTime.now();
+    
+    // Показываем предварительный просмотр распознанного текста
+    final shouldCreateNote = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Создать заметку?'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Распознанный текст:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(_speechWords.trim()),
+              ),
+              const SizedBox(height: 8),
+              Text('Заголовок заметки: "Аудиозаметка"'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text('Отмена'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text('Создать'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldCreateNote != true) {
+      // Пользователь отменил создание заметки
+      setState(() {
+        _speechWords = '';
+      });
+      return;
+    }
+
+    final note = NoteModel(
+      title: 'Аудиозаметка', // Заголовок как требовалось
+      content: _speechWords.trim(),
+      createdDate: now,
+      updatedDate: now,
+    );
+
+    try {
+      await _databaseHelper.insertNote(note);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.speechNoteCreated),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
+      // Очищаем состояние
+      setState(() {
+        _speechWords = '';
+      });
+
+      // Перезагружаем заметки
+      await _loadData();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.noteSaveError(e.toString())),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // Выбор языка распознавания
+  Future<void> _selectLanguage() async {
+    final l10n = AppLocalizations.of(context)!;
+    
+    final selected = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(l10n.selectLanguage),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: _speechService.availableLanguages.length,
+              itemBuilder: (context, index) {
+                final languageName = _speechService.availableLanguages.keys.elementAt(index);
+                final languageCode = _speechService.availableLanguages.values.elementAt(index);
+                
+                return RadioListTile<String>(
+                  title: Text(languageName),
+                  value: languageCode,
+                  groupValue: _selectedLanguage,
+                  onChanged: (value) {
+                    Navigator.pop(context, value);
+                  },
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+
+    if (selected != null) {
+      setState(() {
+        _selectedLanguage = selected;
+      });
+      _speechService.setLanguage(selected);
+    }
+  }
+
+  // Показать диалог ошибки
+  void _showErrorDialog(String message) {
+    final l10n = AppLocalizations.of(context)!;
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(l10n.errorDialogTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(message),
+              const SizedBox(height: 16),
+              const Text(
+                'Для исправления:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              const Text('1. Перейдите в настройки приложения'),
+              const Text('2. Разрешите доступ к микрофону'),
+              const Text('3. Проверьте интернет-соединение'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(l10n.ok),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _speechService.openAppSettings();
+              },
+              child: const Text('Настройки'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // Создание баннера
@@ -133,7 +552,7 @@ class _NotesScreenState extends State<NotesScreen> {
 
   Future<void> _saveNote(NoteModel note) async {
     final l10n = AppLocalizations.of(context)!;
-    
+
     if (note.title.trim().isEmpty && note.content.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -268,8 +687,28 @@ Widget build(BuildContext context) {
           );
         },
       ),
-      title: Text(l10n.notesTitle),
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(l10n.notesTitle),
+          const SizedBox(width: 8),
+          // Индикатор статуса speech recognition
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: _speechService.isAvailable ? Colors.green : Colors.red,
+            ),
+          ),
+        ],
+      ),
       actions: [
+        IconButton(
+          icon: const Icon(Icons.mic),
+          onPressed: _speechService.isAvailable ? _selectLanguage : _reinitializeSpeechService,
+          tooltip: _speechService.isAvailable ? l10n.selectLanguage : 'Переинициализировать speech recognition',
+        ),
         IconButton(
           icon: const Icon(Icons.refresh),
           onPressed: _loadData,
@@ -307,8 +746,10 @@ Widget _buildMainContent(AppLocalizations l10n) {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Заголовок и кнопка добавления
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Wrap(
+          direction: Axis.horizontal,
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Text(
               l10n.addNoteTitle,
@@ -317,9 +758,66 @@ Widget _buildMainContent(AppLocalizations l10n) {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            FloatingActionButton(
-              onPressed: _showAddNoteDialog,
-              child: const Icon(Icons.add),
+            // Индикатор состояния speech-to-text
+            if (_isSpeechListening) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.red, width: 1),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.mic, color: Colors.red, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      l10n.listeningIndicator,
+                      style: TextStyle(color: Colors.red[700], fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            // Row с кнопками
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                // Кнопка распознавания речи
+                SizedBox(
+                  width: 56,
+                  height: 56,
+                  child: FloatingActionButton(
+                    onPressed: _isSpeechListening 
+                        ? _stopSpeechRecognition 
+                        : _startSpeechRecognition,
+                    heroTag: "speech_to_text",
+                    backgroundColor: _isSpeechListening ? Colors.red : Colors.blue,
+                    tooltip: _speechService.isAvailable 
+                        ? (_isSpeechListening ? 'Остановить запись' : 'Начать запись голоса')
+                        : 'Speech recognition недоступен',
+                    child: Icon(
+                      _isSpeechListening ? Icons.stop : Icons.mic,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Кнопка добавления заметки
+                SizedBox(
+                  width: 56,
+                  height: 56,
+                  child: FloatingActionButton(
+                    onPressed: _showAddNoteDialog,
+                    heroTag: "add_note",
+                    tooltip: 'Добавить заметку',
+                    child: const Icon(Icons.add, size: 24),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -339,7 +837,7 @@ Widget _buildNotesList(AppLocalizations l10n) {
   if (_isLoading) {
     return const Center(child: CircularProgressIndicator());
   }
-  
+
   if (_errorMessage != null) {
     return _buildErrorWidget(l10n);
   }
@@ -430,7 +928,7 @@ Widget _buildBannerWidget() {
           ? '${note.content.substring(0, 20)}...' 
           : note.content;
     }
-    
+
     // Обрезаем содержимое до 2 строк
     String displayContent = note.content;
     if (displayContent.length > 100) {

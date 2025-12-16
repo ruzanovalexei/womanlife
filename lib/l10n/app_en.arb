@@ -457,5 +457,17 @@
     "placeholders": {
       "message": {}
     }
-  }
+  },
+  "selectLanguage": "Select Language",
+  "speechRecognitionError": "Speech recognition error",
+  "speechRecognitionErrorWithMessage": "Speech recognition error: {error}",
+  "@speechRecognitionErrorWithMessage": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "speechNoteCreated": "Voice note created",
+  "noMicrophonePermission": "No microphone permission",
+  "listeningIndicator": "Listening...",
+  "errorDialogTitle": "Error"
 }

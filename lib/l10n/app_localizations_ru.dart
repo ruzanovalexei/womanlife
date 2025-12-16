@@ -858,4 +858,27 @@ class AppLocalizationsRu extends AppLocalizations {
   String habitDeleteError(Object message) {
     return 'Ошибка удаления привычки: $message';
   }
+
+  @override
+  String get selectLanguage => 'Выбор языка';
+
+  @override
+  String get speechRecognitionError => 'Ошибка распознавания речи';
+
+  @override
+  String speechRecognitionErrorWithMessage(Object error) {
+    return 'Ошибка распознавания речи: $error';
+  }
+
+  @override
+  String get speechNoteCreated => 'Аудиозаметка создана';
+
+  @override
+  String get noMicrophonePermission => 'Нет разрешения на использование микрофона';
+
+  @override
+  String get listeningIndicator => 'Слушаю...';
+
+  @override
+  String get errorDialogTitle => 'Ошибка';
 }

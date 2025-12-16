@@ -1648,6 +1648,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error deleting habit: {message}'**
   String habitDeleteError(Object message);
+
+  /// No description provided for @selectLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Language'**
+  String get selectLanguage;
+
+  /// No description provided for @speechRecognitionError.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech recognition error'**
+  String get speechRecognitionError;
+
+  /// No description provided for @speechRecognitionErrorWithMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech recognition error: {error}'**
+  String speechRecognitionErrorWithMessage(Object error);
+
+  /// No description provided for @speechNoteCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice note created'**
+  String get speechNoteCreated;
+
+  /// No description provided for @noMicrophonePermission.
+  ///
+  /// In en, this message translates to:
+  /// **'No microphone permission'**
+  String get noMicrophonePermission;
+
+  /// No description provided for @listeningIndicator.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening...'**
+  String get listeningIndicator;
+
+  /// No description provided for @errorDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get errorDialogTitle;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

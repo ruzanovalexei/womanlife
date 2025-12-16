@@ -285,7 +285,7 @@ class DatabaseHelper {
 
   Future<List<FrequencyType>> getAllFrequencyTypes() async {
     Database db = await database;
-    List<Map<String, dynamic>> maps = await db.query(frequencyTypesTable, orderBy: 'type ASC, value ASC, daysOfWeek ASC');
+    List<Map<String, dynamic>> maps = await db.query(frequencyTypesTable, orderBy: 'type ASC, intervalValue ASC, selectedDaysOfWeek ASC');
     return maps.map((map) => FrequencyType.fromMap(map)).toList();
   }
 
@@ -297,7 +297,7 @@ class DatabaseHelper {
 
   Future<List<FrequencyType>> getFrequencyTypesByType(int type) async {
     Database db = await database;
-    List<Map<String, dynamic>> maps = await db.query(frequencyTypesTable, where: 'type = ?', whereArgs: [type], orderBy: 'value ASC, daysOfWeek ASC');
+    List<Map<String, dynamic>> maps = await db.query(frequencyTypesTable, where: 'type = ?', whereArgs: [type], orderBy: 'intervalValue ASC, selectedDaysOfWeek ASC');
     return maps.map((map) => FrequencyType.fromMap(map)).toList();
   }
 

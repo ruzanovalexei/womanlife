@@ -459,6 +459,18 @@
     "placeholders": {
       "message": {}
     }
-  }
+  },
+  "selectLanguage": "Выбор языка",
+  "speechRecognitionError": "Ошибка распознавания речи",
+  "speechRecognitionErrorWithMessage": "Ошибка распознавания речи: {error}",
+  "@speechRecognitionErrorWithMessage": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "speechNoteCreated": "Аудиозаметка создана",
+  "noMicrophonePermission": "Нет разрешения на использование микрофона",
+  "listeningIndicator": "Слушаю...",
+  "errorDialogTitle": "Ошибка"
 }
 

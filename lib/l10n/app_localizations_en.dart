@@ -858,4 +858,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String habitDeleteError(Object message) {
     return 'Error deleting habit: $message';
   }
+
+  @override
+  String get selectLanguage => 'Select Language';
+
+  @override
+  String get speechRecognitionError => 'Speech recognition error';
+
+  @override
+  String speechRecognitionErrorWithMessage(Object error) {
+    return 'Speech recognition error: $error';
+  }
+
+  @override
+  String get speechNoteCreated => 'Voice note created';
+
+  @override
+  String get noMicrophonePermission => 'No microphone permission';
+
+  @override
+  String get listeningIndicator => 'Listening...';
+
+  @override
+  String get errorDialogTitle => 'Error';
 }
