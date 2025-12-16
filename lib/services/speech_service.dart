@@ -230,8 +230,14 @@ class SpeechService {
     required Function(String error) onError,
   }) async {
     try {
+      debugPrint('=== Starting speech recognition ===');
+      debugPrint('Current _isListening: $_isListening');
+      debugPrint('Current _isAvailable: $_isAvailable');
+      debugPrint('Selected language: $_selectedLanguage');
+
       // Проверяем доступность и разрешения
       if (!_isAvailable) {
+        debugPrint('Speech service not available, initializing...');
         final initialized = await initialize();
         if (!initialized) {
           onError('Не удалось инициализировать распознавание речи');
@@ -241,6 +247,7 @@ class SpeechService {
 
       final hasPerms = await hasPermissions();
       if (!hasPerms) {
+        debugPrint('Permissions not available, requesting...');
         final granted = await requestPermissions();
         if (!granted) {
           onError('Необходимо предоставить разрешения для доступа к микрофону');
@@ -248,13 +255,22 @@ class SpeechService {
         }
       }
 
+      // Проверяем, не слушаем ли уже
+      if (_isListening) {
+        debugPrint('Already listening, ignoring start request');
+        return true;
+      }
+
       // Начинаем слушать
+      debugPrint('Setting _isListening to true');
       _isListening = true;
       _currentWords = '';
       
+      debugPrint('Calling _speech.listen()...');
       await _speech.listen(
         onResult: (result) {
           _currentWords = result.recognizedWords;
+          debugPrint('Speech result received: "${result.recognizedWords}"');
           onResult(result.recognizedWords);
         },
         listenFor: const Duration(seconds: 30), // Максимум 30 секунд
@@ -269,11 +285,14 @@ class SpeechService {
         listenMode: ListenMode.confirmation,
       );
 
+      debugPrint('=== Speech recognition started successfully ===');
       onListeningStarted();
       return true;
     } catch (e) {
+      debugPrint('=== Error starting speech recognition ===');
+      debugPrint('Error: $e');
       _isListening = false;
-      debugPrint('Error starting speech recognition: $e');
+      debugPrint('Set _isListening to false due to error');
       onError('Ошибка запуска распознавания речи: $e');
       return false;
     }
@@ -284,14 +303,27 @@ class SpeechService {
     required Function() onListeningStopped,
   }) async {
     try {
+      debugPrint('=== Stopping speech recognition ===');
+      debugPrint('Current _isListening before stop: $_isListening');
+      
       if (_isListening) {
+        debugPrint('Calling _speech.stop()...');
         await _speech.stop();
+        debugPrint('=== Speech recognition stopped successfully ===');
+        debugPrint('Setting _isListening to false');
         _isListening = false;
+        debugPrint('Calling onListeningStopped callback');
+        onListeningStopped();
+      } else {
+        debugPrint('Not currently listening, nothing to stop');
         onListeningStopped();
       }
     } catch (e) {
-      debugPrint('Error stopping speech recognition: $e');
+      debugPrint('=== Error stopping speech recognition ===');
+      debugPrint('Error: $e');
       _isListening = false;
+      debugPrint('Set _isListening to false due to error');
+      onListeningStopped();
     }
   }
 

@@ -127,6 +127,12 @@ class _NotesScreenState extends State<NotesScreen> {
   Future<void> _startSpeechRecognition() async {
     final l10n = AppLocalizations.of(context)!;
 
+    // Защита от двойного нажатия
+    if (_isSpeechListening) {
+      debugPrint('Speech recognition already active, ignoring start request');
+      return;
+    }
+
     // Показываем индикатор загрузки
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -167,12 +173,14 @@ class _NotesScreenState extends State<NotesScreen> {
         });
       },
       onListeningStarted: () {
+        debugPrint('=== Speech recognition started callback ===');
         setState(() {
           _isSpeechListening = true;
           _speechWords = '';
         });
       },
       onListeningStopped: () {
+        debugPrint('=== Speech recognition stopped callback ===');
         setState(() {
           _isSpeechListening = false;
         });
@@ -182,11 +190,12 @@ class _NotesScreenState extends State<NotesScreen> {
         }
       },
       onError: (error) {
+        debugPrint('Speech recognition error details: $error');
+        
+        // ВАЖНО: Сбрасываем состояние при ошибке
         setState(() {
           _isSpeechListening = false;
         });
-        
-        debugPrint('Speech recognition error details: $error');
         
         String errorMessage;
         if (error.contains('error_no_match')) {
@@ -226,6 +235,12 @@ class _NotesScreenState extends State<NotesScreen> {
   Future<void> _stopSpeechRecognition() async {
     debugPrint('Stopping speech recognition...');
     
+    // Проверяем, что мы действительно слушаем
+    if (!_isSpeechListening) {
+      debugPrint('Speech recognition is not active, nothing to stop');
+      return;
+    }
+
     // Показываем индикатор остановки
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -238,12 +253,11 @@ class _NotesScreenState extends State<NotesScreen> {
     try {
       debugPrint('About to call _speechService.stopListening...');
       
+      // НЕ обновляем состояние здесь - это произойдет в колбэке
       await _speechService.stopListening(
         onListeningStopped: () {
           debugPrint('=== Speech recognition stopped callback received ===');
-          setState(() {
-            _isSpeechListening = false;
-          });
+          // Состояние уже обновлено в onListeningStarted
           
           // Если есть распознанный текст, создаем заметку
           if (_speechWords.isNotEmpty) {
@@ -270,6 +284,7 @@ class _NotesScreenState extends State<NotesScreen> {
       debugPrint('Error: $e');
       debugPrint('Stack trace: $stackTrace');
       
+      // При ошибке принудительно сбрасываем состояние
       setState(() {
         _isSpeechListening = false;
       });
@@ -739,14 +754,22 @@ Widget build(BuildContext context) {
                 onPressed: _isSpeechListening 
                     ? _stopSpeechRecognition 
                     : _startSpeechRecognition,
-                icon: Icon(
-                  _isSpeechListening ? Icons.stop : Icons.mic,
-                  color: Colors.white,
+                icon: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    _isSpeechListening ? Icons.stop : Icons.mic,
+                    color: Colors.white,
+                    key: ValueKey(_isSpeechListening),
+                  ),
                 ),
-                label: Text(
-                  _isSpeechListening 
-                      ? 'Остановить запись' 
-                      : 'Голосовая заметка',
+                label: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: Text(
+                    _isSpeechListening 
+                        ? 'Остановить запись' 
+                        : 'Голосовая заметка',
+                    key: ValueKey(_isSpeechListening),
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _isSpeechListening ? Colors.red : Colors.blue,
