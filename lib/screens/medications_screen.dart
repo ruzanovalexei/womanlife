@@ -68,7 +68,9 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
       padding: const EdgeInsets.only(bottom: 8),
       height: isBannerAlreadyCreated ? 60 : 0, // Фиксированная высота
       child: isBannerAlreadyCreated 
-          ? AdWidget(bannerAd: banner)
+            ? IgnorePointer(
+              child: AdWidget(bannerAd: banner),
+            )
           : const SizedBox.shrink(),
     );
   }

@@ -120,43 +120,43 @@ class _SettingsFormState extends State<SettingsForm> {
           ),
           const SizedBox(height: 16),
           // Настройка периода хранения данных
-          CheckboxListTile(
-            title: const Text('Автоматическая очистка старых данных'),
-            subtitle: const Text('Удалять записи старше указанного периода'),
-            value: _isDataRetentionEnabled,
-            onChanged: (value) {
-              setState(() {
-                _isDataRetentionEnabled = value ?? false;
-                if (!_isDataRetentionEnabled) {
-                  _dataRetentionController.clear();
-                }
-              });
-            },
-          ),
-          if (_isDataRetentionEnabled) ...[
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _dataRetentionController,
-              decoration: const InputDecoration(
-                labelText: 'Период хранения данных (месяцев)',
-                border: OutlineInputBorder(),
-                helperText: '0 = без ограничений, null = не удалять автоматически',
-              ),
-              keyboardType: TextInputType.number,
-              validator: (value) {
-                if (_isDataRetentionEnabled && (value == null || value.isEmpty)) {
-                  return 'Введите период хранения данных';
-                }
-                if (value != null && value.isNotEmpty) {
-                  final numValue = int.tryParse(value);
-                  if (numValue == null || numValue < 0) {
-                    return 'Введите корректное число (0 или больше)';
-                  }
-                }
-                return null;
-              },
-            ),
-          ],
+          // CheckboxListTile(
+          //   title: const Text('Автоматическая очистка старых данных'),
+          //   subtitle: const Text('Удалять записи старше указанного периода'),
+          //   value: _isDataRetentionEnabled,
+          //   onChanged: (value) {
+          //     setState(() {
+          //       _isDataRetentionEnabled = value ?? false;
+          //       if (!_isDataRetentionEnabled) {
+          //         _dataRetentionController.clear();
+          //       }
+          //     });
+          //   },
+          // ),
+          // if (_isDataRetentionEnabled) ...[
+          //   const SizedBox(height: 8),
+          //   TextFormField(
+          //     controller: _dataRetentionController,
+          //     decoration: const InputDecoration(
+          //       labelText: 'Период хранения данных (месяцев)',
+          //       border: OutlineInputBorder(),
+          //       helperText: '0 = без ограничений, null = не удалять автоматически',
+          //     ),
+          //     keyboardType: TextInputType.number,
+          //     validator: (value) {
+          //       if (_isDataRetentionEnabled && (value == null || value.isEmpty)) {
+          //         return 'Введите период хранения данных';
+          //       }
+          //       if (value != null && value.isNotEmpty) {
+          //         final numValue = int.tryParse(value);
+          //         if (numValue == null || numValue < 0) {
+          //           return 'Введите корректное число (0 или больше)';
+          //         }
+          //       }
+          //       return null;
+          //     },
+          //   ),
+          // ],
           const SizedBox(height: 32),
           ElevatedButton(
             onPressed: _saveSettings,

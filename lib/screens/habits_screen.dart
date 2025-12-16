@@ -473,7 +473,9 @@ class _HabitsScreenState extends State<HabitsScreen> {
       padding: const EdgeInsets.only(bottom: 8),
       height: isBannerAlreadyCreated ? 60 : 0, // Фиксированная высота
       child: isBannerAlreadyCreated 
-          ? AdWidget(bannerAd: banner)
+               ? IgnorePointer(
+              child: AdWidget(bannerAd: banner),
+            )
           : const SizedBox.shrink(),
     );
   }

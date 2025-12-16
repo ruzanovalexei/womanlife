@@ -159,8 +159,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           bottom: TabBar(
             tabs: [
               Tab(text: l10n.settingsTabGeneral),
-              Tab(text: l10n.settingsTabSymptoms),
-              Tab(text: l10n.settingsTabCache),
+              // Tab(text: l10n.settingsTabSymptoms),
+              // Tab(text: l10n.settingsTabCache),
             ],
           ),
         ),
@@ -205,7 +205,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         // Убрал вкладку симптомов, пока думаю что она не нужн
         // const SymptomsTab(),
-        const CacheManagementTab(),
+        // const CacheManagementTab(),
       ],
     );
   }
@@ -240,7 +240,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       padding: const EdgeInsets.only(bottom: 8),
       height: isBannerAlreadyCreated ? 60 : 0, // Фиксированная высота
       child: isBannerAlreadyCreated 
-          ? AdWidget(bannerAd: banner)
+          ? IgnorePointer(
+              child: AdWidget(bannerAd: banner),
+            )
           : const SizedBox.shrink(),
     );
   }

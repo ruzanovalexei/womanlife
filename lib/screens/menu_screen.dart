@@ -288,7 +288,9 @@ static const _backgroundImage = AssetImage('assets/images/fon1.png');
       padding: const EdgeInsets.only(bottom: 8),
       height: _isBannerLoaded ? 60 : 0,
       child: _bannerAd != null && _isBannerLoaded
-          ? AdWidget(bannerAd: _bannerAd!)
+          ? IgnorePointer(
+          child: AdWidget(bannerAd: _bannerAd!)
+          )
           : const SizedBox.shrink(),
     );
   }
