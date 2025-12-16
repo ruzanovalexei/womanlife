@@ -8,6 +8,8 @@ import '../models/frequency_type.dart';
 import '../models/habit_execution_record.dart';
 import '../models/habit_measurable_record.dart';
 import '../utils/date_utils.dart';
+import 'habits_settings_screen.dart';
+import 'package:yandex_mobileads/mobile_ads.dart';
 
 class HabitsScreen extends StatefulWidget {
   const HabitsScreen({super.key});
@@ -31,11 +33,61 @@ class _HabitsScreenState extends State<HabitsScreen> {
   bool _isLoading = true;
   String? _errorMessage;
 
+  // Реклама
+  late BannerAd banner;
+  var isBannerAlreadyCreated = false;
+
   @override
   void initState() {
     super.initState();
     _selectedDate = MyDateUtils.getUtcToday();
+    _initializeScreen();
+  }
+
+  // Оптимизированная инициализация экрана
+  void _initializeScreen() {
+    _createAdBanner();
     _loadData();
+  }
+
+  // Создание баннера
+  BannerAd _createBanner() {
+    final screenWidth = MediaQuery.of(context).size.width.round();
+    final adSize = BannerAdSize.sticky(width: screenWidth);
+    
+    return BannerAd(
+      adUnitId: 'R-M-17946414-4',
+      adSize: adSize,
+      adRequest: const AdRequest(),
+      onAdLoaded: () {
+        if (mounted) {
+          setState(() {}); // Обновляем только для показа баннера
+        }
+      },
+      onAdFailedToLoad: (error) {
+        debugPrint('Ad failed to load: $error');
+      },
+      onAdClicked: () {},
+      onLeftApplication: () {},
+      onReturnedToApplication: () {},
+      onImpression: (impressionData) {}
+    );
+  }
+
+  // Оптимизированное создание баннера
+  void _createAdBanner() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !isBannerAlreadyCreated) {
+        try {
+          banner = _createBanner();
+          setState(() {
+            isBannerAlreadyCreated = true;
+          });
+        } catch (e) {
+          debugPrint('Banner creation failed: $e');
+        }
+      }
+    });
   }
 
   Future<void> _loadData() async {
@@ -371,6 +423,61 @@ class _HabitsScreenState extends State<HabitsScreen> {
     );
   }
 
+  // Вынесенный основной контент
+  Widget _buildMainContent(AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Навигация по датам
+          _buildDateNavigation(),
+          const SizedBox(height: 8),
+          
+          // Основной контент с привычками
+          Expanded(
+            child: _buildContent(),
+          ),
+          
+          // Кнопка для перехода к экрану настроек привычек
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const HabitsSettingsScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.settings),
+              label: const Text('Настройки привычек'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Вынесенный виджет баннера
+  Widget _buildBannerWidget() {
+    return Container(
+      alignment: Alignment.bottomCenter,
+      padding: const EdgeInsets.only(bottom: 8),
+      height: isBannerAlreadyCreated ? 60 : 0, // Фиксированная высота
+      child: isBannerAlreadyCreated 
+          ? AdWidget(bannerAd: banner)
+          : const SizedBox.shrink(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -388,14 +495,13 @@ class _HabitsScreenState extends State<HabitsScreen> {
         ),
         child: Column(
           children: [
-            // Навигация по датам
-            _buildDateNavigation(),
-            const SizedBox(height: 8),
-            
             // Основной контент
             Expanded(
-              child: _buildContent(),
+              child: _buildMainContent(l10n),
             ),
+            
+            // Блок рекламы
+            _buildBannerWidget(),
           ],
         ),
       ),

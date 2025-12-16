@@ -17,6 +17,7 @@ import 'package:yandex_mobileads/mobile_ads.dart';
 import '../services/permissions_service.dart';
 import 'home_screen.dart';
 import 'menu_screen.dart';
+import 'medications_screen.dart';
 //import 'package:yandex_mobileads/ad_widget.dart';
 
 // Added MedicationTime class
@@ -1114,23 +1115,26 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
 
                 // Кнопка "Календарь месячных"
                 const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => HomeScreen(
-                          calledFromDetailScreen: true,
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => HomeScreen(
+                            calledFromDetailScreen: true,
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.calendar_month),
-                  label: const Text('Календарь месячных'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.pink,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      );
+                    },
+                    icon: const Icon(Icons.calendar_month),
+                    label: const Text('Календарь месячных'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    ),
                   ),
                 ),
               ],
@@ -1474,13 +1478,18 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                 const SizedBox(height: 16),
                 
                 // Кнопка быстрого добавления симптома
-                ElevatedButton.icon(
-                  onPressed: _showQuickAddSymptomDialog,
-                  icon: const Icon(Icons.add),
-                  label: Text(l10n.addSymptomButton),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.pink,
-                    foregroundColor: Colors.white,
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _showQuickAddSymptomDialog,
+                    icon: const Icon(Icons.add),
+                    label: Text(l10n.addSymptomButton),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    ),
                   ),
                 ),
                 
@@ -1627,6 +1636,29 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                       );
                     },
                   ),
+                
+                // Кнопка для перехода к экрану лекарств
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MedicationsScreen(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.medication),
+                    label: const Text('Управление лекарствами'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

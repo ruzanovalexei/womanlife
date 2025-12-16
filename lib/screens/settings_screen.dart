@@ -7,9 +7,7 @@ import '../models/settings.dart';
 import '../services/locale_service.dart';
 import '../services/permissions_service.dart';
 import '../widgets/settings_tab.dart';
-import '../widgets/medications_tab.dart';
 import '../widgets/symptoms_tab.dart';
-import '../widgets/habits_tab.dart';
 import '../widgets/cache_management_tab.dart';
 import 'package:yandex_mobileads/mobile_ads.dart';
 //import 'package:yandex_mobileads/ad_widget.dart';
@@ -154,16 +152,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
     
     return DefaultTabController(
-      length: 5,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           title: Text(l10n.settingsTitle),
           bottom: TabBar(
             tabs: [
               Tab(text: l10n.settingsTabGeneral),
-              Tab(text: l10n.settingsTabMedications),
               Tab(text: l10n.settingsTabSymptoms),
-              Tab(text: l10n.settingsTabHabits),
               Tab(text: l10n.settingsTabCache),
             ],
           ),
@@ -207,9 +203,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           settings: _settings,
           onSave: _saveSettings,
         ),
-        const MedicationsTab(),
-        const SymptomsTab(),
-        const HabitsTab(),
+        // Убрал вкладку симптомов, пока думаю что она не нужн
+        // const SymptomsTab(),
         const CacheManagementTab(),
       ],
     );

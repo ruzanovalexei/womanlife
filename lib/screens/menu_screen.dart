@@ -9,6 +9,7 @@ import 'package:period_tracker/screens/settings_screen.dart';
 import 'package:period_tracker/screens/lists_screen.dart';
 import 'package:period_tracker/screens/notes_screen.dart';
 import 'package:period_tracker/screens/habits_screen.dart';
+// import 'package:period_tracker/screens/medications_screen.dart';
 import 'package:yandex_mobileads/mobile_ads.dart';
 // import 'package:yandex_mobileads/ad_widget.dart'; // Добавляем импорт AdWidget
 
@@ -152,7 +153,12 @@ class _MenuScreenState extends State<MenuScreen> {
         }
         break;
       case 1:
-        // Планируется реализация
+        // Navigator.push(
+        //   context,
+        //   MaterialPageRoute(builder: (context) => const MedicationsScreen()),
+        // ).then((_) {
+        //   _loadData();
+        // });
         break;
       case 2:
         Navigator.push(
