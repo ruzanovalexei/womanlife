@@ -730,6 +730,33 @@ Widget build(BuildContext context) {
             child: _buildMainContent(l10n),
           ),
           
+          // Кнопка распознавания речи
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _isSpeechListening 
+                    ? _stopSpeechRecognition 
+                    : _startSpeechRecognition,
+                icon: Icon(
+                  _isSpeechListening ? Icons.stop : Icons.mic,
+                  color: Colors.white,
+                ),
+                label: Text(
+                  _isSpeechListening 
+                      ? 'Остановить запись' 
+                      : 'Голосовая заметка',
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _isSpeechListening ? Colors.red : Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                ),
+              ),
+            ),
+          ),
+          
           // Блок рекламы
           _buildBannerWidget(),
         ],
@@ -746,16 +773,15 @@ Widget _buildMainContent(AppLocalizations l10n) {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Заголовок и кнопка добавления
-        Wrap(
-          direction: Axis.horizontal,
-          alignment: WrapAlignment.spaceBetween,
-          crossAxisAlignment: WrapCrossAlignment.center,
+        Row(
           children: [
-            Text(
-              l10n.addNoteTitle,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+            Expanded(
+              child: Text(
+                l10n.addNoteTitle,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             // Индикатор состояния speech-to-text
@@ -779,45 +805,18 @@ Widget _buildMainContent(AppLocalizations l10n) {
                   ],
                 ),
               ),
+              const SizedBox(width: 12),
             ],
-            // Row с кнопками
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                // Кнопка распознавания речи
-                SizedBox(
-                  width: 56,
-                  height: 56,
-                  child: FloatingActionButton(
-                    onPressed: _isSpeechListening 
-                        ? _stopSpeechRecognition 
-                        : _startSpeechRecognition,
-                    heroTag: "speech_to_text",
-                    backgroundColor: _isSpeechListening ? Colors.red : Colors.blue,
-                    tooltip: _speechService.isAvailable 
-                        ? (_isSpeechListening ? 'Остановить запись' : 'Начать запись голоса')
-                        : 'Speech recognition недоступен',
-                    child: Icon(
-                      _isSpeechListening ? Icons.stop : Icons.mic,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Кнопка добавления заметки
-                SizedBox(
-                  width: 56,
-                  height: 56,
-                  child: FloatingActionButton(
-                    onPressed: _showAddNoteDialog,
-                    heroTag: "add_note",
-                    tooltip: 'Добавить заметку',
-                    child: const Icon(Icons.add, size: 24),
-                  ),
-                ),
-              ],
+            // Кнопка добавления заметки
+            SizedBox(
+              width: 56,
+              height: 56,
+              child: FloatingActionButton(
+                onPressed: _showAddNoteDialog,
+                heroTag: "add_note",
+                tooltip: 'Добавить заметку',
+                child: const Icon(Icons.add, size: 24),
+              ),
             ),
           ],
         ),
