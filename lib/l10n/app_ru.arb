@@ -411,6 +411,7 @@
   },
   "emptyNotesMessage": "Создайте первую заметку",
   "settingsTabHabits": "Привычки",
+  "settingsTabCache": "Кеш и оптимизация",
   "habitsTitle": "Привычки",
   "noHabits": "Нет привычек",
   "executionHabitsTitle": "Привычки выполнения",

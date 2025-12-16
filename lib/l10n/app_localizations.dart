@@ -1445,6 +1445,12 @@ abstract class AppLocalizations {
   /// **'Habits'**
   String get settingsTabHabits;
 
+  /// No description provided for @settingsTabCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache & Optimization'**
+  String get settingsTabCache;
+
   /// No description provided for @habitsTitle.
   ///
   /// In en, this message translates to:

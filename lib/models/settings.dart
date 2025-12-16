@@ -5,6 +5,7 @@ class Settings {
   final int planningMonths; // Период планирования в месяцах
   final String locale;
   final String firstDayOfWeek;
+  final int? dataRetentionPeriod; // Период хранения данных в месяцах (null = неограниченно)
 
   const Settings({
     this.id,
@@ -13,6 +14,7 @@ class Settings {
     required this.planningMonths,
     required this.locale,
     required this.firstDayOfWeek,
+    this.dataRetentionPeriod,
   });
 
   Map<String, dynamic> toMap() {
@@ -23,6 +25,7 @@ class Settings {
       'planningMonths': planningMonths,
       'locale': locale,
       'firstDayOfWeek': firstDayOfWeek,
+      'dataRetentionPeriod': dataRetentionPeriod,
     };
   }
 
@@ -34,6 +37,7 @@ class Settings {
       planningMonths: map['planningMonths'] ?? 3, // По умолчанию 3 месяца
       locale: map['locale'] ?? 'en',
       firstDayOfWeek: map['firstDayOfWeek'] ?? 'monday',
+      dataRetentionPeriod: map['dataRetentionPeriod'], // null = неограниченно
     );
   }
 
@@ -44,6 +48,7 @@ class Settings {
     int? planningMonths,
     String? locale,
     String? firstDayOfWeek,
+    int? dataRetentionPeriod,
   }) {
     return Settings(
       id: id ?? this.id,
@@ -52,11 +57,12 @@ class Settings {
       planningMonths: planningMonths ?? this.planningMonths,
       locale: locale ?? this.locale,
       firstDayOfWeek: firstDayOfWeek ?? this.firstDayOfWeek,
+      dataRetentionPeriod: dataRetentionPeriod ?? this.dataRetentionPeriod,
     );
   }
 
   @override
   String toString() {
-    return 'Settings{id: $id, cycleLength: $cycleLength, periodLength: $periodLength, planningMonths: $planningMonths, locale: $locale, firstDayOfWeek: $firstDayOfWeek}';
+    return 'Settings{id: $id, cycleLength: $cycleLength, periodLength: $periodLength, planningMonths: $planningMonths, locale: $locale, firstDayOfWeek: $firstDayOfWeek, dataRetentionPeriod: $dataRetentionPeriod}';
   }
 }

@@ -409,6 +409,7 @@
   },
   "emptyNotesMessage": "Create your first note",
   "settingsTabHabits": "Habits",
+  "settingsTabCache": "Cache & Optimization",
   "habitsTitle": "Habits",
   "noHabits": "No habits",
   "executionHabitsTitle": "Execution Habits",

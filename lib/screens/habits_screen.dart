@@ -22,7 +22,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
   
   List<HabitExecution> _executionHabits = [];
   List<HabitMeasurable> _measurableHabits = [];
-  List<FrequencyType> _frequencyTypes = [];
+  // List<FrequencyType> _frequencyTypes = [];
   Map<int, FrequencyType> _frequencyTypesMap = {};
   
   Map<int, HabitExecutionRecord> _executionRecords = {};
@@ -76,7 +76,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
       setState(() {
         _executionHabits = executionHabits;
         _measurableHabits = measurableHabits;
-        _frequencyTypes = allFrequencyTypes;
+        // _frequencyTypes = allFrequencyTypes;
         _frequencyTypesMap = frequencyTypesMap;
         _executionRecords = executionRecordsMap;
         _measurableRecords = measurableRecordsMap;

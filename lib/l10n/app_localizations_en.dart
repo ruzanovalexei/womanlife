@@ -752,6 +752,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTabHabits => 'Habits';
 
   @override
+  String get settingsTabCache => 'Cache & Optimization';
+
+  @override
   String get habitsTitle => 'Habits';
 
   @override

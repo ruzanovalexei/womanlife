@@ -7,6 +7,7 @@ import 'package:period_tracker/models/settings.dart';
 import 'package:period_tracker/screens/menu_screen.dart';
 import 'package:period_tracker/services/locale_service.dart';
 import 'package:period_tracker/services/simple_background_service.dart';
+import 'package:period_tracker/services/cache_service.dart';
 //import 'package:period_tracker/services/notification_service.dart';
 
 void main() async {
@@ -30,12 +31,20 @@ void main() async {
       planningMonths: 3,
       locale: 'ru',
       firstDayOfWeek: 'monday',
+      dataRetentionPeriod: null, // null = неограниченно
     );
   }
   localeService = LocaleService(Locale(settings.locale));
 
-    // Запускаем фоновый сервис
+  // Инициализируем сервис кеша для оптимизации БД
+  final cacheService = CacheService();
+  await cacheService.initialize();
+
+  // Запускаем фоновый сервис
   await SimpleBackgroundService.initialize();
+
+  // Очистка кеша при закрытии приложения не поддерживается на всех платформах
+  // Вместо этого используем автоматическую очистку при запуске приложения
 
   runApp(const MyApp());
 }

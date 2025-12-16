@@ -752,6 +752,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsTabHabits => 'Привычки';
 
   @override
+  String get settingsTabCache => 'Кеш и оптимизация';
+
+  @override
   String get habitsTitle => 'Привычки';
 
   @override

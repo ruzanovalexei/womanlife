@@ -10,6 +10,7 @@ import '../widgets/settings_tab.dart';
 import '../widgets/medications_tab.dart';
 import '../widgets/symptoms_tab.dart';
 import '../widgets/habits_tab.dart';
+import '../widgets/cache_management_tab.dart';
 import 'package:yandex_mobileads/mobile_ads.dart';
 //import 'package:yandex_mobileads/ad_widget.dart';
 class SettingsScreen extends StatefulWidget {
@@ -153,7 +154,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
     
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Scaffold(
         appBar: AppBar(
           title: Text(l10n.settingsTitle),
@@ -163,6 +164,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Tab(text: l10n.settingsTabMedications),
               Tab(text: l10n.settingsTabSymptoms),
               Tab(text: l10n.settingsTabHabits),
+              Tab(text: l10n.settingsTabCache),
             ],
           ),
         ),
@@ -208,6 +210,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const MedicationsTab(),
         const SymptomsTab(),
         const HabitsTab(),
+        const CacheManagementTab(),
       ],
     );
   }

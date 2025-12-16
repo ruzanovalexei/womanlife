@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:flutter/material.dart'; // Для Locale
@@ -22,7 +23,7 @@ import '../models/habit_measurable_record.dart'; // Импортируем мо�
 
 class DatabaseHelper {
   static const _databaseName = "PeriodTracker.db";
-  static const _databaseVersion = 20; // Добавляем поддержку привычек + исправление полей intervalValue и selectedDaysOfWeek + дополнительная проверка
+  static const _databaseVersion = 22; // Добавляем настраиваемый период хранения данных
 
   static const settingsTable = 'settings';
   static const dayNotesTable = 'day_notes';
@@ -71,7 +72,8 @@ class DatabaseHelper {
         ovulationDay INTEGER NOT NULL,
         planningMonths INTEGER NOT NULL,
         locale TEXT NOT NULL,
-        firstDayOfWeek TEXT NOT NULL
+        firstDayOfWeek TEXT NOT NULL,
+        dataRetentionPeriod INTEGER
       )
     ''');
 
@@ -219,6 +221,9 @@ class DatabaseHelper {
       )
     ''');
 
+    // Создание индексов для оптимизации производительности
+    await _createIndexes(db);
+
     // Insert default settings
     await db.insert(settingsTable, {
       'cycleLength': 28,
@@ -227,6 +232,7 @@ class DatabaseHelper {
       'planningMonths': 3,
       'locale': 'ru',
       'firstDayOfWeek': 'monday',
+      'dataRetentionPeriod': null, // null = неограниченно
     });
 
     // Initialize default symptoms with codes
@@ -731,6 +737,32 @@ class DatabaseHelper {
             // print('Error checking/fixing frequency_types table structure: $e');
           }
           break;
+        case 21:
+          try {
+            // Создание индексов для оптимизации производительности
+            await _createIndexes(db);
+            
+            // Добавляем поле для хранения даты последней очистки кеша в настройки
+            try {
+              await db.execute('ALTER TABLE $settingsTable ADD COLUMN lastCacheCleanup TEXT');
+            } catch (e) {
+              // Поле уже существует или произошла другая ошибка
+            }
+            
+            print('Database optimized with indexes and cache cleanup support');
+          } catch (e) {
+            print('Error optimizing database: $e');
+          }
+          break;
+        case 22:
+          try {
+            // Добавляем поле для периода хранения данных в настройки
+            await db.execute('ALTER TABLE $settingsTable ADD COLUMN dataRetentionPeriod INTEGER');
+            print('Added dataRetentionPeriod column to settings table');
+          } catch (e) {
+            print('Error adding dataRetentionPeriod column: $e');
+          }
+          break;
       }
     }
   }
@@ -1071,5 +1103,260 @@ class DatabaseHelper {
       'intervalValue': 3, // Значение по умолчанию, будет изменено пользователем
       'selectedDaysOfWeek': null,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+
+  // ===================== DATABASE OPTIMIZATION METHODS =====================
+  
+  /// Создание индексов для оптимизации производительности
+  static Future<void> _createIndexes(Database db) async {
+    // Индексы для таблицы day_notes
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_day_notes_date ON $dayNotesTable(date)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_day_notes_symptoms ON $dayNotesTable(symptoms)');
+    
+    // Индексы для таблицы periods
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_periods_start_date ON $periodsTable(startDate)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_periods_end_date ON $periodsTable(endDate)');
+    
+    // Индексы для таблицы medications
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_medications_start_date ON $medicationsTable(startDate)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_medications_end_date ON $medicationsTable(endDate)');
+    
+    // Индексы для таблицы medication_taken_records
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_medication_records_medication_id ON $medicationTakenRecordsTable(medicationId)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_medication_records_date ON $medicationTakenRecordsTable(date)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_medication_records_medication_date ON $medicationTakenRecordsTable(medicationId, date)');
+    
+    // Индексы для таблицы list_items
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_list_items_list_id ON $listItemsTable(listId)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_list_items_completed ON $listItemsTable(isCompleted)');
+    
+    // Индексы для таблицы notes
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_notes_updated_date ON $notesTable(updatedDate)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_notes_created_date ON $notesTable(createdDate)');
+    
+    // Индексы для таблиц привычек
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_habits_execution_frequency_id ON $habitsExecutionTable(frequencyId)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_habits_execution_start_date ON $habitsExecutionTable(startDate)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_habits_execution_end_date ON $habitsExecutionTable(endDate)');
+    
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_habits_measurable_frequency_id ON $habitsMeasurableTable(frequencyId)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_habits_measurable_start_date ON $habitsMeasurableTable(startDate)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_habits_measurable_end_date ON $habitsMeasurableTable(endDate)');
+    
+    // Индексы для записей привычек
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_habit_execution_records_habit_id ON $habitExecutionRecordsTable(habitId)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_habit_execution_records_date ON $habitExecutionRecordsTable(executionDate)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_habit_execution_records_habit_date ON $habitExecutionRecordsTable(habitId, executionDate)');
+    
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_habit_measurable_records_habit_id ON $habitMeasurableRecordsTable(habitId)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_habit_measurable_records_date ON $habitMeasurableRecordsTable(executionDate)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_habit_measurable_records_habit_date ON $habitMeasurableRecordsTable(habitId, executionDate)');
+  }
+
+  /// Оптимизация базы данных (VACUUM, ANALYZE, REINDEX)
+  Future<void> optimizeDatabase() async {
+    Database db = await database;
+    try {
+      await db.execute('VACUUM'); // Освобождает неиспользуемое пространство
+      await db.execute('ANALYZE'); // Обновляет статистику для оптимизатора запросов
+      await db.execute('REINDEX'); // Перестраивает индексы
+      print('Database optimized successfully');
+    } catch (e) {
+      print('Error optimizing database: $e');
+    }
+  }
+
+  /// Получение информации о размере базы данных
+  Future<Map<String, dynamic>> getDatabaseInfo() async {
+    Database db = await database;
+    final databasePath = db.path;
+    final databaseFile = File(databasePath);
+    
+    Map<String, dynamic> info = {
+      'fileSizeBytes': await databaseFile.length(),
+      'fileSizeMB': (await databaseFile.length()) / (1024 * 1024),
+      'tables': <String, dynamic>{}
+    };
+
+    // Получаем информацию о таблицах
+    final tables = await db.rawQuery('''
+      SELECT name 
+      FROM sqlite_master 
+      WHERE type='table' AND name NOT LIKE 'sqlite_%'
+      ORDER BY name
+    ''');
+
+    for (final table in tables) {
+      final tableName = table['name'] as String;
+      final tableInfo = await db.rawQuery('''
+        SELECT 
+          COUNT(*) as rowCount,
+          SUM(pgsize) as totalSize
+        FROM dbstat 
+        WHERE name = ?
+      ''', [tableName]);
+      
+      final stats = tableInfo.first;
+      info['tables'][tableName] = {
+        'rowCount': stats['rowCount'] ?? 0,
+        'sizeBytes': stats['totalSize'] ?? 0,
+        'sizeKB': ((stats['totalSize'] ?? 0) as int) / 1024,
+      };
+    }
+
+    return info;
+  }
+
+  /// Очистка кеша приложения
+  Future<void> clearCache() async {
+    try {
+      Database db = await database;
+      
+      // Получаем настройки для определения периода хранения данных
+      final settings = await getSettings();
+      final retentionPeriodMonths = settings.dataRetentionPeriod;
+      
+      // Если период хранения не задан (null), не удаляем данные
+      if (retentionPeriodMonths == null) {
+        print('Data retention period not set, skipping cache cleanup');
+        return;
+      }
+      
+      // Вычисляем дату cutoff на основе настроек пользователя
+      final cutoffDate = DateTime.now().subtract(Duration(days: retentionPeriodMonths * 30));
+      final cutoffDateStr = MyDateUtils.toUtcDateString(cutoffDate);
+      
+      // Очистка старых записей привычек
+      await db.delete(habitExecutionRecordsTable, where: 'executionDate < ?', whereArgs: [cutoffDateStr]);
+      await db.delete(habitMeasurableRecordsTable, where: 'executionDate < ?', whereArgs: [cutoffDateStr]);
+      
+      // Очистка старых записей приема лекарств
+      await db.delete(medicationTakenRecordsTable, where: 'date < ?', whereArgs: [cutoffDateStr]);
+      
+      // Очистка старых заметок по дням
+      await db.delete(dayNotesTable, where: 'date < ?', whereArgs: [cutoffDateStr]);
+      
+      print('Cache cleared successfully (retention period: $retentionPeriodMonths months)');
+    } catch (e) {
+      print('Error clearing cache: $e');
+    }
+  }
+
+  /// Периодическая очистка кеша (вызывать при запуске приложения)
+  Future<void> performPeriodicCleanup() async {
+    try {
+      Database db = await database;
+      
+      // Проверяем, когда была последняя очистка (используем настройки для хранения даты последней очистки)
+      // final settings = await getSettings();
+      final lastCleanup = await _getLastCleanupDate(db);
+      
+      if (lastCleanup == null || 
+          DateTime.now().difference(lastCleanup).inDays > 30) {
+        
+        await clearCache();
+        await optimizeDatabase();
+        await _setLastCleanupDate(db, DateTime.now());
+        
+        print('Periodic cleanup performed');
+      }
+    } catch (e) {
+      print('Error performing periodic cleanup: $e');
+    }
+  }
+
+  /// Получение даты последней очистки кеша
+  static Future<DateTime?> _getLastCleanupDate(Database db) async {
+    try {
+      final result = await db.query(settingsTable, limit: 1);
+      if (result.isNotEmpty) {
+        final lastCleanup = result.first['lastCacheCleanup'];
+        if (lastCleanup != null) {
+          return MyDateUtils.fromUtcDateString(lastCleanup as String);
+        }
+      }
+    } catch (e) {
+      print('Error getting last cleanup date: $e');
+    }
+    return null;
+  }
+
+  /// Установка даты последней очистки кеша
+  static Future<void> _setLastCleanupDate(Database db, DateTime date) async {
+    try {
+      await db.update(settingsTable, {
+        'lastCacheCleanup': MyDateUtils.toUtcDateString(date),
+      });
+    } catch (e) {
+      print('Error setting last cleanup date: $e');
+    }
+  }
+
+  /// Очистка кеша при закрытии приложения
+  Future<void> cleanupOnExit() async {
+    try {
+      await clearCache();
+      await optimizeDatabase();
+      print('Cleanup on exit completed');
+    } catch (e) {
+      print('Error during cleanup on exit: $e');
+    }
+  }
+
+  /// Получение статистики использования приложения
+  Future<Map<String, dynamic>> getUsageStatistics() async {
+    Database db = await database;
+    final stats = <String, dynamic>{};
+    
+    try {
+      // Общее количество записей
+      final totalRecords = await db.rawQuery('''
+        SELECT 
+          (SELECT COUNT(*) FROM $dayNotesTable) as dayNotes,
+          (SELECT COUNT(*) FROM $notesTable) as notes,
+          (SELECT COUNT(*) FROM $listsTable) as lists,
+          (SELECT COUNT(*) FROM $listItemsTable) as listItems,
+          (SELECT COUNT(*) FROM $medicationsTable) as medications,
+          (SELECT COUNT(*) FROM $medicationTakenRecordsTable) as medicationRecords,
+          (SELECT COUNT(*) FROM $habitsExecutionTable) as habitExecutions,
+          (SELECT COUNT(*) FROM $habitsMeasurableTable) as habitMeasurables,
+          (SELECT COUNT(*) FROM $habitExecutionRecordsTable) as habitExecutionRecords,
+          (SELECT COUNT(*) FROM $habitMeasurableRecordsTable) as habitMeasurableRecords
+      ''');
+      
+      if (totalRecords.isNotEmpty) {
+        stats.addAll(totalRecords.first);
+      }
+      
+      // Статистика по датам
+      final dateStats = await db.rawQuery('''
+        SELECT 
+          MIN(date) as earliestDate,
+          MAX(date) as latestDate,
+          COUNT(DISTINCT date) as uniqueDays
+        FROM $dayNotesTable
+      ''');
+      
+      if (dateStats.isNotEmpty) {
+        stats.addAll(dateStats.first);
+      }
+      
+      // Статистика размеров данных
+      final dbInfo = await getDatabaseInfo();
+      stats['databaseSizeMB'] = dbInfo['fileSizeMB'];
+      
+    } catch (e) {
+      print('Error getting usage statistics: $e');
+    }
+    
+    return stats;
+  }
+
+  /// Закрытие соединения с базой данных
+  Future<void> closeDatabase() async {
+    if (_database != null) {
+      await _database!.close();
+      _database = null;
+    }
   }
 }

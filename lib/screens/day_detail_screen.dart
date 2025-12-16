@@ -1571,7 +1571,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
           });
         },
         title: Text(
-          l10n.addMedicationTitle,
+          l10n.settingsTabMedications,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         children: [

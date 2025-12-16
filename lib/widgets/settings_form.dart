@@ -21,8 +21,10 @@ class _SettingsFormState extends State<SettingsForm> {
   late TextEditingController _cycleLengthController;
   late TextEditingController _periodLengthController;
   late TextEditingController _planningMonthsController;
+  late TextEditingController _dataRetentionController;
   late String _selectedLocale;
   late String _selectedFirstDay;
+  late bool _isDataRetentionEnabled;
 
   final _formKey = GlobalKey<FormState>();
 
@@ -32,8 +34,12 @@ class _SettingsFormState extends State<SettingsForm> {
     _cycleLengthController = TextEditingController(text: widget.settings.cycleLength.toString());
     _periodLengthController = TextEditingController(text: widget.settings.periodLength.toString());
     _planningMonthsController = TextEditingController(text: widget.settings.planningMonths.toString());
+    _dataRetentionController = TextEditingController(
+      text: widget.settings.dataRetentionPeriod?.toString() ?? ''
+    );
     _selectedLocale = widget.settings.locale;
     _selectedFirstDay = widget.settings.firstDayOfWeek;
+    _isDataRetentionEnabled = widget.settings.dataRetentionPeriod != null;
   }
 
   @override
@@ -112,6 +118,45 @@ class _SettingsFormState extends State<SettingsForm> {
               });
             },
           ),
+          const SizedBox(height: 16),
+          // Настройка периода хранения данных
+          CheckboxListTile(
+            title: const Text('Автоматическая очистка старых данных'),
+            subtitle: const Text('Удалять записи старше указанного периода'),
+            value: _isDataRetentionEnabled,
+            onChanged: (value) {
+              setState(() {
+                _isDataRetentionEnabled = value ?? false;
+                if (!_isDataRetentionEnabled) {
+                  _dataRetentionController.clear();
+                }
+              });
+            },
+          ),
+          if (_isDataRetentionEnabled) ...[
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _dataRetentionController,
+              decoration: const InputDecoration(
+                labelText: 'Период хранения данных (месяцев)',
+                border: OutlineInputBorder(),
+                helperText: '0 = без ограничений, null = не удалять автоматически',
+              ),
+              keyboardType: TextInputType.number,
+              validator: (value) {
+                if (_isDataRetentionEnabled && (value == null || value.isEmpty)) {
+                  return 'Введите период хранения данных';
+                }
+                if (value != null && value.isNotEmpty) {
+                  final numValue = int.tryParse(value);
+                  if (numValue == null || numValue < 0) {
+                    return 'Введите корректное число (0 или больше)';
+                  }
+                }
+                return null;
+              },
+            ),
+          ],
           const SizedBox(height: 32),
           ElevatedButton(
             onPressed: _saveSettings,
@@ -148,12 +193,18 @@ class _SettingsFormState extends State<SettingsForm> {
 
   void _saveSettings() {
     if (_formKey.currentState!.validate()) {
+      int? dataRetentionPeriod;
+      if (_isDataRetentionEnabled && _dataRetentionController.text.isNotEmpty) {
+        dataRetentionPeriod = int.parse(_dataRetentionController.text);
+      }
+      
       final newSettings = widget.settings.copyWith(
         cycleLength: int.parse(_cycleLengthController.text),
         periodLength: int.parse(_periodLengthController.text),
         planningMonths: int.parse(_planningMonthsController.text),
         locale: _selectedLocale,
         firstDayOfWeek: _selectedFirstDay,
+        dataRetentionPeriod: dataRetentionPeriod,
       );
       
       widget.onSave(newSettings);
@@ -165,6 +216,7 @@ class _SettingsFormState extends State<SettingsForm> {
     _cycleLengthController.dispose();
     _periodLengthController.dispose();
     _planningMonthsController.dispose();
+    _dataRetentionController.dispose();
     super.dispose();
   }
 }

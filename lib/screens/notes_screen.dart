@@ -49,7 +49,7 @@ class _NotesScreenState extends State<NotesScreen> {
 
   // Переинициализация сервиса распознавания речи
   Future<void> _reinitializeSpeechService() async {
-    final l10n = AppLocalizations.of(context)!;
+    // final l10n = AppLocalizations.of(context)!;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -74,7 +74,7 @@ class _NotesScreenState extends State<NotesScreen> {
 
   // Инициализация сервиса распознавания речи
   Future<void> _initializeSpeechService() async {
-    final l10n = AppLocalizations.of(context)!;
+    // final l10n = AppLocalizations.of(context)!;
 
     debugPrint('Initializing speech service...');
     final initialized = await _speechService.initialize();
