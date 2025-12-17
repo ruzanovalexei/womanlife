@@ -273,8 +273,8 @@ class SpeechService {
           debugPrint('Speech result received: "${result.recognizedWords}"');
           onResult(result.recognizedWords);
         },
-        listenFor: const Duration(seconds: 30), // Максимум 30 секунд
-        pauseFor: const Duration(seconds: 3), // Пауза 3 секунды
+        listenFor: const Duration(seconds: 100), // Увеличил до 60 секунд
+        pauseFor: const Duration(seconds: 20), // Увеличил паузу до 10 секунд
         partialResults: true,
         localeId: _selectedLanguage,
         onSoundLevelChange: (double level) {
