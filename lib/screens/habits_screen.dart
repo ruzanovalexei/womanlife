@@ -590,7 +590,24 @@ class _HabitsScreenState extends State<HabitsScreen> {
         .where((habit) => _shouldExecuteOnDateMeasurable(habit, _selectedDate))
         .toList();
 
-    if (executionHabitsForDate.isEmpty && measurableHabitsForDate.isEmpty) {
+    // Объединяем все привычки в один список с указанием типа
+    final allHabits = <Map<String, dynamic>>[];
+    
+    for (final habit in executionHabitsForDate) {
+      allHabits.add({
+        'habit': habit,
+        'type': 'execution',
+      });
+    }
+    
+    for (final habit in measurableHabitsForDate) {
+      allHabits.add({
+        'habit': habit,
+        'type': 'measurable',
+      });
+    }
+
+    if (allHabits.isEmpty) {
       return const Center(
         child: Text(
           'На выбранную дату привычки не запланированы',
@@ -599,127 +616,120 @@ class _HabitsScreenState extends State<HabitsScreen> {
       );
     }
 
-    return SingleChildScrollView(
+    return ListView.builder(
       padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Блок "Выполнение"
-          if (executionHabitsForDate.isNotEmpty) ...[
-            _buildExecutionBlock(executionHabitsForDate),
-            const SizedBox(height: 16),
-          ],
-          
-          // Блок "Измеримый результат"
-          if (measurableHabitsForDate.isNotEmpty) ...[
-            _buildMeasurableBlock(measurableHabitsForDate),
-          ],
-        ],
-      ),
+      itemCount: allHabits.length,
+      itemBuilder: (context, index) {
+        final habitData = allHabits[index];
+        final habit = habitData['habit'];
+        final type = habitData['type'];
+        
+        if (type == 'execution') {
+          return _buildHabitCard(habit as HabitExecution, false);
+        } else {
+          return _buildHabitCard(habit as HabitMeasurable, true);
+        }
+      },
     );
   }
 
-  Widget _buildExecutionBlock(List<HabitExecution> habits) {
+  
+
+  Widget _buildHabitCard(dynamic habit, bool isMeasurable) {
+    final isCompleted = isMeasurable 
+        ? (_measurableRecords[habit.id]?.isCompleted ?? false)
+        : (_executionRecords[habit.id]?.isCompleted ?? false);
+
     return Card(
-      child: ExpansionTile(
-        title: Text(
-          'Выполнение (${habits.length})',
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.blue,
-          ),
-        ),
-        children: [
-          ...habits.map((habit) => _buildExecutionHabitItem(habit)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMeasurableBlock(List<HabitMeasurable> habits) {
-    return Card(
-      child: ExpansionTile(
-        title: Text(
-          'Измеримый результат (${habits.length})',
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.green,
-          ),
-        ),
-        children: [
-          ...habits.map((habit) => _buildMeasurableHabitItem(habit)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildExecutionHabitItem(HabitExecution habit) {
-    final record = _executionRecords[habit.id];
-    final isCompleted = record?.isCompleted ?? false;
-
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-      leading: Checkbox(
-        value: isCompleted,
-        onChanged: (value) {
-          if (value != null) {
-            _toggleExecutionHabit(habit, value);
-          }
-        },
-      ),
-      title: Text(
-        habit.name,
-        style: TextStyle(
-          fontWeight: FontWeight.w500,
-          decoration: isCompleted ? TextDecoration.lineThrough : null,
-        ),
-      ),
-      subtitle: Text(
-        'Напоминание: ${habit.reminderTime.isEmpty ? 'не установлено' : habit.reminderTime}',
-        style: const TextStyle(fontSize: 12),
-      ),
-    );
-  }
-
-  Widget _buildMeasurableHabitItem(HabitMeasurable habit) {
-    final record = _measurableRecords[habit.id];
-    final isCompleted = record?.isCompleted ?? false;
-    final actualValue = record?.actualValue;
-
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-      leading: Checkbox(
-        value: isCompleted,
-        onChanged: (value) {
-          if (value != null) {
-            _toggleMeasurableHabit(habit, value);
-          }
-        },
-      ),
-      title: Text(
-        habit.name,
-        style: TextStyle(
-          fontWeight: FontWeight.w500,
-          decoration: isCompleted ? TextDecoration.lineThrough : null,
-        ),
-      ),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Цель: ${habit.goal} ${habit.unit}',
-            style: const TextStyle(fontSize: 12),
-          ),
-          if (actualValue != null) ...[
-            Text(
-              'Факт: $actualValue ${habit.unit}',
-              style: const TextStyle(fontSize: 12, color: Colors.green),
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Заголовок с чекбоксом и названием привычки
+            Row(
+              children: [
+                Checkbox(
+                  value: isCompleted,
+                  onChanged: (value) {
+                    if (value != null) {
+                      if (isMeasurable) {
+                        _toggleMeasurableHabit(habit, value);
+                      } else {
+                        _toggleExecutionHabit(habit, value);
+                      }
+                    }
+                  },
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    habit.name,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      decoration: isCompleted ? TextDecoration.lineThrough : null,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 8),
+            
+            // Дополнительная информация
+            if (isMeasurable) ...[
+              // Для измеримых привычек показываем цель и факт
+              _buildMeasurableInfo(habit),
+              const SizedBox(height: 8),
+            ],
+            
+            // Напоминание
+            Row(
+              children: [
+                const Icon(Icons.access_time, size: 16, color: Colors.grey),
+                const SizedBox(width: 4),
+                Text(
+                  'Напоминание: ${habit.reminderTime.isEmpty ? 'не установлено' : habit.reminderTime}',
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMeasurableInfo(HabitMeasurable habit) {
+    final record = _measurableRecords[habit.id];
+    final actualValue = record?.actualValue;
+
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.blue.shade200),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.flag, size: 16, color: Colors.blue),
+          const SizedBox(width: 8),
           Text(
-            'Напоминание: ${habit.reminderTime.isEmpty ? 'не установлено' : habit.reminderTime}',
-            style: const TextStyle(fontSize: 12),
+            'Цель: ${habit.goal} ${habit.unit}',
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           ),
+          if (actualValue != null) ...[
+            const SizedBox(width: 16),
+            const Icon(Icons.check_circle, size: 16, color: Colors.green),
+            const SizedBox(width: 4),
+            Text(
+              'Факт: $actualValue ${habit.unit}',
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.green),
+            ),
+          ],
         ],
       ),
     );

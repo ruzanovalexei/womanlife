@@ -350,36 +350,17 @@ class _HabitsTabState extends State<HabitsTab> {
                                 style: const TextStyle(fontSize: 16, color: Colors.grey),
                               ),
                             )
-                          : ListView(
-                              children: [
-                                // Привычки типа выполнение
-                                if (_executionHabits.isNotEmpty) ...[
-                                  Text(
-                                    l10n.executionHabitsTitle,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.blue,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  ..._executionHabits.map((habit) => _buildHabitExecutionCard(habit)),
-                                  const SizedBox(height: 16),
-                                ],
-                                // Привычки типа измеримый результат
-                                if (_measurableHabits.isNotEmpty) ...[
-                                  Text(
-                                    l10n.measurableHabitsTitle,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.green,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  ..._measurableHabits.map((habit) => _buildHabitMeasurableCard(habit)),
-                                ],
-                              ],
+                          : ListView.builder(
+                              itemCount: _executionHabits.length + _measurableHabits.length,
+                              itemBuilder: (context, index) {
+                                // Объединяем все привычки в один список
+                                if (index < _executionHabits.length) {
+                                  return _buildHabitExecutionCard(_executionHabits[index]);
+                                } else {
+                                  final measurableIndex = index - _executionHabits.length;
+                                  return _buildHabitMeasurableCard(_measurableHabits[measurableIndex]);
+                                }
+                              },
                             ),
             ),
           ],
