@@ -622,13 +622,17 @@ class _ListsScreenState extends State<ListsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Кнопка добавления записи
-          ElevatedButton.icon(
-            onPressed: () => _showAddListItemDialog(list.id!),
-            icon: const Icon(Icons.add, size: 16),
-            label: Text(l10n.addListItemButton),
-            style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.pink,
-                    foregroundColor: Colors.white,
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => _showAddListItemDialog(list.id!),
+              icon: const Icon(Icons.add),
+              label: Text(l10n.addListItemButton),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              ),
             ),
           ),
           const SizedBox(height: 16),
