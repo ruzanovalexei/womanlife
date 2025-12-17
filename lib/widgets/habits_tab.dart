@@ -615,7 +615,7 @@ class _HabitExecutionDialogState extends State<HabitExecutionDialog> {
         minute: int.parse(timeParts[1]),
       );
     }
-    reminderTime = initialReminderTime ?? const TimeOfDay(hour: 0, minute: 0); // Временная инициализация
+    reminderTime = initialReminderTime; // Оставляем null, если время не выбрано
 
     nameController.addListener(_updateKeyboardState);
   }
@@ -831,7 +831,7 @@ class _HabitExecutionDialogState extends State<HabitExecutionDialog> {
             ListTile(
               title: Text(l10n.habitReminderTimeLabel),
               subtitle: Text(reminderTime != null 
-                  ? '${l10n.habitReminderTimeLabel}: ${reminderTime!.hour.toString().padLeft(2, '0')}:${reminderTime!.minute.toString().padLeft(2, '0')}'
+                  ? '${reminderTime!.hour.toString().padLeft(2, '0')}:${reminderTime!.minute.toString().padLeft(2, '0')}'
                   : 'Выберите время напоминания'),
               trailing: const Icon(Icons.access_time),
               onTap: _pickReminderTime,
@@ -1004,7 +1004,7 @@ class _HabitMeasurableDialogState extends State<HabitMeasurableDialog> {
         minute: int.parse(timeParts[1]),
       );
     }
-    reminderTime = initialReminderTime ?? const TimeOfDay(hour: 0, minute: 0); // Временная инициализация
+    reminderTime = initialReminderTime; // Оставляем null, если время не выбрано
 
     nameController.addListener(_updateKeyboardState);
   }
@@ -1245,7 +1245,7 @@ class _HabitMeasurableDialogState extends State<HabitMeasurableDialog> {
             ListTile(
               title: Text(l10n.habitReminderTimeLabel),
               subtitle: Text(reminderTime != null 
-                  ? '${l10n.habitReminderTimeLabel}: ${reminderTime!.hour.toString().padLeft(2, '0')}:${reminderTime!.minute.toString().padLeft(2, '0')}'
+                  ? '${reminderTime!.hour.toString().padLeft(2, '0')}:${reminderTime!.minute.toString().padLeft(2, '0')}'
                   : 'Выберите время напоминания'),
               trailing: const Icon(Icons.access_time),
               onTap: _pickReminderTime,
