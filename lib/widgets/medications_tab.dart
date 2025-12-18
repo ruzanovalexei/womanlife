@@ -9,7 +9,9 @@ import '../utils/date_utils.dart'; // Добавлен импорт MyDateUtils
 import '../models/medication_time.dart';
 
 class MedicationsTab extends StatefulWidget {
-  const MedicationsTab({super.key});
+  final Function(bool hasChanges)? onDataChanged;
+  
+  const MedicationsTab({super.key, this.onDataChanged});
 
   @override
   _MedicationsTabState createState() => _MedicationsTabState();
@@ -60,6 +62,9 @@ class _MedicationsTabState extends State<MedicationsTab> {
         }
         await _loadMedications();
         
+        // Уведомляем об изменении данных
+        widget.onDataChanged?.call(true);
+        
         if (mounted) {
           // Сообщение об успехе можно добавить при необходимости
         }
@@ -81,6 +86,10 @@ class _MedicationsTabState extends State<MedicationsTab> {
     try {
       await _databaseHelper.deleteMedication(medication.id!);
       await _loadMedications();
+      
+      // Уведомляем об изменении данных
+      widget.onDataChanged?.call(true);
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.medicationDeleteSuccess(medication.name)),

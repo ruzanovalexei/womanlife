@@ -444,13 +444,18 @@ class _HabitsScreenState extends State<HabitsScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
+              onPressed: () async {
+                final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => const HabitsSettingsScreen(),
                   ),
                 );
+                
+                // Если были изменения в привычках, перезагружаем данные
+                if (result == true) {
+                  await _loadData();
+                }
               },
               icon: const Icon(Icons.settings),
               label: const Text('Настройки привычек'),

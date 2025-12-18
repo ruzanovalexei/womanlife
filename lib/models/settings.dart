@@ -35,7 +35,7 @@ class Settings {
       cycleLength: map['cycleLength'],
       periodLength: map['periodLength'],
       planningMonths: map['planningMonths'] ?? 3, // По умолчанию 3 месяца
-      locale: map['locale'] ?? 'en',
+      locale: map['locale'] ?? 'ru',
       firstDayOfWeek: map['firstDayOfWeek'] ?? 'monday',
       dataRetentionPeriod: map['dataRetentionPeriod'], // null = неограниченно
     );

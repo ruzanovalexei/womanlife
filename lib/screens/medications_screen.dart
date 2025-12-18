@@ -14,6 +14,7 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
   static const _backgroundImage = AssetImage('assets/images/fon1.png');
   late BannerAd banner;
   var isBannerAlreadyCreated = false;
+  bool _hasChanges = false; // Флаг для отслеживания изменений
 
   @override
   void initState() {
@@ -82,6 +83,12 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.settingsTabMedications),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context, _hasChanges);
+          },
+        ),
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -94,7 +101,13 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
           children: [
             // Основной контент
             Expanded(
-              child: const MedicationsTab(),
+              child: MedicationsTab(
+                onDataChanged: (hasChanges) {
+                  setState(() {
+                    _hasChanges = hasChanges;
+                  });
+                },
+              ),
             ),
             
             // Блок рекламы

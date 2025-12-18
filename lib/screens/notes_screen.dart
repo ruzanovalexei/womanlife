@@ -48,29 +48,29 @@ class _NotesScreenState extends State<NotesScreen> {
   }
 
   // Переинициализация сервиса распознавания речи
-  Future<void> _reinitializeSpeechService() async {
-    // final l10n = AppLocalizations.of(context)!;
+  // Future<void> _reinitializeSpeechService() async {
+  //   // final l10n = AppLocalizations.of(context)!;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Переинициализация speech recognition...'),
-        backgroundColor: Colors.blue,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(
+  //       content: Text('Переинициализация speech recognition...'),
+  //       backgroundColor: Colors.blue,
+  //       duration: const Duration(seconds: 2),
+  //     ),
+  //   );
 
-    await _initializeSpeechService();
+  //   await _initializeSpeechService();
     
-    if (_speechService.isAvailable) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Speech recognition успешно инициализирован'),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    }
-  }
+  //   if (_speechService.isAvailable) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text('Speech recognition успешно инициализирован'),
+  //         backgroundColor: Colors.green,
+  //         duration: const Duration(seconds: 2),
+  //       ),
+  //     );
+  //   }
+  // }
 
   // Инициализация сервиса распознавания речи
   Future<void> _initializeSpeechService() async {
@@ -388,45 +388,45 @@ class _NotesScreenState extends State<NotesScreen> {
   }
 
   // Выбор языка распознавания
-  Future<void> _selectLanguage() async {
-    final l10n = AppLocalizations.of(context)!;
+  // Future<void> _selectLanguage() async {
+  //   final l10n = AppLocalizations.of(context)!;
     
-    final selected = await showDialog<String>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(l10n.selectLanguage),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: _speechService.availableLanguages.length,
-              itemBuilder: (context, index) {
-                final languageName = _speechService.availableLanguages.keys.elementAt(index);
-                final languageCode = _speechService.availableLanguages.values.elementAt(index);
+  //   final selected = await showDialog<String>(
+  //     context: context,
+  //     builder: (context) {
+  //       return AlertDialog(
+  //         title: Text(l10n.selectLanguage),
+  //         content: SizedBox(
+  //           width: double.maxFinite,
+  //           child: ListView.builder(
+  //             shrinkWrap: true,
+  //             itemCount: _speechService.availableLanguages.length,
+  //             itemBuilder: (context, index) {
+  //               final languageName = _speechService.availableLanguages.keys.elementAt(index);
+  //               final languageCode = _speechService.availableLanguages.values.elementAt(index);
                 
-                return RadioListTile<String>(
-                  title: Text(languageName),
-                  value: languageCode,
-                  groupValue: _selectedLanguage,
-                  onChanged: (value) {
-                    Navigator.pop(context, value);
-                  },
-                );
-              },
-            ),
-          ),
-        );
-      },
-    );
+  //               return RadioListTile<String>(
+  //                 title: Text(languageName),
+  //                 value: languageCode,
+  //                 groupValue: _selectedLanguage,
+  //                 onChanged: (value) {
+  //                   Navigator.pop(context, value);
+  //                 },
+  //               );
+  //             },
+  //           ),
+  //         ),
+  //       );
+  //     },
+  //   );
 
-    if (selected != null) {
-      setState(() {
-        _selectedLanguage = selected;
-      });
-      _speechService.setLanguage(selected);
-    }
-  }
+  //   if (selected != null) {
+  //     setState(() {
+  //       _selectedLanguage = selected;
+  //     });
+  //     _speechService.setLanguage(selected);
+  //   }
+  // }
 
   // Показать диалог ошибки
   void _showErrorDialog(String message) {
@@ -718,18 +718,18 @@ Widget build(BuildContext context) {
           ),
         ],
       ),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.mic),
-          onPressed: _speechService.isAvailable ? _selectLanguage : _reinitializeSpeechService,
-          tooltip: _speechService.isAvailable ? l10n.selectLanguage : 'Переинициализировать speech recognition',
-        ),
-        IconButton(
-          icon: const Icon(Icons.refresh),
-          onPressed: _loadData,
-          tooltip: l10n.refreshTooltip,
-        ),
-      ],
+      // actions: [
+      //   IconButton(
+      //     icon: const Icon(Icons.mic),
+      //     onPressed: _speechService.isAvailable ? _selectLanguage : _reinitializeSpeechService,
+      //     tooltip: _speechService.isAvailable ? l10n.selectLanguage : 'Переинициализировать speech recognition',
+      //   ),
+      //   IconButton(
+      //     icon: const Icon(Icons.refresh),
+      //     onPressed: _loadData,
+      //     tooltip: l10n.refreshTooltip,
+      //   ),
+      // ],
     ),
       body: Container(
         decoration: const BoxDecoration(

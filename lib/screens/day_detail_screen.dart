@@ -1644,13 +1644,18 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
+                    onPressed: () async {
+                      final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const MedicationsScreen(),
                         ),
                       );
+                      
+                      // Если были изменения в лекарствах, перезагружаем данные
+                      if (result == true) {
+                        await _loadData();
+                      }
                     },
                     icon: const Icon(Icons.medication),
                     label: const Text('Управление лекарствами'),

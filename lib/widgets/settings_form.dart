@@ -70,30 +70,30 @@ class _SettingsFormState extends State<SettingsForm> {
             min: 1,
             max: 12,
           ),
-          const SizedBox(height: 16),
-          DropdownButtonFormField<String>(
-            initialValue: _selectedLocale,
-            decoration: InputDecoration(
-              labelText: l10n.settingsFormLanguageLabel,
-              border: const OutlineInputBorder(),
-            ),
-            items: [
-              DropdownMenuItem(
-                value: 'en',
-                child: Text(l10n.settingsFormLanguageEnglish),
-              ),
-              DropdownMenuItem(
-                value: 'ru',
-                child: Text(l10n.settingsFormLanguageRussian),
-              ),
-            ],
-            onChanged: (value) {
-              if (value == null) return;
-              setState(() {
-                _selectedLocale = value;
-              });
-            },
-          ),
+          // const SizedBox(height: 16),
+          // DropdownButtonFormField<String>(
+          //   initialValue: _selectedLocale,
+          //   decoration: InputDecoration(
+          //     labelText: l10n.settingsFormLanguageLabel,
+          //     border: const OutlineInputBorder(),
+          //   ),
+          //   items: [
+          //     DropdownMenuItem(
+          //       value: 'en',
+          //       child: Text(l10n.settingsFormLanguageEnglish),
+          //     ),
+          //     DropdownMenuItem(
+          //       value: 'ru',
+          //       child: Text(l10n.settingsFormLanguageRussian),
+          //     ),
+          //   ],
+          //   onChanged: (value) {
+          //     if (value == null) return;
+          //     setState(() {
+          //       _selectedLocale = value;
+          //     });
+          //   },
+          // ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             initialValue: _selectedFirstDay,

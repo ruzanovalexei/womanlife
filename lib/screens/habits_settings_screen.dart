@@ -14,6 +14,7 @@ class _HabitsSettingsScreenState extends State<HabitsSettingsScreen> {
   late BannerAd banner;
   var isBannerAlreadyCreated = false;
   static const _backgroundImage = AssetImage('assets/images/fon1.png');
+  bool _hasChanges = false; // Флаг для отслеживания изменений
 
   @override
   void initState() {
@@ -73,6 +74,12 @@ class _HabitsSettingsScreenState extends State<HabitsSettingsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.settingsTabHabits),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context, _hasChanges);
+          },
+        ),
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -98,7 +105,13 @@ class _HabitsSettingsScreenState extends State<HabitsSettingsScreen> {
 
   // Вынесенный основной контент
   Widget _buildMainContent() {
-    return const HabitsTab();
+    return HabitsTab(
+      onDataChanged: (hasChanges) {
+        setState(() {
+          _hasChanges = hasChanges;
+        });
+      },
+    );
   }
 
   // Вынесенный виджет баннера

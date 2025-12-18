@@ -8,7 +8,9 @@ import '../models/frequency_type.dart';
 import '../utils/date_utils.dart';
 
 class HabitsTab extends StatefulWidget {
-  const HabitsTab({super.key});
+  final Function(bool hasChanges)? onDataChanged;
+  
+  const HabitsTab({super.key, this.onDataChanged});
 
   @override
   _HabitsTabState createState() => _HabitsTabState();
@@ -119,6 +121,9 @@ class _HabitsTabState extends State<HabitsTab> {
         }
         await _loadHabits();
 
+        // Уведомляем об изменении данных
+        widget.onDataChanged?.call(true);
+
         if (mounted) {
           final l10n = AppLocalizations.of(context)!;
           ScaffoldMessenger.of(context).showSnackBar(
@@ -169,6 +174,9 @@ class _HabitsTabState extends State<HabitsTab> {
         }
         await _loadHabits();
 
+        // Уведомляем об изменении данных
+        widget.onDataChanged?.call(true);
+
         if (mounted) {
           final l10n = AppLocalizations.of(context)!;
           ScaffoldMessenger.of(context).showSnackBar(
@@ -212,6 +220,9 @@ class _HabitsTabState extends State<HabitsTab> {
                   await _databaseHelper.deleteHabitExecution(habit.id!);
                   Navigator.pop(context);
                   await _loadHabits();
+
+                  // Уведомляем об изменении данных
+                  widget.onDataChanged?.call(true);
 
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -261,6 +272,9 @@ class _HabitsTabState extends State<HabitsTab> {
                   await _databaseHelper.deleteHabitMeasurable(habit.id!);
                   Navigator.pop(context);
                   await _loadHabits();
+
+                  // Уведомляем об изменении данных
+                  widget.onDataChanged?.call(true);
 
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
