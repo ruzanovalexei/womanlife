@@ -256,11 +256,11 @@
   "cancel": "Cancel",
   "menuTitle": "Menu",
   "menuSubtitle": "Choose the section you need",
-  "menuAnalytics": "Health",
-  "menuMedications": "Daily Schedule",
-  "menuInsights": "Lists",
-  "menuReminders": "Habits",
-  "menuHelp": "Notes",
+  "menu1": "Health",
+  "menu2": "Medications",
+  "menu3": "Lists",
+  "menu4": "Habits",
+  "menu5": "Notes",
   "menuItem1": "Health opened",
   "menuItem2": "Daily Schedule opened",
   "menuItem3": "To-Do List opened",
@@ -342,6 +342,7 @@
   "periodBlockTitle": "Period",
   "delayLabel": "Delay",
   "previousPeriodsTitle": "Previous periods",
+  "nextPlannedPeriodsTitle": "Next planned periods",
   "activeLabel": "(active)",
   "durationLabel": "Duration:",
   "durationDayOne": "day",
@@ -366,5 +367,108 @@
   "editListNameLabel": "List Name",
   "listNameRequired": "Enter list name",
   "listUpdated": "List updated",
-  "listUpdateError": "Error updating list: {message}"
+  "listUpdateError": "Error updating list: {message}",
+  "notificationChannelName": "Medication Reminders",
+  "notificationChannelDescription": "Medication intake notifications",
+  "notificationTitle": "Time to take medications!",
+  "notificationBody": "Don't forget to take:",
+  "notesTitle": "Notes",
+  "addNoteTitle": "Add Note",
+  "editNoteTitle": "Edit Note",
+  "noteTitleLabel": "Note Title",
+  "noteContentLabel": "Note Content",
+  "noteDateLabel": "Note Date",
+  "noteRequired": "Enter note title or content",
+  "noteSaved": "Note saved",
+  "noteUpdated": "Note updated",
+  "noteDeleted": "Note deleted",
+  "noteSaveError": "Error saving note: {message}",
+  "@noteSaveError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "noteUpdateError": "Error updating note: {message}",
+  "@noteUpdateError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "noteDeleteError": "Error deleting note: {message}",
+  "@noteDeleteError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "deleteNoteConfirmTitle": "Delete Note",
+  "deleteNoteConfirmMessage": "Are you sure you want to delete the note \"{title}\"?",
+  "@deleteNoteConfirmMessage": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "emptyNotesMessage": "Create your first note",
+  "settingsTabHabits": "Habits",
+  "settingsTabCache": "Cache & Optimization",
+  "habitsTitle": "Habits",
+  "noHabits": "No habits",
+  "executionHabitsTitle": "Execution Habits",
+  "measurableHabitsTitle": "Measurable Habits",
+  "selectHabitTypeTitle": "Select Habit Type",
+  "habitTypeExecution": "Execution",
+  "habitTypeMeasurable": "Measurable Result",
+  "habitTypeExecutionDescription": "Simple habit completion tracking",
+  "habitTypeMeasurableDescription": "Habit with measurable result",
+  "addHabitExecutionTitle": "Add Execution Habit",
+  "editHabitExecutionTitle": "Edit Execution Habit",
+  "addHabitMeasurableTitle": "Add Measurable Habit",
+  "editHabitMeasurableTitle": "Edit Measurable Habit",
+  "habitNameLabel": "Habit Name",
+  "habitFrequencyLabel": "Frequency",
+  "habitStartDateLabel": "Start Date",
+  "habitEndDateLabel": "End Date",
+  "habitReminderTimeLabel": "Reminder Time",
+  "habitGoalLabel": "Goal",
+  "habitUnitLabel": "Unit",
+  "pickStartDate": "Pick start date",
+  "pickEndDate": "Pick end date",
+  "fillAllRequiredFields": "Fill all required fields",
+  "invalidTimeFormat": "Invalid time format (use HH:MM)",
+  "invalidGoalValue": "Enter a valid goal value",
+  "habitExecutionAdded": "Execution habit added",
+  "habitExecutionUpdated": "Execution habit updated",
+  "habitMeasurableAdded": "Measurable habit added",
+  "habitMeasurableUpdated": "Measurable habit updated",
+  "habitSaveError": "Error saving habit: {message}",
+  "@habitSaveError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "deleteHabitTitle": "Delete Habit",
+  "deleteHabitConfirmMessage": "Are you sure you want to delete habit \"{name}\"?",
+  "@deleteHabitConfirmMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "habitDeleted": "Habit deleted",
+  "habitDeleteError": "Error deleting habit: {message}",
+  "@habitDeleteError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "selectLanguage": "Select Language",
+  "speechRecognitionError": "Speech recognition error",
+  "speechRecognitionErrorWithMessage": "Speech recognition error: {error}",
+  "@speechRecognitionErrorWithMessage": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "speechNoteCreated": "Voice note created",
+  "noMicrophonePermission": "No microphone permission",
+  "listeningIndicator": "Listening...",
+  "errorDialogTitle": "Error"
 }

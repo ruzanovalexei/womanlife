@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+//import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:period_tracker/l10n/app_localizations.dart';
 
@@ -17,6 +17,7 @@ import 'package:yandex_mobileads/mobile_ads.dart';
 import '../services/permissions_service.dart';
 import 'home_screen.dart';
 import 'menu_screen.dart';
+import 'medications_screen.dart';
 //import 'package:yandex_mobileads/ad_widget.dart';
 
 // Added MedicationTime class
@@ -57,7 +58,7 @@ class DayDetailScreen extends StatefulWidget {
   final DateTime selectedDate;
   final List<PeriodRecord> periodRecords;
   final Settings settings;
-  final bool shouldReturnResult; // Нужно ли возвращать результат
+  final bool shouldReturnResult;
 
   const DayDetailScreen({
     super.key, 
@@ -74,18 +75,17 @@ class DayDetailScreen extends StatefulWidget {
 class _DayDetailScreenState extends State<DayDetailScreen> {
   final _databaseHelper = DatabaseHelper();
   late DayNote _dayNote;
-  //final _symptomController = TextEditingController();
   bool _isLoading = true;
   String? _errorMessage;
   
-  
-  //Реклама
+  // Реклама
   late BannerAd banner;
   var isBannerAlreadyCreated = false;
-
+  static const _backgroundImage = AssetImage('assets/images/fon1.png');
 
   PeriodRecord? _lastPeriod;
   PeriodRecord? _activePeriod;
+  List<PeriodRecord> _allPeriodRecords = []; // Все записи о периодах для расчета плановых периодов
   List<String> _allSymptoms = []; // Список всех доступных симптомов
   List<Medication> _allMedications = []; // Список всех лекарств
 
@@ -99,54 +99,43 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
   bool get _canMarkStart => PeriodCalculator.canMarkPeriodStart(widget.selectedDate, _lastPeriod);
   bool get _canMarkEnd => PeriodCalculator.canMarkPeriodEnd(widget.selectedDate, _activePeriod);
   bool get _isInActivePeriod => PeriodCalculator.isDateInActivePeriod(widget.selectedDate, _activePeriod);
-  bool get _isDelayDay => PeriodCalculator.isDelayDay(widget.selectedDate, widget.settings, widget.periodRecords);
-  bool get _isOvulationDay => PeriodCalculator.isOvulationDay(widget.selectedDate, widget.settings, widget.periodRecords);
-  bool get _isFertileDay => PeriodCalculator.isFertileDay(widget.selectedDate, widget.settings, widget.periodRecords);
+  // bool get _isDelayDay => PeriodCalculator.isDelayDay(widget.selectedDate, widget.settings, _allPeriodRecords);
+  bool get _isOvulationDay => PeriodCalculator.isOvulationDay(widget.selectedDate, widget.settings, _allPeriodRecords);
+  bool get _isFertileDay => PeriodCalculator.isFertileDay(widget.selectedDate, widget.settings, _allPeriodRecords);
 
 
 
-//Реклама
-  _createBanner() {
-    final screenWidth = MediaQuery.of(context).size.width.round();
-    final adSize = BannerAdSize.sticky(width: screenWidth);
+
+
+
+
+  // Получить следующие плановые периоды (первые после последних фактических с интервалом более 14 дней)
+  List<PeriodRange> get _nextPlannedPeriods {
+    if (_allPeriodRecords.isEmpty) return [];
     
-    return BannerAd(
-      adUnitId: 'R-M-17946414-1',
-      adSize: adSize,
-      adRequest: const AdRequest(),
-      onAdLoaded: () {},
-      onAdFailedToLoad: (error) {},
-      onAdClicked: () {},
-      onLeftApplication: () {},
-      onReturnedToApplication: () {},
-      onImpression: (impressionData) {}
+    // Рассчитываем все плановые периоды на основе настроек и фактических записей
+    final plannedPeriods = PeriodCalculator.calculatePlannedPeriods(
+      widget.settings, 
+      _allPeriodRecords
     );
-  }
-
-
-
-
-  // Найти предыдущий период, предшествующий выбранному дню
-  PeriodRecord? get _previousPeriod {
-    if (widget.periodRecords.isEmpty) return null;
     
-    // Фильтруем периоды, которые заканчиваются до выбранной даты
-    final previousPeriods = widget.periodRecords.where((period) {
-      final periodEndDate = period.endDate ?? PeriodCalculator.getToday();
-      return periodEndDate.isBefore(widget.selectedDate) || 
-             periodEndDate.isAtSameMomentAs(widget.selectedDate);
+    // Находим последний фактический период
+    final sortedActualPeriods = List<PeriodRecord>.from(_allPeriodRecords)
+      ..sort((a, b) => b.startDate.compareTo(a.startDate));
+    
+    if (sortedActualPeriods.isEmpty) return [];
+    
+    final lastActualPeriod = sortedActualPeriods.first;
+    
+    // Фильтруем плановые периоды, оставляя только те, которые начинаются 
+    // более чем через 14 дней после последнего фактического
+    final nextPlannedPeriods = plannedPeriods.where((plannedPeriod) {
+      final daysDifference = plannedPeriod.startDate.difference(lastActualPeriod.startDate).inDays;
+      return daysDifference > 14;
     }).toList();
     
-    if (previousPeriods.isEmpty) return null;
-    
-    // Сортируем по дате окончания (от новых к старым) и берем первый
-    previousPeriods.sort((a, b) {
-      final aEndDate = a.endDate ?? PeriodCalculator.getToday();
-      final bEndDate = b.endDate ?? PeriodCalculator.getToday();
-      return bEndDate.compareTo(aEndDate);
-    });
-    
-    return previousPeriods.first;
+    // Берем только первый плановый период для отображения
+    return nextPlannedPeriods.take(1).toList();
   }
 
   String _formatDate(BuildContext context, DateTime date) {
@@ -154,34 +143,114 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
     return DateFormat('dd.MM.yyyy', localeTag).format(date);
   }
 
+  // Обновить экран с переходом к текущей дате
+  void _refreshToCurrentDate() {
+    final currentDate = PeriodCalculator.getToday();
+    
+    // Переходим к главному экрану с текущей датой
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DayDetailScreen(
+          selectedDate: currentDate,
+          periodRecords: widget.periodRecords, // Передаем текущие записи периодов
+          settings: widget.settings,
+          shouldReturnResult: false,
+        ),
+      ),
+      (route) => false,
+    );
+  }
+
+  // Переключить на предыдущий день
+  void _goToPreviousDay() {
+    final previousDate = widget.selectedDate.subtract(const Duration(days: 1));
+    
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DayDetailScreen(
+          selectedDate: previousDate,
+          periodRecords: widget.periodRecords,
+          settings: widget.settings,
+          shouldReturnResult: widget.shouldReturnResult,
+        ),
+      ),
+    );
+  }
+
+  // Переключить на следующий день
+  void _goToNextDay() {
+    final nextDate = widget.selectedDate.add(const Duration(days: 1));
+    
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DayDetailScreen(
+          selectedDate: nextDate,
+          periodRecords: widget.periodRecords,
+          settings: widget.settings,
+          shouldReturnResult: widget.shouldReturnResult,
+        ),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
+    _initializeScreen();
+  }
+
+  // Оптимизированная инициализация экрана
+  void _initializeScreen() {
+    _createAdBanner();
     _loadData();
   }
 
-  Future<void> _loadData({bool includeBanner = false}) async {
-    try {
+  // Создание баннера
+  BannerAd _createBanner() {
+    final screenWidth = MediaQuery.of(context).size.width.round();
+    final adSize = BannerAdSize.sticky(width: screenWidth);
+    
+    return BannerAd(
+      adUnitId: 'R-M-17946414-3',
+      adSize: adSize,
+      adRequest: const AdRequest(),
+      onAdLoaded: () {
+        if (mounted) {
+          setState(() {}); // Обновляем только для показа баннера
+        }
+      },
+      onAdFailedToLoad: (error) {
+        debugPrint('Ad failed to load: $error');
+      },
+      onAdClicked: () {},
+      onLeftApplication: () {},
+      onReturnedToApplication: () {},
+      onImpression: (impressionData) {}
+    );
+  }
 
-      if (includeBanner) {
-        banner = _createBanner();
-        
-        setState(() {
-          _isLoading = true;
-          _errorMessage = null;
-          isBannerAlreadyCreated = true;
-        });
-      } else {
-        setState(() {
-          _isLoading = true;
-          _errorMessage = null;
-        });
+  // Оптимизированное создание баннера
+  void _createAdBanner() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !isBannerAlreadyCreated) {
+        try {
+          banner = _createBanner();
+          setState(() {
+            isBannerAlreadyCreated = true;
+          });
+        } catch (e) {
+          debugPrint('Banner creation failed: $e');
+        }
       }
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
+    });
+  }
 
+  // Оптимизированная загрузка данных - один setState
+  Future<void> _loadData() async {
+    try {
       // Загружаем заметку дня
       DayNote? note = await _databaseHelper.getDayNote(widget.selectedDate);
       _dayNote = note ?? DayNote(
@@ -189,47 +258,52 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
         symptoms: [],
       );
 
+      // Загружаем все периоды из базы данных
+      _allPeriodRecords = await _databaseHelper.getAllPeriodRecords();
+      
       // Загружаем последний период и активный период
       _lastPeriod = await _databaseHelper.getLastPeriodRecord();
       _activePeriod = await _databaseHelper.getActivePeriodRecord();
 
-      await _loadAllSymptoms(); // Загружаем все симптомы через новую функцию
-      // Загружаем все лекарства
+      await _loadAllSymptoms();
       _allMedications = await _databaseHelper.getAllMedications();
-      // Загружаем записи о приеме лекарств для выбранного дня
       _takenRecords = await _databaseHelper.getMedicationTakenRecordsForDay(widget.selectedDate);
-
-      setState(() {
-        _isLoading = false;
-      });
       
-      // Проверяем разрешения после загрузки данных
       if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = null;
+        });
+        
+        // Проверяем разрешения после загрузки данных
         await PermissionsService.checkAndRequestPermissions(context);
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+        debugPrint('Error loading day detail data: $e');
+      }
     }
   }
 
   Future<void> _startNewPeriod() async {
     try {
-      final l10n = AppLocalizations.of(context)!;
+      // final l10n = AppLocalizations.of(context)!;
       final newPeriod = PeriodRecord(
         startDate: widget.selectedDate,
       );
       
       await _databaseHelper.insertPeriodRecord(newPeriod);
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.startPeriodSuccess),
-          backgroundColor: Colors.green,
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text(l10n.startPeriodSuccess),
+      //     backgroundColor: Colors.green,
+      //   ),
+      // );
       
       await _loadData(); // Перезагружаем данные
       
@@ -268,12 +342,12 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       
       await _databaseHelper.updatePeriodRecord(updatedPeriod);
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.endPeriodSuccess),
-          backgroundColor: Colors.green,
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text(l10n.endPeriodSuccess),
+      //     backgroundColor: Colors.green,
+      //   ),
+      // );
       
       await _loadData(); // Перезагружаем данные
       
@@ -292,15 +366,15 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
     if (_activePeriod == null) return;
     
     try {
-      final l10n = AppLocalizations.of(context)!;
+      // final l10n = AppLocalizations.of(context)!;
       await _databaseHelper.deletePeriodRecord(_activePeriod!.id!);
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.cancelPeriodSuccess),
-          backgroundColor: Colors.green,
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text(l10n.cancelPeriodSuccess),
+      //     backgroundColor: Colors.green,
+      //   ),
+      // );
       
       await _loadData(); // Перезагружаем данные
       
@@ -319,16 +393,16 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
     if (_lastPeriod == null || _lastPeriod!.endDate == null) return;
     
     try {
-      final l10n = AppLocalizations.of(context)!;
+      // final l10n = AppLocalizations.of(context)!;
       final updatedPeriod = _lastPeriod!.copyWith(endDate: null, setEndDate: true);
       await _databaseHelper.updatePeriodRecord(updatedPeriod);
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.removePeriodEndSuccess),
-          backgroundColor: Colors.green,
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text(l10n.removePeriodEndSuccess),
+      //     backgroundColor: Colors.green,
+      //   ),
+      // );
       
       await _loadData();
     } catch (e) {
@@ -346,15 +420,15 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
     if (_lastPeriod == null || _lastPeriod!.id == null) return;
     
     try {
-      final l10n = AppLocalizations.of(context)!;
+      // final l10n = AppLocalizations.of(context)!;
       await _databaseHelper.deletePeriodRecord(_lastPeriod!.id!);
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.deletePeriodSuccess),
-          backgroundColor: Colors.green,
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text(l10n.deletePeriodSuccess),
+      //     backgroundColor: Colors.green,
+      //   ),
+      // );
       
       await _loadData();
     } catch (e) {
@@ -370,16 +444,16 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
 
   Future<void> _saveDayNote() async {
     try {
-      final l10n = AppLocalizations.of(context)!;
+      // final l10n = AppLocalizations.of(context)!;
       await _databaseHelper.insertOrUpdateDayNote(_dayNote);
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.symptomsSaved),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 1),
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text(l10n.symptomsSaved),
+      //     backgroundColor: Colors.green,
+      //     duration: const Duration(seconds: 1),
+      //   ),
+      // );
     } catch (e) {
       final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -420,8 +494,10 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
   Future<void> _loadAllSymptoms() async {
     try {
       _allSymptoms = await _databaseHelper.getAllSymptoms();
+      // Сортируем симптомы в алфавитном порядке
+      _allSymptoms.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
     } catch (e) {
-      print('Error loading all symptoms: $e');
+      // print('Error loading all symptoms: $e');
       setState(() {
         _errorMessage = 'Error loading symptoms: ${e.toString()}';
       });
@@ -469,88 +545,60 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
   }
 
   Future<void> _showQuickAddSymptomDialog() async {
-    final l10n = AppLocalizations.of(context)!;
-    final nameController = TextEditingController();
+    // final l10n = AppLocalizations.of(context)!;
 
-    return showDialog(
+    final result = await showDialog<String>(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Добавить новый симптом'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Название симптома',
-                  border: OutlineInputBorder(),
-                ),
-                autofocus: true,
-                onSubmitted: (_) {
-                  Navigator.pop(context);
-                  _quickAddSymptom(nameController.text);
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(l10n.cancelButton),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _quickAddSymptom(nameController.text);
-              },
-              child: const Text('Добавить'),
-            ),
-          ],
-        );
+        return const AddSymptomDialog();
       },
     );
-  }
 
-  Future<void> _quickAddSymptom(String symptomText) async {
-    final symptom = symptomText.trim();
-    if (symptom.isEmpty) return;
-
-    try {
-      // Добавляем симптом в глобальный список
-      if (!_allSymptoms.any((s) => s.toLowerCase() == symptom.toLowerCase())) {
-        final newSymptom = Symptom(name: symptom, isDefault: false);
-        await _databaseHelper.insertSymptom(newSymptom);
-        await _loadAllSymptoms(); // Перезагружаем список всех симптомов
-      }
-
-      // Добавляем симптом в текущий день
-      _addSymptom(symptom);
-
-      // Показываем уведомление об успехе
-      //final l10n = AppLocalizations.of(context)!;
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Симптом "$symptom" добавлен'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
-    } catch (e) {
-      // Показываем ошибку
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Ошибка при добавлении симптома: $e'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
+    // Если пользователь добавил симптом, обрабатываем его
+    if (result != null && result.isNotEmpty) {
+      _addSymptom(result);
     }
   }
+
+  // Future<void> _quickAddSymptom(String symptomText) async {
+  //   final symptom = symptomText.trim();
+  //   if (symptom.isEmpty) return;
+
+  //   try {
+  //     // Добавляем симптом в глобальный список
+  //     if (!_allSymptoms.any((s) => s.toLowerCase() == symptom.toLowerCase())) {
+  //       final newSymptom = Symptom(name: symptom, isDefault: false);
+  //       await _databaseHelper.insertSymptom(newSymptom);
+  //       await _loadAllSymptoms(); // Перезагружаем список всех симптомов
+  //     }
+
+  //     // Добавляем симптом в текущий день
+  //     _addSymptom(symptom);
+
+  //     // Показываем уведомление об успехе
+  //     //final l10n = AppLocalizations.of(context)!;
+  //     if (mounted) {
+  //       // ScaffoldMessenger.of(context).showSnackBar(
+  //       //   SnackBar(
+  //       //     content: Text('Симптом "$symptom" добавлен'),
+  //       //     backgroundColor: Colors.green,
+  //       //     duration: const Duration(seconds: 2),
+  //       //   ),
+  //       // );
+  //     }
+  //   } catch (e) {
+  //     // Показываем ошибку
+  //     if (mounted) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(
+  //           content: Text('Ошибка при добавлении симптома: $e'),
+  //           backgroundColor: Colors.red,
+  //           duration: const Duration(seconds: 3),
+  //         ),
+  //       );
+  //     }
+  //   }
+  // }
 
   Future<void> _toggleMedicationTakenStatus(MedicationEvent event, bool isTaken) async {
     try {
@@ -561,9 +609,11 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
         TimeOfDay(hour: event.scheduledTime.hour, minute: event.scheduledTime.minute),
       );
 
+      MedicationTakenRecord updatedRecord; // Объявляем переменную перед блоками условий
+
       if (isTaken) {
         // Отмечаем как принятое
-        final newRecord = existingRecord?.copyWith(
+        updatedRecord = existingRecord?.copyWith(
               isTaken: true,
               actualTakenTime: DateTime.now(),
             ) ??
@@ -574,24 +624,47 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
               actualTakenTime: DateTime.now(),
               isTaken: true,
             );
+        
         if (existingRecord == null) {
-          await _databaseHelper.insertMedicationTakenRecord(newRecord);
+          await _databaseHelper.insertMedicationTakenRecord(updatedRecord);
         } else {
-          await _databaseHelper.updateMedicationTakenRecord(newRecord);
+          await _databaseHelper.updateMedicationTakenRecord(updatedRecord);
         }
       } else {
-        // Отмечаем как непринятое или удаляем запись, если она была
+        // Отмечаем как непринятое
         if (existingRecord != null) {
-          final updatedRecord = existingRecord.copyWith(
+          updatedRecord = existingRecord.copyWith(
             isTaken: false,
             actualTakenTime: null, // Сбрасываем фактическое время
           );
           await _databaseHelper.updateMedicationTakenRecord(updatedRecord);
+        } else {
+          // Если записи не было, создаем новую с isTaken = false
+          updatedRecord = MedicationTakenRecord(
+            medicationId: event.medicationId,
+            date: widget.selectedDate,
+            scheduledTime: TimeOfDay(hour: event.scheduledTime.hour, minute: event.scheduledTime.minute),
+            isTaken: false,
+          );
+          await _databaseHelper.insertMedicationTakenRecord(updatedRecord);
         }
       }
-      await _loadData(); // Перезагружаем данные, чтобы обновить UI
+      // Обновляем только локальные данные без перезагрузки всего экрана
+      setState(() {
+        // Обновляем записи о приеме лекарств
+        final existingIndex = _takenRecords.indexWhere((record) =>
+            record.medicationId == event.medicationId &&
+            record.scheduledTime.hour == event.scheduledTime.hour &&
+            record.scheduledTime.minute == event.scheduledTime.minute);
+
+        if (existingIndex >= 0) {
+          _takenRecords[existingIndex] = updatedRecord;
+        } else {
+          _takenRecords.add(updatedRecord);
+        }
+      });
     } catch (e) {
-      print('Ошибка при обновлении статуса приема лекарства: $e');
+      // print('Ошибка при обновлении статуса приема лекарства: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Ошибка: ${e.toString()}'),
@@ -604,124 +677,188 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
 @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-
-    // Создаем баннер только если его еще нет и мы не в процессе загрузки
-    if (!isBannerAlreadyCreated && !_isLoading) {
-      try {
-        banner = _createBanner();
-        setState(() {
-          isBannerAlreadyCreated = true;
-        });
-      } catch (e) {
-        // Игнорируем ошибки создания баннера
-      }
-    }
-
+    
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
             Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => const MenuScreen()),
-                (route) => false,
-              );
+              context,
+              MaterialPageRoute(builder: (context) => const MenuScreen()),
+              (route) => false,
+            );
           },
         ),
         title: Text(l10n.dayDetailsTitle),
         actions: [
-          // IconButton(
-          //   icon: const Icon(Icons.calendar_month),
-          //   onPressed: _openCalendar,
-          //   tooltip: 'Календарь',
-          // ),
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _loadData,
+            onPressed: _refreshToCurrentDate,
             tooltip: l10n.refreshTooltip,
           ),
         ],
       ),
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/images/fon1.png'),
+            image: _backgroundImage,
             fit: BoxFit.cover,
           ),
         ),
         child: Column(
-        children: [
-          // Основной контент
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _errorMessage != null
-                    ? Center(child: Text(l10n.errorWithMessage(_errorMessage!)))
-                    : SingleChildScrollView(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Заголовок с датой
-                            Card(
-                              child: InkWell(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => HomeScreen(
-                                        calledFromDetailScreen: true,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                borderRadius: BorderRadius.circular(8),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16),
-                                  child: Center(
-                                    child: Text(
-                                      _formatDate(context, widget.selectedDate),
-                                      style: const TextStyle(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-
-                            // Блок "Месячные"
-                            _buildPeriodBlock(l10n),
-                            const SizedBox(height: 8),
-//Убрал на будущее, пока не особо нужен
-                            // Блок "Секс"
-                            _buildSexBlock(l10n),
-                            const SizedBox(height: 8),
-
-                            // Блок "Самочувствие"
-                            _buildHealthBlock(l10n),
-                            const SizedBox(height: 8),
-
-                            // Блок "Лекарства"
-                            _buildMedicineBlock(l10n),
-                          ],
-                        ),
-                      ),
-          ),
-          
-          // Виджет рекламы
-          Container(
-            alignment: Alignment.bottomCenter,
-            child: isBannerAlreadyCreated ? AdWidget(bannerAd: banner) : null,
-          ),
-        ],
-      ),
+          children: [
+            // Основной контент
+            Expanded(
+              child: _buildMainContent(l10n),
+            ),
+            
+            // Блок рекламы
+            _buildBannerWidget(),
+          ],
+        ),
       ),
     );
   }
+
+  // Вынесенный основной контент
+  Widget _buildMainContent(AppLocalizations l10n) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    
+    if (_errorMessage != null) {
+      return _buildErrorWidget(l10n);
+    }
+    
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Элемент переключения дат
+          _buildDateNavigation(),
+          const SizedBox(height: 16),
+
+          // Блок "Месячные"
+          _buildPeriodBlock(l10n),
+          const SizedBox(height: 8),
+
+          // Блок "Секс"
+          _buildSexBlock(l10n),
+          const SizedBox(height: 8),
+
+          // Блок "Самочувствие"
+          _buildHealthBlock(l10n),
+          const SizedBox(height: 8),
+
+          // Блок "Лекарства"
+          _buildMedicineBlock(l10n),
+        ],
+      ),
+    );
+  }
+
+  // Виджет навигации по датам
+  Widget _buildDateNavigation() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Row(
+          children: [
+            // Кнопка "предыдущая"
+            IconButton(
+              onPressed: _goToPreviousDay,
+              icon: const Icon(Icons.chevron_left),
+              tooltip: 'Предыдущий день',
+              constraints: const BoxConstraints(
+                minWidth: 44,
+                minHeight: 44,
+              ),
+            ),
+            
+            // Центральная часть с датой
+            Expanded(
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => HomeScreen(
+                        calledFromDetailScreen: true,
+                      ),
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  child: Center(
+                    child: Text(
+                      _formatDate(context, widget.selectedDate),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            
+            // Кнопка "следующая"
+            IconButton(
+              onPressed: _goToNextDay,
+              icon: const Icon(Icons.chevron_right),
+              tooltip: 'Следующий день',
+              constraints: const BoxConstraints(
+                minWidth: 44,
+                minHeight: 44,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Виджет ошибки
+  Widget _buildErrorWidget(AppLocalizations l10n) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error, size: 64, color: Colors.red[300]),
+          const SizedBox(height: 16),
+          Text(
+            l10n.errorWithMessage(_errorMessage!),
+            style: const TextStyle(fontSize: 16),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _loadData,
+            child: Text(l10n.retry),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Вынесенный виджет баннера
+  Widget _buildBannerWidget() {
+    return Container(
+      alignment: Alignment.bottomCenter,
+      padding: const EdgeInsets.only(bottom: 8),
+      height: isBannerAlreadyCreated ? 60 : 0, // Фиксированная высота
+      child: isBannerAlreadyCreated 
+                ? IgnorePointer(
+              child: AdWidget(bannerAd: banner),
+            )
+          : const SizedBox.shrink(),
+    );
+  }
+
 
   // Блок "Месячные"
   Widget _buildPeriodBlock(AppLocalizations l10n) {
@@ -743,34 +880,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Информация о задержке
-                if (_isDelayDay)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.orange[50],
-                      border: Border.all(color: Colors.orange),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.access_time, color: Colors.orange),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            l10n.delayLabel,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              color: Colors.orange,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 
-                if (_isDelayDay) const SizedBox(height: 16),
 
                 // Информация об овуляции
                 if (_isOvulationDay)
@@ -830,49 +940,81 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                 
                 if (_isFertileDay && !_isOvulationDay) const SizedBox(height: 16),
 
-                // Информация о предыдущих месячных
-                if (_previousPeriod != null) ...[
+                // Информация о следующих плановых месячных
+                if (_nextPlannedPeriods.isNotEmpty) ...[
                   Text(
-                    l10n.previousPeriodsTitle,
+                    l10n.nextPlannedPeriodsTitle,
                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      border: Border.all(color: Colors.blue),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.calendar_month, color: Colors.blue),
-                            const SizedBox(width: 8),
-                            Expanded(
+                  ..._nextPlannedPeriods.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final period = entry.value;
+                    final daysUntil = period.startDate.difference(PeriodCalculator.getToday()).inDays;
+                    final isDelay = daysUntil < 0;
+                    final mainColor = isDelay ? Colors.orange : Colors.green;
+                    final lightColor = isDelay ? Colors.orange[50] : Colors.green[50];
+                    final iconColor = isDelay ? Colors.orange : Colors.green;
+                    final textColor = isDelay ? Colors.orange : Colors.green;
+                    
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      margin: EdgeInsets.only(bottom: index < _nextPlannedPeriods.length - 1 ? 8 : 0),
+                      decoration: BoxDecoration(
+                        color: lightColor,
+                        border: Border.all(color: mainColor),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.calendar_month, color: iconColor),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '${_formatDate(context, period.startDate)} - ${_formatDate(context, period.endDate)}',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    color: textColor,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${l10n.durationLabel} ${widget.settings.periodLength} ${widget.settings.periodLength == 1 ? l10n.durationDayOne : l10n.durationDayFew}',
+                            style: TextStyle(fontSize: 12, color: textColor),
+                          ),
+                          if (index == 0) ...[
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: isDelay ? Colors.orange[100] : Colors.green[100],
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                               child: Text(
-                                _previousPeriod!.endDate != null
-                                    ? '${_formatDate(context, _previousPeriod!.startDate)} - ${_formatDate(context, _previousPeriod!.endDate!)}'
-                                    : '${_formatDate(context, _previousPeriod!.startDate)} - ${l10n.activeLabel}',
-                                style: const TextStyle(
+                                daysUntil > 0 
+                                    ? 'Через $daysUntil ${daysUntil == 1 ? l10n.durationDayOne : l10n.durationDayFew}'
+                                    : daysUntil == 0 
+                                        ? 'Начинается сегодня'
+                                        : 'Задержка: ${-daysUntil} ${-daysUntil == 1 ? l10n.durationDayOne : l10n.durationDayFew}',
+                                style: TextStyle(
+                                  fontSize: 12, 
+                                  color: textColor,
                                   fontWeight: FontWeight.w500,
-                                  color: Colors.blue,
                                 ),
                               ),
                             ),
                           ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${l10n.durationLabel} ${_previousPeriod!.durationInDays} ${_previousPeriod!.durationInDays == 1 ? l10n.durationDayOne : l10n.durationDayFew}',
-                          style: const TextStyle(fontSize: 12, color: Colors.blue),
-                        ),
-                      ],
-                    ),
-                  ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
                   const SizedBox(height: 16),
                 ],
 
@@ -972,6 +1114,31 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                     style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ],
+
+                // Кнопка "Календарь месячных"
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => HomeScreen(
+                            calledFromDetailScreen: true,
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.calendar_month),
+                    label: const Text('Календарь месячных'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -1313,13 +1480,18 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                 const SizedBox(height: 16),
                 
                 // Кнопка быстрого добавления симптома
-                ElevatedButton.icon(
-                  onPressed: _showQuickAddSymptomDialog,
-                  icon: const Icon(Icons.add),
-                  label: Text(l10n.addSymptomButton),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.pink,
-                    foregroundColor: Colors.white,
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _showQuickAddSymptomDialog,
+                    icon: const Icon(Icons.add),
+                    label: Text(l10n.addSymptomButton),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    ),
                   ),
                 ),
                 
@@ -1335,13 +1507,15 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: _dayNote.symptoms.map((symptom) => Chip(
-                      label: Text(symptom),
-                      onDeleted: () => _removeSymptom(symptom),
-                      deleteIcon: const Icon(Icons.clear, size: 18),
-                      backgroundColor: Colors.pink.shade50,
-                      side: BorderSide(color: Colors.pink.shade200),
-                    )).toList(),
+                    children: (_dayNote.symptoms.toList()
+                          ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase())))
+                        .map((symptom) => Chip(
+                          label: Text(symptom),
+                          onDeleted: () => _removeSymptom(symptom),
+                          deleteIcon: const Icon(Icons.clear, size: 18),
+                          backgroundColor: Colors.pink.shade50,
+                          side: BorderSide(color: Colors.pink.shade200),
+                        )).toList(),
                   ),
                 ] else
                   Text(
@@ -1408,7 +1582,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
           });
         },
         title: Text(
-          l10n.addMedicationTitle,
+          l10n.settingsTabMedications,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         children: [
@@ -1464,6 +1638,34 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                       );
                     },
                   ),
+                
+                // Кнопка для перехода к экрану лекарств
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MedicationsScreen(),
+                        ),
+                      );
+                      
+                      // Если были изменения в лекарствах, перезагружаем данные
+                      if (result == true) {
+                        await _loadData();
+                      }
+                    },
+                    icon: const Icon(Icons.medication),
+                    label: const Text('Управление лекарствами'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -1477,4 +1679,115 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
     super.dispose();
   }
 
+}
+
+// Отдельный виджет для диалога добавления симптома
+class AddSymptomDialog extends StatefulWidget {
+  const AddSymptomDialog({super.key});
+
+  @override
+  State<AddSymptomDialog> createState() => _AddSymptomDialogState();
+}
+
+class _AddSymptomDialogState extends State<AddSymptomDialog> {
+  late TextEditingController nameController;
+  bool isAtStart = true; // Отслеживаем, находится ли курсор в начале
+
+  @override
+  void initState() {
+    super.initState();
+    nameController = TextEditingController();
+    
+    // Добавляем listener для отслеживания позиции курсора
+    nameController.addListener(_updateKeyboardState);
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    super.dispose();
+  }
+
+  // Функция для обновления состояния клавиатуры
+  void _updateKeyboardState() {
+    final currentPosition = nameController.selection.extentOffset;
+    final newIsAtStart = currentPosition == 0;
+    
+    if (newIsAtStart != isAtStart) {
+      setState(() {
+        isAtStart = newIsAtStart;
+      });
+    }
+  }
+
+  Future<void> _addSymptom() async {
+    final symptom = nameController.text.trim();
+    if (symptom.isEmpty) return;
+
+    try {
+      // Получаем доступ к базе данных через контекст
+      final databaseHelper = DatabaseHelper();
+      
+      // Проверяем, есть ли уже такой симптом в глобальном списке
+      final allSymptoms = await databaseHelper.getAllSymptoms();
+      if (!allSymptoms.any((s) => s.toLowerCase() == symptom.toLowerCase())) {
+        final newSymptom = Symptom(name: symptom, isDefault: false);
+        await databaseHelper.insertSymptom(newSymptom);
+      }
+
+      // Закрываем диалог и передаем результат
+      if (mounted) {
+        Navigator.pop(context, symptom);
+      }
+    } catch (e) {
+      // Показываем ошибку
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ошибка при добавлении симптома: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return AlertDialog(
+      title: const Text('Добавить новый симптом'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: nameController,
+            decoration: const InputDecoration(
+              labelText: 'Название симптома',
+              border: OutlineInputBorder(),
+            ),
+            autofocus: true,
+            textCapitalization: isAtStart 
+                ? TextCapitalization.sentences // Первая буква заглавная, остальные строчные
+                : TextCapitalization.none,      // Все строчные буквы в середине
+            keyboardType: TextInputType.text,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _addSymptom(),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancelButton),
+        ),
+        ElevatedButton(
+          onPressed: _addSymptom,
+          child: const Text('Добавить'),
+        ),
+      ],
+    );
+  }
 }

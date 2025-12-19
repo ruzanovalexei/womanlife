@@ -1,4 +1,3 @@
-//import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:period_tracker/l10n/app_localizations.dart';
 import 'package:period_tracker/database/database_helper.dart';
@@ -8,9 +7,11 @@ import 'package:period_tracker/utils/date_utils.dart';
 import 'package:period_tracker/screens/day_detail_screen.dart';
 import 'package:period_tracker/screens/settings_screen.dart';
 import 'package:period_tracker/screens/lists_screen.dart';
+import 'package:period_tracker/screens/notes_screen.dart';
+import 'package:period_tracker/screens/habits_screen.dart';
+// import 'package:period_tracker/screens/medications_screen.dart';
 import 'package:yandex_mobileads/mobile_ads.dart';
-//import 'package:yandex_mobileads/ad_widget.dart';
-//import 'package:yandex_mobileads/mobile_ads.dart';
+// import 'package:yandex_mobileads/ad_widget.dart'; // Добавляем импорт AdWidget
 
 class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key});
@@ -25,19 +26,105 @@ class _MenuScreenState extends State<MenuScreen> {
   List<PeriodRecord> _periodRecords = [];
   bool _isLoading = true;
   
-  late BannerAd banner;
-  var isBannerAlreadyCreated = false;
+  // Исправлено: правильное объявление баннера и флага
+  BannerAd? _bannerAd;
+  bool _isBannerLoading = false;
+  bool _isBannerLoaded = false;
 
-  _createBanner() {
+  @override
+  void initState() {
+    super.initState();
+    _initializeScreen();
+  }
+
+  @override
+  void dispose() {
+    // Очищаем баннер при уничтожении виджета
+    _bannerAd?.destroy();
+    super.dispose();
+  }
+
+  // Оптимизированная инициализация экрана
+  void _initializeScreen() {
+    _loadData();
+    _createAdBanner();
+  }
+
+  // Оптимизированная загрузка данных - один setState
+  Future<void> _loadData() async {
+    try {
+      final settings = await _databaseHelper.getSettings();
+      final periodRecords = await _databaseHelper.getAllPeriodRecords();
+      
+      if (mounted) {
+        setState(() {
+          _settings = settings;
+          _periodRecords = periodRecords;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        debugPrint('Error loading data: $e');
+      }
+    }
+  }
+
+  // Исправленное создание баннера с защитой от повторного вызова
+  void _createAdBanner() {
+    // Проверяем, не создается ли уже баннер
+    if (_isBannerLoading || _isBannerLoaded || _bannerAd != null) {
+      return;
+    }
+
+    _isBannerLoading = true;
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        _isBannerLoading = false;
+        return;
+      }
+
+      try {
+        final bannerAd = _createBanner();
+        if (mounted) {
+          setState(() {
+            _bannerAd = bannerAd;
+            _isBannerLoading = false;
+            _isBannerLoaded = true;
+          });
+        }
+      } catch (e) {
+        _isBannerLoading = false;
+        debugPrint('Banner creation failed: $e');
+      }
+    });
+  }
+
+  // Создание баннера
+  BannerAd _createBanner() {
     final screenWidth = MediaQuery.of(context).size.width.round();
     final adSize = BannerAdSize.sticky(width: screenWidth);
     
     return BannerAd(
-      adUnitId: 'R-M-17946414-1',
+      adUnitId: 'R-M-17946414-3',
       adSize: adSize,
       adRequest: const AdRequest(),
-      onAdLoaded: () {},
-      onAdFailedToLoad: (error) {},
+      onAdLoaded: () {
+        debugPrint('Banner loaded successfully');
+      },
+      onAdFailedToLoad: (error) {
+        debugPrint('Ad failed to load: $error');
+        if (mounted) {
+          setState(() {
+            _isBannerLoaded = false;
+            _bannerAd = null;
+          });
+        }
+      },
       onAdClicked: () {},
       onLeftApplication: () {},
       onReturnedToApplication: () {},
@@ -45,45 +132,7 @@ class _MenuScreenState extends State<MenuScreen> {
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _createAdBanner();
-    _loadData();
-  }
-
-  Future<void> _loadData() async {
-    try {
-      _settings = await _databaseHelper.getSettings();
-      _periodRecords = await _databaseHelper.getAllPeriodRecords();
-      setState(() {
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  void _createAdBanner() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        try {
-          banner = _createBanner();
-          setState(() {
-            isBannerAlreadyCreated = true;
-          });
-        } catch (e) {
-          // Игнорируем ошибки создания баннера
-        }
-      }
-    });
-  }
-
   void _onMenuItemTap(int index) {
-    // final l10n = AppLocalizations.of(context)!;
-    
     switch (index) {
       case 0:
         // Кнопка "Здоровье" - открываем детальный экран на текущую дату
@@ -95,138 +144,154 @@ class _MenuScreenState extends State<MenuScreen> {
                 selectedDate: MyDateUtils.getUtcToday(),
                 periodRecords: _periodRecords,
                 settings: _settings,
-                shouldReturnResult: false, // По умолчанию не возвращаем результат
+                shouldReturnResult: false,
               ),
             ),
           ).then((_) {
-            // Обновляем данные при возврате
-            _loadData();
+            _loadData(); // Обновляем данные при возврате
           });
         }
         break;
       case 1:
-        // ScaffoldMessenger.of(context).showSnackBar(
-        //   SnackBar(content: Text(l10n.menuItem2)),
-        // );
+        // Navigator.push(
+        //   context,
+        //   MaterialPageRoute(builder: (context) => const MedicationsScreen()),
+        // ).then((_) {
+        //   _loadData();
+        // });
         break;
       case 2:
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const ListsScreen()),
         ).then((_) {
-          // Обновляем данные при возврате
           _loadData();
         });
         break;
       case 3:
-        // ScaffoldMessenger.of(context).showSnackBar(
-        //   SnackBar(content: Text(l10n.menuItem4)),
-        // );
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const HabitsScreen()),
+        ).then((_) {
+          _loadData();
+        });
         break;
       case 4:
-        // ScaffoldMessenger.of(context).showSnackBar(
-        //   SnackBar(content: Text(l10n.menuItem5)),
-        // );
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const NotesScreen()),
+        ).then((_) {
+          _loadData();
+        });
         break;
       case 5:
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const SettingsScreen()),
         ).then((_) {
-          // Обновляем данные при возврате
           _loadData();
         });
         break;
     }
   }
-
+static const _backgroundImage = AssetImage('assets/images/fon1.png');
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.menuTitle), // Добавить в локализацию
-        // leading: IconButton(
-        //   icon: const Icon(Icons.arrow_back),
-        //   onPressed: () => Navigator.of(context).pop(),
-        // ),
+        title: Text(l10n.menuTitle),
       ),
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/images/fon1.png'),
+            image: _backgroundImage,
             fit: BoxFit.cover,
           ),
         ),
         child: Column(
-        children: [
-          // Центральная часть - 5 кнопок в виде плиток (одна под другой)
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+          children: [
+            // Основной контент
+            Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
-                  : Column(
-                children: [
-                  const SizedBox(height: 12),
-                  _buildMenuTile(
-                    icon: Icons.favorite,
-                    title: l10n.menuAnalytics,
-                    color: Colors.pink[200]!,
-                    onTap: () => _onMenuItemTap(0),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildMenuTile(
-                    icon: Icons.schedule,
-                    title: l10n.menuMedications,
-                    color: Colors.pink[200]!,
-                    onTap: () => _onMenuItemTap(1),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildMenuTile(
-                    icon: Icons.checklist,
-                    title: l10n.menuInsights,
-                    color: Colors.pink[200]!,
-                    onTap: () => _onMenuItemTap(2),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildMenuTile(
-                    icon: Icons.loop,
-                    title: l10n.menuReminders,
-                    color: Colors.pink[200]!,
-                    onTap: () => _onMenuItemTap(3),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildMenuTile(
-                    icon: Icons.note,
-                    title: l10n.menuHelp,
-                    color: Colors.pink[200]!,
-                    onTap: () => _onMenuItemTap(4),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildMenuTile(
-                    icon: Icons.settings,
-                    title: l10n.settingsTitle,
-                    color: Colors.pink[200]!,
-                    onTap: () => _onMenuItemTap(5),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-              ),
+                  : _buildMenuContent(l10n),
             ),
+            
+            // Блок рекламы
+            _buildBannerWidget(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Вынесенный в отдельный метод контент меню
+  Widget _buildMenuContent(AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          const SizedBox(height: 12),
+          _buildMenuTile(
+            icon: Icons.favorite,
+            title: l10n.menu1,
+            color: Colors.pink[200]!,
+            onTap: () => _onMenuItemTap(0),
           ),
-        
-          
-          // Блок рекламы внизу
-          Container(
-            alignment: Alignment.bottomCenter,
-            padding: const EdgeInsets.only(bottom: 8),
-            child: isBannerAlreadyCreated ? AdWidget(bannerAd: banner) : null,
+          const SizedBox(height: 12),
+          _buildMenuTile(
+            icon: Icons.schedule,
+            title: l10n.menu2,
+            color: const Color.fromARGB(255, 116, 114, 115),
+            onTap: () => _onMenuItemTap(1),
           ),
+          const SizedBox(height: 12),
+          _buildMenuTile(
+            icon: Icons.checklist,
+            title: l10n.menu3,
+            color: Colors.pink[200]!,
+            onTap: () => _onMenuItemTap(2),
+          ),
+          const SizedBox(height: 12),
+          _buildMenuTile(
+            icon: Icons.loop,
+            title: l10n.menu4,
+            color:  Colors.pink[200]!,
+            onTap: () => _onMenuItemTap(3),
+          ),
+          const SizedBox(height: 12),
+          _buildMenuTile(
+            icon: Icons.note,
+            title: l10n.menu5,
+            color: Colors.pink[200]!,
+            onTap: () => _onMenuItemTap(4),
+          ),
+          const SizedBox(height: 12),
+          _buildMenuTile(
+            icon: Icons.settings,
+            title: l10n.settingsTitle,
+            color: Colors.pink[200]!,
+            onTap: () => _onMenuItemTap(5),
+          ),
+          const SizedBox(height: 12),
         ],
       ),
-      ),
+    );
+  }
+
+  // Исправленный виджет баннера
+  Widget _buildBannerWidget() {
+    return Container(
+      alignment: Alignment.bottomCenter,
+      padding: const EdgeInsets.only(bottom: 8),
+      height: _isBannerLoaded ? 60 : 0,
+      child: _bannerAd != null && _isBannerLoaded
+          ? IgnorePointer(
+          child: AdWidget(bannerAd: _bannerAd!)
+          )
+          : const SizedBox.shrink(),
     );
   }
 
@@ -243,7 +308,7 @@ class _MenuScreenState extends State<MenuScreen> {
         child: Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.4), // Увеличиваем непрозрачность
+            color: color.withOpacity(0.4),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: color.withOpacity(0.6), width: 2),
             boxShadow: [
@@ -260,23 +325,23 @@ class _MenuScreenState extends State<MenuScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.9), // Белый фон для иконки
+                  color: Colors.white.withOpacity(0.9),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   icon,
                   size: 24,
-                  color: Colors.pink[600], // Более светлый розовый для иконки
+                  color: Colors.pink[600],
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: Text(
                   title,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white, // Белый цвет для текста
+                    color: Colors.white,
                   ),
                   textAlign: TextAlign.left,
                   maxLines: 2,
@@ -284,10 +349,10 @@ class _MenuScreenState extends State<MenuScreen> {
                 ),
               ),
               const SizedBox(width: 16),
-              Icon(
+              const Icon(
                 Icons.arrow_forward_ios,
                 size: 16,
-                color: Colors.white, // Белый цвет для стрелки
+                color: Colors.white,
               ),
               const SizedBox(width: 8),
             ],

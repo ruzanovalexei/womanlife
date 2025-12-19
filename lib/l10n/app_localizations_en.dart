@@ -476,19 +476,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuSubtitle => 'Choose the section you need';
 
   @override
-  String get menuAnalytics => 'Health';
+  String get menu1 => 'Health';
 
   @override
-  String get menuMedications => 'Daily Schedule';
+  String get menu2 => 'Daily Schedule';
 
   @override
-  String get menuInsights => 'Lists';
+  String get menu3 => 'Lists';
 
   @override
-  String get menuReminders => 'Habits';
+  String get menu4 => 'Habits';
 
   @override
-  String get menuHelp => 'Notes';
+  String get menu5 => 'Notes';
 
   @override
   String get menuItem1 => 'Health opened';
@@ -604,6 +604,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get previousPeriodsTitle => 'Previous periods';
 
   @override
+  String get nextPlannedPeriodsTitle => 'Next planned periods';
+
+  @override
   String get activeLabel => '(active)';
 
   @override
@@ -676,4 +679,209 @@ class AppLocalizationsEn extends AppLocalizations {
   String listUpdateError(Object message) {
     return 'Error updating list: $message';
   }
+
+  @override
+  String get notificationChannelName => 'Medication Reminders';
+
+  @override
+  String get notificationChannelDescription => 'Medication intake notifications';
+
+  @override
+  String get notificationTitle => 'Time to take medications!';
+
+  @override
+  String get notificationBody => 'Don\'t forget to take:';
+
+  @override
+  String get notesTitle => 'Notes';
+
+  @override
+  String get addNoteTitle => 'Add Note';
+
+  @override
+  String get editNoteTitle => 'Edit Note';
+
+  @override
+  String get noteTitleLabel => 'Note Title';
+
+  @override
+  String get noteContentLabel => 'Note Content';
+
+  @override
+  String get noteDateLabel => 'Note Date';
+
+  @override
+  String get noteRequired => 'Enter note title or content';
+
+  @override
+  String get noteSaved => 'Note saved';
+
+  @override
+  String get noteUpdated => 'Note updated';
+
+  @override
+  String get noteDeleted => 'Note deleted';
+
+  @override
+  String noteSaveError(Object message) {
+    return 'Error saving note: $message';
+  }
+
+  @override
+  String noteUpdateError(Object message) {
+    return 'Error updating note: $message';
+  }
+
+  @override
+  String noteDeleteError(Object message) {
+    return 'Error deleting note: $message';
+  }
+
+  @override
+  String get deleteNoteConfirmTitle => 'Delete Note';
+
+  @override
+  String deleteNoteConfirmMessage(Object title) {
+    return 'Are you sure you want to delete the note \"$title\"?';
+  }
+
+  @override
+  String get emptyNotesMessage => 'Create your first note';
+
+  @override
+  String get settingsTabHabits => 'Habits';
+
+  @override
+  String get settingsTabCache => 'Cache & Optimization';
+
+  @override
+  String get habitsTitle => 'Habits';
+
+  @override
+  String get noHabits => 'No habits';
+
+  @override
+  String get executionHabitsTitle => 'Execution Habits';
+
+  @override
+  String get measurableHabitsTitle => 'Measurable Habits';
+
+  @override
+  String get selectHabitTypeTitle => 'Select Habit Type';
+
+  @override
+  String get habitTypeExecution => 'Execution';
+
+  @override
+  String get habitTypeMeasurable => 'Measurable Result';
+
+  @override
+  String get habitTypeExecutionDescription => 'Simple habit completion tracking';
+
+  @override
+  String get habitTypeMeasurableDescription => 'Habit with measurable result';
+
+  @override
+  String get addHabitExecutionTitle => 'Add Execution Habit';
+
+  @override
+  String get editHabitExecutionTitle => 'Edit Execution Habit';
+
+  @override
+  String get addHabitMeasurableTitle => 'Add Measurable Habit';
+
+  @override
+  String get editHabitMeasurableTitle => 'Edit Measurable Habit';
+
+  @override
+  String get habitNameLabel => 'Habit Name';
+
+  @override
+  String get habitFrequencyLabel => 'Frequency';
+
+  @override
+  String get habitStartDateLabel => 'Start Date';
+
+  @override
+  String get habitEndDateLabel => 'End Date';
+
+  @override
+  String get habitReminderTimeLabel => 'Reminder Time';
+
+  @override
+  String get habitGoalLabel => 'Goal';
+
+  @override
+  String get habitUnitLabel => 'Unit';
+
+  @override
+  String get pickStartDate => 'Pick start date';
+
+  @override
+  String get pickEndDate => 'Pick end date';
+
+  @override
+  String get fillAllRequiredFields => 'Fill all required fields';
+
+  @override
+  String get invalidTimeFormat => 'Invalid time format (use HH:MM)';
+
+  @override
+  String get invalidGoalValue => 'Enter a valid goal value';
+
+  @override
+  String get habitExecutionAdded => 'Execution habit added';
+
+  @override
+  String get habitExecutionUpdated => 'Execution habit updated';
+
+  @override
+  String get habitMeasurableAdded => 'Measurable habit added';
+
+  @override
+  String get habitMeasurableUpdated => 'Measurable habit updated';
+
+  @override
+  String habitSaveError(Object message) {
+    return 'Error saving habit: $message';
+  }
+
+  @override
+  String get deleteHabitTitle => 'Delete Habit';
+
+  @override
+  String deleteHabitConfirmMessage(Object name) {
+    return 'Are you sure you want to delete habit \"$name\"?';
+  }
+
+  @override
+  String get habitDeleted => 'Habit deleted';
+
+  @override
+  String habitDeleteError(Object message) {
+    return 'Error deleting habit: $message';
+  }
+
+  @override
+  String get selectLanguage => 'Select Language';
+
+  @override
+  String get speechRecognitionError => 'Speech recognition error';
+
+  @override
+  String speechRecognitionErrorWithMessage(Object error) {
+    return 'Speech recognition error: $error';
+  }
+
+  @override
+  String get speechNoteCreated => 'Voice note created';
+
+  @override
+  String get noMicrophonePermission => 'No microphone permission';
+
+  @override
+  String get listeningIndicator => 'Listening...';
+
+  @override
+  String get errorDialogTitle => 'Error';
 }

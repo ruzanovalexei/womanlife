@@ -20,26 +20,43 @@ class _ListsScreenState extends State<ListsScreen> {
   late List<ListModel> _lists;
   bool _isLoading = true;
   String? _errorMessage;
-
+  static const _backgroundImage = AssetImage('assets/images/fon1.png');
   // ID открытого списка (только один список может быть открыт одновременно)
   int? _expandedListId;
 
-  //Реклама
+  // Реклама
   late BannerAd banner;
   var isBannerAlreadyCreated = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _initializeScreen();
+  }
 
-//Реклама
-  _createBanner() {
+  // Оптимизированная инициализация экрана
+  void _initializeScreen() {
+    _createAdBanner();
+    _loadData();
+  }
+
+  // Создание баннера
+  BannerAd _createBanner() {
     final screenWidth = MediaQuery.of(context).size.width.round();
     final adSize = BannerAdSize.sticky(width: screenWidth);
     
     return BannerAd(
-      adUnitId: 'R-M-17946414-1',
+      adUnitId: 'R-M-17946414-5',
       adSize: adSize,
       adRequest: const AdRequest(),
-      onAdLoaded: () {},
-      onAdFailedToLoad: (error) {},
+      onAdLoaded: () {
+        if (mounted) {
+          setState(() {}); // Обновляем только для показа баннера
+        }
+      },
+      onAdFailedToLoad: (error) {
+        debugPrint('Ad failed to load: $error');
+      },
       onAdClicked: () {},
       onLeftApplication: () {},
       onReturnedToApplication: () {},
@@ -47,133 +64,71 @@ class _ListsScreenState extends State<ListsScreen> {
     );
   }
 
-
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
+  // Оптимизированное создание баннера
+  void _createAdBanner() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !isBannerAlreadyCreated) {
+        try {
+          banner = _createBanner();
+          setState(() {
+            isBannerAlreadyCreated = true;
+          });
+        } catch (e) {
+          debugPrint('Banner creation failed: $e');
+        }
+      }
+    });
   }
 
-  Future<void> _loadData({bool includeBanner = false}) async {
+  // Оптимизированная загрузка данных - один setState
+  Future<void> _loadData() async {
     try {
-      if (includeBanner) {
-        banner = _createBanner();
-        
+      final lists = await _databaseHelper.getAllLists();
+      
+      if (mounted) {
         setState(() {
-          _isLoading = true;
-          _errorMessage = null;
-          isBannerAlreadyCreated = true;
-        });
-      } else {
-        setState(() {
-          _isLoading = true;
+          _lists = lists;
+          _isLoading = false;
           _errorMessage = null;
         });
       }
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
-
-      _lists = await _databaseHelper.getAllLists();
-
-      setState(() {
-        _isLoading = false;
-      });
     } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+        debugPrint('Error loading lists: $e');
+      }
     }
   }
 
   Future<void> _showAddListDialog() async {
-    final l10n = AppLocalizations.of(context)!;
-    final nameController = TextEditingController();
-
-    return showDialog(
+    final result = await showDialog<String>(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text(l10n.addListTitle),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  labelText: l10n.listNameLabel,
-                  border: const OutlineInputBorder(),
-                ),
-                autofocus: true,
-                onSubmitted: (_) {
-                  Navigator.pop(context);
-                  _saveList(nameController.text);
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(l10n.cancelButton),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _saveList(nameController.text);
-              },
-              child: Text(l10n.saveButton),
-            ),
-          ],
-        );
+        return const AddListDialog();
       },
     );
+
+    // Если пользователь добавил список, обрабатываем его
+    if (result != null && result.isNotEmpty) {
+      await _saveList(result);
+    }
   }
 
   Future<void> _showEditListDialog(ListModel list) async {
-    final l10n = AppLocalizations.of(context)!;
-    final nameController = TextEditingController(text: list.name);
-
-    return showDialog(
+    final result = await showDialog<String>(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text(l10n.editListTitle),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  labelText: l10n.editListNameLabel,
-                  border: const OutlineInputBorder(),
-                ),
-                autofocus: true,
-                onSubmitted: (_) {
-                  Navigator.pop(context);
-                  _updateList(list, nameController.text);
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(l10n.cancelButton),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _updateList(list, nameController.text);
-              },
-              child: Text(l10n.saveButton),
-            ),
-          ],
-        );
+        return EditListDialog(initialName: list.name);
       },
     );
+
+    // Если пользователь обновил список, обрабатываем его
+    if (result != null && result.isNotEmpty) {
+      await _updateList(list, result);
+    }
   }
 
   Future<void> _saveList(String name) async {
@@ -190,16 +145,17 @@ class _ListsScreenState extends State<ListsScreen> {
       return;
     }
 
-    try {
-      final now = DateTime.now();
-      final newList = ListModel(
-        name: trimmedName,
-        createdDate: now,
-        updatedDate: now,
-      );
+  try {
+    final now = DateTime.now();
+    final newList = ListModel(
+      name: trimmedName,
+      createdDate: now,
+      updatedDate: now,
+    );
 
-      await _databaseHelper.insertList(newList);
-      
+    await _databaseHelper.insertList(newList);
+    
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.listSaved),
@@ -209,7 +165,9 @@ class _ListsScreenState extends State<ListsScreen> {
       );
 
       await _loadData();
-    } catch (e) {
+    }
+  } catch (e) {
+    if (mounted) {
       final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -217,8 +175,10 @@ class _ListsScreenState extends State<ListsScreen> {
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
+      debugPrint('Error saving list: $e');
     }
   }
+}
 
   Future<void> _updateList(ListModel list, String name) async {
     final l10n = AppLocalizations.of(context)!;
@@ -315,47 +275,17 @@ class _ListsScreenState extends State<ListsScreen> {
   }
 
   Future<void> _showAddListItemDialog(int listId) async {
-    final l10n = AppLocalizations.of(context)!;
-    final textController = TextEditingController();
-
-    return showDialog(
+    final result = await showDialog<String>(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text(l10n.addListItemTitle),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: textController,
-                decoration: InputDecoration(
-                  labelText: l10n.listItemTextLabel,
-                  border: const OutlineInputBorder(),
-                ),
-                autofocus: true,
-                onSubmitted: (_) {
-                  Navigator.pop(context);
-                  _saveListItem(listId, textController.text);
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(l10n.cancelButton),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _saveListItem(listId, textController.text);
-              },
-              child: Text(l10n.saveButton),
-            ),
-          ],
-        );
+        return AddListItemDialog();
       },
     );
+
+    // Если пользователь добавил запись, обрабатываем ее
+    if (result != null && result.isNotEmpty) {
+      await _saveListItem(listId, result);
+    }
   }
 
   Future<void> _saveListItem(int listId, String text) async {
@@ -383,13 +313,13 @@ class _ListsScreenState extends State<ListsScreen> {
 
       await _databaseHelper.insertListItem(newItem);
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.listItemAdded),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 1),
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text(l10n.listItemAdded),
+      //     backgroundColor: Colors.green,
+      //     duration: const Duration(seconds: 1),
+      //   ),
+      // );
 
       await _loadData();
     } catch (e) {
@@ -429,17 +359,7 @@ class _ListsScreenState extends State<ListsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    // Создаем баннер только если его еще нет и мы не в процессе загрузки
-    if (!isBannerAlreadyCreated && !_isLoading) {
-      try {
-        banner = _createBanner();
-        setState(() {
-          isBannerAlreadyCreated = true;
-        });
-      } catch (e) {
-        // Игнорируем ошибки создания баннера
-      }
-    }
+    
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -462,100 +382,144 @@ class _ListsScreenState extends State<ListsScreen> {
         ],
       ),
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/images/fon1.png'),
+            image: _backgroundImage,
             fit: BoxFit.cover,
           ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Заголовок и кнопка добавления
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    l10n.addListTitle,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  FloatingActionButton(
-                    onPressed: _showAddListDialog,
-                    child: const Icon(Icons.add),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Списки
-              Expanded(
-                child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _errorMessage != null
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.error, size: 64, color: Colors.red[300]),
-                                const SizedBox(height: 16),
-                                Text(
-                                  l10n.errorWithMessage(_errorMessage!),
-                                  style: const TextStyle(fontSize: 16),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 16),
-                                ElevatedButton(
-                                  onPressed: _loadData,
-                                  child: Text(l10n.retry),
-                                ),
-                              ],
-                            ),
-                          )
-                        : _lists.isEmpty
-                            ? Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.checklist,
-                                      size: 64,
-                                      color: Colors.grey[400],
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      l10n.emptyListsMessage,
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            : ListView.builder(
-                                padding: EdgeInsets.zero,
-                                itemCount: _lists.length,
-                                itemBuilder: (context, index) {
-                                  final list = _lists[index];
-                                  return _buildListBlock(list, l10n);
-                                },
-                              ),
-              ),
-
-                        // Виджет рекламы
-          Container(
-            alignment: Alignment.bottomCenter,
-            child: isBannerAlreadyCreated ? AdWidget(bannerAd: banner) : null,
-          ),
-            ],
-          ),
+        child: Column(
+          children: [
+            // Основной контент
+            Expanded(
+              child: _buildMainContent(l10n),
+            ),
+            
+            // Блок рекламы
+            _buildBannerWidget(),
+          ],
         ),
       ),
+    );
+  }
+
+  // Вынесенный основной контент
+  Widget _buildMainContent(AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Заголовок и кнопка добавления
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                l10n.addListTitle,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              FloatingActionButton(
+                onPressed: _showAddListDialog,
+                child: const Icon(Icons.add),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Списки
+          Expanded(
+            child: _buildListsContent(l10n),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Вынесенный контент списков
+  Widget _buildListsContent(AppLocalizations l10n) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    
+    if (_errorMessage != null) {
+      return _buildErrorWidget(l10n);
+    }
+    
+    if (_lists.isEmpty) {
+      return _buildEmptyWidget(l10n);
+    }
+    
+    return ListView.builder(
+      padding: EdgeInsets.zero,
+      itemCount: _lists.length,
+      itemBuilder: (context, index) {
+        final list = _lists[index];
+        return _buildListBlock(list, l10n);
+      },
+    );
+  }
+
+  // Виджет ошибки
+  Widget _buildErrorWidget(AppLocalizations l10n) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error, size: 64, color: Colors.red[300]),
+          const SizedBox(height: 16),
+          Text(
+            l10n.errorWithMessage(_errorMessage!),
+            style: const TextStyle(fontSize: 16),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _loadData,
+            child: Text(l10n.retry),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Виджет пустого состояния
+  Widget _buildEmptyWidget(AppLocalizations l10n) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.checklist,
+            size: 64,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            l10n.emptyListsMessage,
+            style: const TextStyle(
+              fontSize: 18,
+              color: Colors.grey,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Вынесенный виджет баннера
+  Widget _buildBannerWidget() {
+    return Container(
+      alignment: Alignment.bottomCenter,
+      padding: const EdgeInsets.only(bottom: 8),
+      height: isBannerAlreadyCreated ? 60 : 0, // Фиксированная высота
+      child: isBannerAlreadyCreated 
+          ? IgnorePointer(
+              child: AdWidget(bannerAd: banner),
+            )
+          : const SizedBox.shrink(),
     );
   }
 
@@ -658,13 +622,17 @@ class _ListsScreenState extends State<ListsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Кнопка добавления записи
-          ElevatedButton.icon(
-            onPressed: () => _showAddListItemDialog(list.id!),
-            icon: const Icon(Icons.add, size: 16),
-            label: Text(l10n.addListItemButton),
-            style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.pink,
-                    foregroundColor: Colors.white,
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => _showAddListItemDialog(list.id!),
+              icon: const Icon(Icons.add),
+              label: Text(l10n.addListItemButton),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -774,5 +742,291 @@ class _ListsScreenState extends State<ListsScreen> {
         );
       }
     }
+  }
+}
+
+// Отдельный виджет для диалога добавления списка
+class AddListDialog extends StatefulWidget {
+  const AddListDialog({super.key});
+
+  @override
+  State<AddListDialog> createState() => _AddListDialogState();
+}
+
+class _AddListDialogState extends State<AddListDialog> {
+  late TextEditingController nameController;
+  bool isAtStart = true; // Отслеживаем, находится ли курсор в начале
+
+  @override
+  void initState() {
+    super.initState();
+    nameController = TextEditingController();
+    
+    // Добавляем listener для отслеживания позиции курсора
+    nameController.addListener(_updateKeyboardState);
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    super.dispose();
+  }
+
+  // Функция для обновления состояния клавиатуры
+  void _updateKeyboardState() {
+    final currentPosition = nameController.selection.extentOffset;
+    final newIsAtStart = currentPosition == 0;
+    
+    if (newIsAtStart != isAtStart) {
+      setState(() {
+        isAtStart = newIsAtStart;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return AlertDialog(
+      title: Text(l10n.addListTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: nameController,
+            decoration: InputDecoration(
+              labelText: l10n.listNameLabel,
+              border: const OutlineInputBorder(),
+            ),
+            autofocus: true,
+            textCapitalization: isAtStart 
+                ? TextCapitalization.sentences // Первая буква заглавная, остальные строчные
+                : TextCapitalization.none,      // Все строчные буквы в середине
+            keyboardType: TextInputType.text,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _saveList(),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancelButton),
+        ),
+        ElevatedButton(
+          onPressed: _saveList,
+          child: Text(l10n.saveButton),
+        ),
+      ],
+    );
+  }
+
+  void _saveList() {
+    final name = nameController.text.trim();
+
+    if (name.isEmpty) {
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.listNameRequired),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    Navigator.pop(context, name);
+  }
+}
+
+// Отдельный виджет для диалога редактирования списка
+class EditListDialog extends StatefulWidget {
+  final String initialName;
+  
+  const EditListDialog({super.key, required this.initialName});
+
+  @override
+  State<EditListDialog> createState() => _EditListDialogState();
+}
+
+class _EditListDialogState extends State<EditListDialog> {
+  late TextEditingController nameController;
+  bool isAtStart = true; // Отслеживаем, находится ли курсор в начале
+
+  @override
+  void initState() {
+    super.initState();
+    nameController = TextEditingController(text: widget.initialName);
+    
+    // Добавляем listener для отслеживания позиции курсора
+    nameController.addListener(_updateKeyboardState);
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    super.dispose();
+  }
+
+  // Функция для обновления состояния клавиатуры
+  void _updateKeyboardState() {
+    final currentPosition = nameController.selection.extentOffset;
+    final newIsAtStart = currentPosition == 0;
+    
+    if (newIsAtStart != isAtStart) {
+      setState(() {
+        isAtStart = newIsAtStart;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return AlertDialog(
+      title: Text(l10n.editListTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: nameController,
+            decoration: InputDecoration(
+              labelText: l10n.editListNameLabel,
+              border: const OutlineInputBorder(),
+            ),
+            textCapitalization: isAtStart 
+                ? TextCapitalization.sentences // Первая буква заглавная, остальные строчные
+                : TextCapitalization.none,      // Все строчные буквы в середине
+            keyboardType: TextInputType.text,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _saveList(),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancelButton),
+        ),
+        ElevatedButton(
+          onPressed: _saveList,
+          child: Text(l10n.saveButton),
+        ),
+      ],
+    );
+  }
+
+  void _saveList() {
+    final name = nameController.text.trim();
+
+    if (name.isEmpty) {
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.listNameRequired),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    Navigator.pop(context, name);
+  }
+}
+
+// Отдельный виджет для диалога добавления записи в список
+class AddListItemDialog extends StatefulWidget {
+  const AddListItemDialog({super.key});
+
+  @override
+  State<AddListItemDialog> createState() => _AddListItemDialogState();
+}
+
+class _AddListItemDialogState extends State<AddListItemDialog> {
+  late TextEditingController textController;
+  bool isAtStart = true; // Отслеживаем, находится ли курсор в начале
+
+  @override
+  void initState() {
+    super.initState();
+    textController = TextEditingController();
+    
+    // Добавляем listener для отслеживания позиции курсора
+    textController.addListener(_updateKeyboardState);
+  }
+
+  @override
+  void dispose() {
+    textController.dispose();
+    super.dispose();
+  }
+
+  // Функция для обновления состояния клавиатуры
+  void _updateKeyboardState() {
+    final currentPosition = textController.selection.extentOffset;
+    final newIsAtStart = currentPosition == 0;
+    
+    if (newIsAtStart != isAtStart) {
+      setState(() {
+        isAtStart = newIsAtStart;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return AlertDialog(
+      title: Text(l10n.addListItemTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: textController,
+            decoration: InputDecoration(
+              labelText: l10n.listItemTextLabel,
+              border: const OutlineInputBorder(),
+            ),
+            autofocus: true,
+            textCapitalization: isAtStart 
+                ? TextCapitalization.sentences // Первая буква заглавная, остальные строчные
+                : TextCapitalization.none,      // Все строчные буквы в середине
+            keyboardType: TextInputType.text,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _saveItem(),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancelButton),
+        ),
+        ElevatedButton(
+          onPressed: _saveItem,
+          child: Text(l10n.saveButton),
+        ),
+      ],
+    );
+  }
+
+  void _saveItem() {
+    final text = textController.text.trim();
+
+    if (text.isEmpty) {
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.listItemTextRequired),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    Navigator.pop(context, text);
   }
 }

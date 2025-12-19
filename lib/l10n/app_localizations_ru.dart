@@ -476,19 +476,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get menuSubtitle => 'Выберите нужный раздел';
 
   @override
-  String get menuAnalytics => 'Здоровье';
+  String get menu1 => 'Здоровье';
 
   @override
-  String get menuMedications => 'Распорядок дня(Ожидайте в новых релизах)';
+  String get menu2 => 'Распорядок дня(Ожидайте в новых релизах)';
 
   @override
-  String get menuInsights => 'Списки';
+  String get menu3 => 'Списки';
 
   @override
-  String get menuReminders => 'Привычки(Ожидайте в новых релизах)';
+  String get menu4 => 'Привычки';
 
   @override
-  String get menuHelp => 'Заметки(Ожидайте в новых релизах)';
+  String get menu5 => 'Заметки';
 
   @override
   String get menuItem1 => 'Здоровье открыто';
@@ -604,6 +604,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get previousPeriodsTitle => 'Предыдущие месячные';
 
   @override
+  String get nextPlannedPeriodsTitle => 'Следующие плановые месячные';
+
+  @override
   String get activeLabel => '(активный)';
 
   @override
@@ -676,4 +679,209 @@ class AppLocalizationsRu extends AppLocalizations {
   String listUpdateError(Object message) {
     return 'Ошибка обновления списка: $message';
   }
+
+  @override
+  String get notificationChannelName => 'Напоминания о лекарствах';
+
+  @override
+  String get notificationChannelDescription => 'Уведомления о приеме лекарств';
+
+  @override
+  String get notificationTitle => 'Скоро принимать лекарства!';
+
+  @override
+  String get notificationBody => 'Не забудьте принять:';
+
+  @override
+  String get notesTitle => 'Заметки';
+
+  @override
+  String get addNoteTitle => 'Добавить заметку';
+
+  @override
+  String get editNoteTitle => 'Редактировать заметку';
+
+  @override
+  String get noteTitleLabel => 'Заголовок заметки';
+
+  @override
+  String get noteContentLabel => 'Содержимое заметки';
+
+  @override
+  String get noteDateLabel => 'Дата заметки';
+
+  @override
+  String get noteRequired => 'Введите заголовок или содержимое заметки';
+
+  @override
+  String get noteSaved => 'Заметка сохранена';
+
+  @override
+  String get noteUpdated => 'Заметка обновлена';
+
+  @override
+  String get noteDeleted => 'Заметка удалена';
+
+  @override
+  String noteSaveError(Object message) {
+    return 'Ошибка сохранения заметки: $message';
+  }
+
+  @override
+  String noteUpdateError(Object message) {
+    return 'Ошибка обновления заметки: $message';
+  }
+
+  @override
+  String noteDeleteError(Object message) {
+    return 'Ошибка удаления заметки: $message';
+  }
+
+  @override
+  String get deleteNoteConfirmTitle => 'Удалить заметку';
+
+  @override
+  String deleteNoteConfirmMessage(Object title) {
+    return 'Вы уверены, что хотите удалить заметку \"$title\"?';
+  }
+
+  @override
+  String get emptyNotesMessage => 'Создайте первую заметку';
+
+  @override
+  String get settingsTabHabits => 'Привычки';
+
+  @override
+  String get settingsTabCache => 'Кеш и оптимизация';
+
+  @override
+  String get habitsTitle => 'Привычки';
+
+  @override
+  String get noHabits => 'Нет привычек';
+
+  @override
+  String get executionHabitsTitle => 'Привычки выполнения';
+
+  @override
+  String get measurableHabitsTitle => 'Измеримые привычки';
+
+  @override
+  String get selectHabitTypeTitle => 'Выберите тип привычки';
+
+  @override
+  String get habitTypeExecution => 'Выполнение';
+
+  @override
+  String get habitTypeMeasurable => 'Измеримый результат';
+
+  @override
+  String get habitTypeExecutionDescription => 'Простая отметка выполнения привычки';
+
+  @override
+  String get habitTypeMeasurableDescription => 'Привычка с измеримым результатом';
+
+  @override
+  String get addHabitExecutionTitle => 'Добавить привычку выполнения';
+
+  @override
+  String get editHabitExecutionTitle => 'Редактировать привычку выполнения';
+
+  @override
+  String get addHabitMeasurableTitle => 'Добавить измеримую привычку';
+
+  @override
+  String get editHabitMeasurableTitle => 'Редактировать измеримую привычку';
+
+  @override
+  String get habitNameLabel => 'Название привычки';
+
+  @override
+  String get habitFrequencyLabel => 'Частота';
+
+  @override
+  String get habitStartDateLabel => 'Дата начала';
+
+  @override
+  String get habitEndDateLabel => 'Дата окончания';
+
+  @override
+  String get habitReminderTimeLabel => 'Время напоминания';
+
+  @override
+  String get habitGoalLabel => 'Цель';
+
+  @override
+  String get habitUnitLabel => 'Единица измерения';
+
+  @override
+  String get pickStartDate => 'Выберите дату начала';
+
+  @override
+  String get pickEndDate => 'Выберите дату окончания';
+
+  @override
+  String get fillAllRequiredFields => 'Заполните все обязательные поля';
+
+  @override
+  String get invalidTimeFormat => 'Неверный формат времени (используйте ЧЧ:ММ)';
+
+  @override
+  String get invalidGoalValue => 'Введите корректное значение цели';
+
+  @override
+  String get habitExecutionAdded => 'Привычка выполнения добавлена';
+
+  @override
+  String get habitExecutionUpdated => 'Привычка выполнения обновлена';
+
+  @override
+  String get habitMeasurableAdded => 'Измеримая привычка добавлена';
+
+  @override
+  String get habitMeasurableUpdated => 'Измеримая привычка обновлена';
+
+  @override
+  String habitSaveError(Object message) {
+    return 'Ошибка сохранения привычки: $message';
+  }
+
+  @override
+  String get deleteHabitTitle => 'Удалить привычку';
+
+  @override
+  String deleteHabitConfirmMessage(Object name) {
+    return 'Вы уверены, что хотите удалить привычку \"$name\"?';
+  }
+
+  @override
+  String get habitDeleted => 'Привычка удалена';
+
+  @override
+  String habitDeleteError(Object message) {
+    return 'Ошибка удаления привычки: $message';
+  }
+
+  @override
+  String get selectLanguage => 'Выбор языка';
+
+  @override
+  String get speechRecognitionError => 'Ошибка распознавания речи';
+
+  @override
+  String speechRecognitionErrorWithMessage(Object error) {
+    return 'Ошибка распознавания речи: $error';
+  }
+
+  @override
+  String get speechNoteCreated => 'Аудиозаметка создана';
+
+  @override
+  String get noMicrophonePermission => 'Нет разрешения на использование микрофона';
+
+  @override
+  String get listeningIndicator => 'Слушаю...';
+
+  @override
+  String get errorDialogTitle => 'Ошибка';
 }

@@ -9,7 +9,9 @@ import '../utils/date_utils.dart'; // Добавлен импорт MyDateUtils
 import '../models/medication_time.dart';
 
 class MedicationsTab extends StatefulWidget {
-  const MedicationsTab({super.key});
+  final Function(bool hasChanges)? onDataChanged;
+  
+  const MedicationsTab({super.key, this.onDataChanged});
 
   @override
   _MedicationsTabState createState() => _MedicationsTabState();
@@ -43,146 +45,51 @@ class _MedicationsTabState extends State<MedicationsTab> {
   }
 
   Future<void> _showMedicationDialog({Medication? medication}) async {
-    await showDialog( // Оборачиваем в showDialog
+    final result = await showDialog<Medication>(
       context: context,
-      builder: (dialogContext) { // Используем dialogContext
-        final TextEditingController nameController = TextEditingController(text: medication?.name);
-        DateTime? startDate = medication?.startDate;
-        DateTime? endDate = medication?.endDate;
-        List<MedicationTime> times = List.from(medication?.times ?? []);
-
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
-            final l10n = AppLocalizations.of(context)!;
-            return AlertDialog(
-              title: Text(medication == null ? l10n.addMedicationTitle : l10n.editMedicationTitle),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: nameController,
-                      decoration: InputDecoration(labelText: l10n.medicationNameLabel),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextButton(
-                            onPressed: () async {
-                              final DateTime? picked = await showDatePicker(
-                                context: context,
-                                // При старте showDatePicker, используем toLocal() чтобы преобразовать UTC дату обратно в локальную
-                                initialDate: startDate == null ? PeriodCalculator.getToday().toLocal() : startDate!.toLocal(),
-                                firstDate: DateTime(2000),
-                                lastDate: DateTime(2100),
-                              );
-                              if (picked != null) {
-                                setState(() {
-                                  // Преобразуем выбранную локальную дату в UTC-дату, сохраняя день/месяц/год
-                                  startDate = MyDateUtils.fromLocalDayToUtcDay(picked);
-                                });
-                              }
-                            },
-                            // Отображаем startDate преобразованную в локальное время для пользователя
-                            child: Text(startDate != null ? '${l10n.medicationStartDateLabel}: ${DateFormat('dd.MM.yyyy').format(startDate!.toLocal())}' : l10n.medicationPickStartDate),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: TextButton(
-                            onPressed: () async {
-                              final DateTime? picked = await showDatePicker(
-                                context: context,
-                                // При старте showDatePicker, используем toLocal() чтобы преобразовать UTC дату обратно в локальную
-                                initialDate: endDate == null ? startDate?.toLocal() ?? PeriodCalculator.getToday().toLocal() : endDate!.toLocal(),
-                                firstDate: DateTime(2000),
-                                lastDate: DateTime(2100),
-                              );
-                              if (picked != null) {
-                                setState(() {
-                                  // Преобразуем выбранную локальную дату в UTC-дату, сохраняя день/месяц/год
-                                  endDate = MyDateUtils.fromLocalDayToUtcDay(picked);
-                                });
-                              }
-                            },
-                            // Отображаем endDate преобразованную в локальное время для пользователя
-                            child: Text(endDate != null ? '${l10n.medicationEndDateLabel}: ${DateFormat('dd.MM.yyyy').format(endDate!.toLocal())}' : l10n.medicationPickEndDate),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    MedicationTimePicker(
-                      initialTimes: times,
-                      onTimesChanged: (newTimes) {
-                        setState(() {
-                          times = newTimes;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: Text(l10n.cancelButton),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    final name = nameController.text.trim();
-                    if (name.isEmpty || startDate == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(l10n.medicationNameMissingError), // localization
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                      return;
-                    }
-
-                    final newMedication = Medication(
-                      id: medication?.id,
-                      name: name,
-                      startDate: startDate!,
-                      endDate: endDate,
-                      times: times,
-                    );
-
-                    try {
-                      if (medication == null) {
-                        await _databaseHelper.insertMedication(newMedication);
-                      } else {
-                        await _databaseHelper.updateMedication(newMedication);
-                      }
-                      await _loadMedications(); // Обновляем список лекарств в MedicationsTab
-                      Navigator.of(context).pop(); // Закрываем диалог
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(l10n.medicationSaveError(e.toString())), // localization
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  },
-                  child: Text(l10n.saveButton),
-                ),
-              ],
-            );
-          },
-        );
+      builder: (context) {
+        return MedicationDialog(medication: medication);
       },
     );
+
+    // Если пользователь сохранил лекарство, обрабатываем результат
+    if (result != null) {
+      try {
+        if (medication == null) {
+          await _databaseHelper.insertMedication(result);
+        } else {
+          await _databaseHelper.updateMedication(result);
+        }
+        await _loadMedications();
+        
+        // Уведомляем об изменении данных
+        widget.onDataChanged?.call(true);
+        
+        if (mounted) {
+          // Сообщение об успехе можно добавить при необходимости
+        }
+      } catch (e) {
+        if (mounted) {
+          final l10n = AppLocalizations.of(context)!;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.medicationSaveError(e.toString())),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
   }
 
   Future<void> _deleteMedication(Medication medication) async {
     try {
       await _databaseHelper.deleteMedication(medication.id!);
       await _loadMedications();
+      
+      // Уведомляем об изменении данных
+      widget.onDataChanged?.call(true);
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.medicationDeleteSuccess(medication.name)),
@@ -312,5 +219,171 @@ class _MedicationsTabState extends State<MedicationsTab> {
         );
       },
     );
+  }
+}
+
+// Отдельный виджет для диалога добавления/редактирования лекарства
+class MedicationDialog extends StatefulWidget {
+  final Medication? medication;
+  
+  const MedicationDialog({super.key, this.medication});
+
+  @override
+  State<MedicationDialog> createState() => _MedicationDialogState();
+}
+
+class _MedicationDialogState extends State<MedicationDialog> {
+  late TextEditingController nameController;
+  late DateTime? startDate;
+  late DateTime? endDate;
+  late List<MedicationTime> times;
+  bool isAtStart = true; // Отслеживаем, находится ли курсор в начале
+
+  @override
+  void initState() {
+    super.initState();
+    nameController = TextEditingController(text: widget.medication?.name);
+    startDate = widget.medication?.startDate;
+    endDate = widget.medication?.endDate;
+    times = List.from(widget.medication?.times ?? []);
+    
+    // Добавляем listener для отслеживания позиции курсора
+    nameController.addListener(_updateKeyboardState);
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    super.dispose();
+  }
+
+  // Функция для обновления состояния клавиатуры
+  void _updateKeyboardState() {
+    final currentPosition = nameController.selection.extentOffset;
+    final newIsAtStart = currentPosition == 0;
+    
+    if (newIsAtStart != isAtStart) {
+      setState(() {
+        isAtStart = newIsAtStart;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
+    return AlertDialog(
+      title: Text(widget.medication == null ? l10n.addMedicationTitle : l10n.editMedicationTitle),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: InputDecoration(labelText: l10n.medicationNameLabel),
+              autofocus: widget.medication == null, // Автофокус только при добавлении
+              textCapitalization: isAtStart 
+                  ? TextCapitalization.sentences // Первая буква заглавная, остальные строчные
+                  : TextCapitalization.none,      // Все строчные буквы в середине
+              keyboardType: TextInputType.text,
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () async {
+                      final DateTime? picked = await showDatePicker(
+                        context: context,
+                        initialDate: startDate == null ? PeriodCalculator.getToday().toLocal() : startDate!.toLocal(),
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2100),
+                      );
+                      if (picked != null) {
+                        setState(() {
+                          startDate = MyDateUtils.fromLocalDayToUtcDay(picked);
+                        });
+                      }
+                    },
+                    child: Text(startDate != null 
+                        ? '${l10n.medicationStartDateLabel}: ${DateFormat('dd.MM.yyyy').format(startDate!.toLocal())}' 
+                        : l10n.medicationPickStartDate),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: TextButton(
+                    onPressed: () async {
+                      final DateTime? picked = await showDatePicker(
+                        context: context,
+                        initialDate: endDate == null ? startDate?.toLocal() ?? PeriodCalculator.getToday().toLocal() : endDate!.toLocal(),
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2100),
+                      );
+                      if (picked != null) {
+                        setState(() {
+                          endDate = MyDateUtils.fromLocalDayToUtcDay(picked);
+                        });
+                      }
+                    },
+                    child: Text(endDate != null 
+                        ? '${l10n.medicationEndDateLabel}: ${DateFormat('dd.MM.yyyy').format(endDate!.toLocal())}' 
+                        : l10n.medicationPickEndDate),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            MedicationTimePicker(
+              initialTimes: times,
+              onTimesChanged: (newTimes) {
+                setState(() {
+                  times = newTimes;
+                });
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: Text(l10n.cancelButton),
+        ),
+        ElevatedButton(
+          onPressed: _saveMedication,
+          child: Text(l10n.saveButton),
+        ),
+      ],
+    );
+  }
+
+  void _saveMedication() {
+    final name = nameController.text.trim();
+    
+    if (name.isEmpty || startDate == null) {
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.medicationNameMissingError),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final newMedication = Medication(
+      id: widget.medication?.id,
+      name: name,
+      startDate: startDate!,
+      endDate: endDate,
+      times: times,
+    );
+
+    Navigator.of(context).pop(newMedication);
   }
 }

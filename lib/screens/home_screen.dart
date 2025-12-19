@@ -43,23 +43,17 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = true;
   String? _errorMessage;
   DateTime _lastSelectedDate = DateTime.now(); // Добавляем последнюю выбранную дату
-
+  static const _backgroundImage = AssetImage('assets/images/fon1.png');
 
   late BannerAd banner;
   var isBannerAlreadyCreated = false;
-
-
-  // BannerAdSize _getAdSize() {
-  //   final screenWidth = MediaQuery.of(context).size.width.round();
-  //   return BannerAdSize.sticky(width: screenWidth);
-  // }
 
   _createBanner() {
     final screenWidth = MediaQuery.of(context).size.width.round();
     final adSize = BannerAdSize.sticky(width: screenWidth);
     
     return BannerAd(
-      adUnitId: 'R-M-17946414-1',
+      adUnitId: 'R-M-17946414-4',
       adSize: adSize,
       adRequest: const AdRequest(),
       onAdLoaded: () {},
@@ -76,8 +70,22 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _initializeNotifications();
+    _initializeBanner();
     _loadData(includeBanner: false);
   }
+
+
+  void _initializeBanner() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        banner = _createBanner();
+        setState(() {
+          isBannerAlreadyCreated = true;
+        });
+      }
+    });
+  }
+
 
   Future<void> _initializeNotifications() async {
     await _notificationService.initialize();
@@ -87,27 +95,14 @@ class _HomeScreenState extends State<HomeScreen> {
       await PermissionsService.checkAndRequestPermissions(context);
     }
   }
-//Этот блок нужен для ручного вызова уведомлений по кнопке - делался для проверки
-  // Future<void> _simulateNotification() async {
-  //   await _notificationService.showImmediateNotification();
-  // }
+
 
   Future<void> _loadData({bool includeBanner = false}) async {
     try {
-      if (includeBanner) {
-        banner = _createBanner();
-        
-        setState(() {
-          _isLoading = true;
-          _errorMessage = null;
-          isBannerAlreadyCreated = true;
-        });
-      } else {
-        setState(() {
-          _isLoading = true;
-          _errorMessage = null;
-        });
-      }
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
       
       _settings = await _databaseHelper.getSettings();
       _periodRecords = await _databaseHelper.getAllPeriodRecords();
@@ -208,84 +203,86 @@ class _HomeScreenState extends State<HomeScreen> {
   // }
 
   @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    
-    // Создаем баннер только если его еще нет и мы не в процессе загрузки
-    if (!isBannerAlreadyCreated && !_isLoading) {
-      try {
-        banner = _createBanner();
-        setState(() {
-          isBannerAlreadyCreated = true;
-        });
-      } catch (e) {
-        // Игнорируем ошибки создания баннера
-      }
-    }
-    
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: _backToDayDetail,
-          tooltip: 'Назад к деталям дня',
-        ),
-        title: Text(l10n.calendar),
-        // actions: [
-        //   IconButton(
-        //     icon: const Icon(Icons.menu),
-        //     onPressed: _openMenu,
-        //     tooltip: l10n.menuTitle,
-        //   ),
-        //   IconButton(
-        //     icon: const Icon(Icons.settings),
-        //     onPressed: _openSettings,
-        //     tooltip: l10n.settingsTooltip,
-        //   ),
-        // ],
+Widget build(BuildContext context) {
+  final l10n = AppLocalizations.of(context)!;
+  
+  return Scaffold(
+    appBar: AppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: _backToDayDetail,
+        tooltip: 'Назад к деталям дня',
       ),
+      title: Text(l10n.calendar),
+    ),
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/images/fon1.png'),
+            image: _backgroundImage,
             fit: BoxFit.cover,
-          ),
         ),
-        child: Column(
+      ),
+      child: Column(
         children: [
-          // Основной контент - календарь
           Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _errorMessage != null
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(l10n.errorWithMessage(_errorMessage!)),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: () => _loadData(includeBanner: true),
-                              child: Text(l10n.retry),
-                            ),
-                          ],
-                        ),
-                      )
-                    : CalendarWidget(
-                        onDaySelected: _openDayDetail,
-                        settings: _settings,
-                        periodRecords: _periodRecords,
-                      ),
+            child: _buildMainContent(l10n),
           ),
-          
-          // Виджет рекламы
-          Container(
-            alignment: Alignment.bottomCenter,
-            child: isBannerAlreadyCreated ? AdWidget(bannerAd: banner) : null,
-          ),
+          _buildBanner(),
         ],
       ),
-    )
+    ),
+  );
+}
+
+
+  Widget _buildMainContent(AppLocalizations l10n) {
+  if (_isLoading) {
+    return const Center(child: CircularProgressIndicator());
+  }
+  
+  if (_errorMessage != null) {
+    return _buildErrorWidget(l10n);
+  }
+  
+  return CalendarWidget(
+    onDaySelected: _openDayDetail,
+    settings: _settings,
+    periodRecords: _periodRecords,
+  );
+}
+
+Widget _buildErrorWidget(AppLocalizations l10n) {
+  return Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(l10n.errorWithMessage(_errorMessage!)),
+        const SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: _loadData,
+          child: Text(l10n.retry),
+        ),
+      ],
+    ),
+  );
+}
+
+// Widget _buildBanner() {
+//   return Container(
+//     alignment: Alignment.bottomCenter,
+//     child: isBannerAlreadyCreated ? AdWidget(bannerAd: banner) : const SizedBox.shrink(),
+//   );
+// }
+  Widget _buildBanner() {
+    return Container(
+      alignment: Alignment.bottomCenter,
+      padding: const EdgeInsets.only(bottom: 8),
+      height: isBannerAlreadyCreated ? 60 : 0, // Фиксированная высота
+      child: isBannerAlreadyCreated 
+              ? IgnorePointer(
+              child: AdWidget(bannerAd: banner),
+            )
+          : const SizedBox.shrink(),
     );
   }
 }

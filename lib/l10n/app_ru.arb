@@ -258,11 +258,11 @@
   "cancel": "Отмена",
   "menuTitle": "Меню",
   "menuSubtitle": "Выберите нужный раздел",
-  "menuAnalytics": "Здоровье",
-  "menuMedications": "Распорядок дня(Ожидайте в новых релизах)",
-  "menuInsights": "Списки",
-  "menuReminders": "Привычки(Ожидайте в новых релизах)",
-  "menuHelp": "Заметки(Ожидайте в новых релизах)",
+  "menu1": "Здоровье",
+  "menu2": "Лекарства",
+  "menu3": "Списки",
+  "menu4": "Привычки",
+  "menu5": "Заметки",
   "menuItem1": "Здоровье открыто",
   "menuItem2": "Распорядок дня открыт",
   "menuItem3": "Список дел открыт",
@@ -344,6 +344,7 @@
   "periodBlockTitle": "Месячные",
   "delayLabel": "Задержка",
   "previousPeriodsTitle": "Предыдущие месячные",
+  "nextPlannedPeriodsTitle": "Следующие плановые месячные",
   "activeLabel": "(активный)",
   "durationLabel": "Продолжительность:",
   "durationDayOne": "день",
@@ -368,6 +369,109 @@
   "editListNameLabel": "Название списка",
   "listNameRequired": "Введите название списка",
   "listUpdated": "Список обновлен",
-  "listUpdateError": "Ошибка обновления списка: {message}"
+  "listUpdateError": "Ошибка обновления списка: {message}",
+  "notificationChannelName": "Напоминания о лекарствах",
+  "notificationChannelDescription": "Уведомления о приеме лекарств",
+  "notificationTitle": "Скоро принимать лекарства!",
+  "notificationBody": "Не забудьте принять:",
+  "notesTitle": "Заметки",
+  "addNoteTitle": "Добавить заметку",
+  "editNoteTitle": "Редактировать заметку",
+  "noteTitleLabel": "Заголовок заметки",
+  "noteContentLabel": "Содержимое заметки",
+  "noteDateLabel": "Дата заметки",
+  "noteRequired": "Введите заголовок или содержимое заметки",
+  "noteSaved": "Заметка сохранена",
+  "noteUpdated": "Заметка обновлена",
+  "noteDeleted": "Заметка удалена",
+  "noteSaveError": "Ошибка сохранения заметки: {message}",
+  "@noteSaveError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "noteUpdateError": "Ошибка обновления заметки: {message}",
+  "@noteUpdateError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "noteDeleteError": "Ошибка удаления заметки: {message}",
+  "@noteDeleteError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "deleteNoteConfirmTitle": "Удалить заметку",
+  "deleteNoteConfirmMessage": "Вы уверены, что хотите удалить заметку \"{title}\"?",
+  "@deleteNoteConfirmMessage": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "emptyNotesMessage": "Создайте первую заметку",
+  "settingsTabHabits": "Привычки",
+  "settingsTabCache": "Кеш и оптимизация",
+  "habitsTitle": "Привычки",
+  "noHabits": "Нет привычек",
+  "executionHabitsTitle": "Привычки выполнения",
+  "measurableHabitsTitle": "Измеримые привычки",
+  "selectHabitTypeTitle": "Выберите тип привычки",
+  "habitTypeExecution": "Выполнение",
+  "habitTypeMeasurable": "Измеримый результат",
+  "habitTypeExecutionDescription": "Простая отметка выполнения привычки",
+  "habitTypeMeasurableDescription": "Привычка с измеримым результатом",
+  "addHabitExecutionTitle": "Добавить привычку выполнения",
+  "editHabitExecutionTitle": "Редактировать привычку выполнения",
+  "addHabitMeasurableTitle": "Добавить измеримую привычку",
+  "editHabitMeasurableTitle": "Редактировать измеримую привычку",
+  "habitNameLabel": "Название привычки",
+  "habitFrequencyLabel": "Частота",
+  "habitStartDateLabel": "Дата начала",
+  "habitEndDateLabel": "Дата окончания",
+  "habitReminderTimeLabel": "Время напоминания",
+  "habitGoalLabel": "Цель",
+  "habitUnitLabel": "Единица измерения",
+  "pickStartDate": "Выберите дату начала",
+  "pickEndDate": "Выберите дату окончания",
+  "fillAllRequiredFields": "Заполните все обязательные поля",
+  "invalidTimeFormat": "Неверный формат времени (используйте ЧЧ:ММ)",
+  "invalidGoalValue": "Введите корректное значение цели",
+  "habitExecutionAdded": "Привычка выполнения добавлена",
+  "habitExecutionUpdated": "Привычка выполнения обновлена",
+  "habitMeasurableAdded": "Измеримая привычка добавлена",
+  "habitMeasurableUpdated": "Измеримая привычка обновлена",
+  "habitSaveError": "Ошибка сохранения привычки: {message}",
+  "@habitSaveError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "deleteHabitTitle": "Удалить привычку",
+  "deleteHabitConfirmMessage": "Вы уверены, что хотите удалить привычку \"{name}\"?",
+  "@deleteHabitConfirmMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "habitDeleted": "Привычка удалена",
+  "habitDeleteError": "Ошибка удаления привычки: {message}",
+  "@habitDeleteError": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "selectLanguage": "Выбор языка",
+  "speechRecognitionError": "Ошибка распознавания речи",
+  "speechRecognitionErrorWithMessage": "Ошибка распознавания речи: {error}",
+  "@speechRecognitionErrorWithMessage": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "speechNoteCreated": "Аудиозаметка создана",
+  "noMicrophonePermission": "Нет разрешения на использование микрофона",
+  "listeningIndicator": "Слушаю...",
+  "errorDialogTitle": "Ошибка"
 }
 
