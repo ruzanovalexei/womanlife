@@ -6,6 +6,7 @@ class Settings {
   final String locale;
   final String firstDayOfWeek;
   final int? dataRetentionPeriod; // Период хранения данных в месяцах (null = неограниченно)
+  final String? lastCacheCleanup; // Дата последней очистки кеша
 
   const Settings({
     this.id,
@@ -15,6 +16,7 @@ class Settings {
     required this.locale,
     required this.firstDayOfWeek,
     this.dataRetentionPeriod,
+    this.lastCacheCleanup,
   });
 
   Map<String, dynamic> toMap() {
@@ -26,6 +28,7 @@ class Settings {
       'locale': locale,
       'firstDayOfWeek': firstDayOfWeek,
       'dataRetentionPeriod': dataRetentionPeriod,
+      'lastCacheCleanup': lastCacheCleanup,
     };
   }
 
@@ -38,6 +41,7 @@ class Settings {
       locale: map['locale'] ?? 'ru',
       firstDayOfWeek: map['firstDayOfWeek'] ?? 'monday',
       dataRetentionPeriod: map['dataRetentionPeriod'], // null = неограниченно
+      lastCacheCleanup: map['lastCacheCleanup'], // Дата последней очистки кеша
     );
   }
 
@@ -49,6 +53,7 @@ class Settings {
     String? locale,
     String? firstDayOfWeek,
     int? dataRetentionPeriod,
+    String? lastCacheCleanup,
   }) {
     return Settings(
       id: id ?? this.id,
@@ -58,11 +63,12 @@ class Settings {
       locale: locale ?? this.locale,
       firstDayOfWeek: firstDayOfWeek ?? this.firstDayOfWeek,
       dataRetentionPeriod: dataRetentionPeriod ?? this.dataRetentionPeriod,
+      lastCacheCleanup: lastCacheCleanup ?? this.lastCacheCleanup,
     );
   }
 
   @override
   String toString() {
-    return 'Settings{id: $id, cycleLength: $cycleLength, periodLength: $periodLength, planningMonths: $planningMonths, locale: $locale, firstDayOfWeek: $firstDayOfWeek, dataRetentionPeriod: $dataRetentionPeriod}';
+    return 'Settings{id: $id, cycleLength: $cycleLength, periodLength: $periodLength, planningMonths: $planningMonths, locale: $locale, firstDayOfWeek: $firstDayOfWeek, dataRetentionPeriod: $dataRetentionPeriod, lastCacheCleanup: $lastCacheCleanup}';
   }
 }

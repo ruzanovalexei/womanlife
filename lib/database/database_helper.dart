@@ -233,6 +233,7 @@ class DatabaseHelper {
       'locale': 'ru',
       'firstDayOfWeek': 'monday',
       'dataRetentionPeriod': null, // null = неограниченно
+      'lastCacheCleanup': null, // Будет установлено при первой очистке
     });
 
     // Initialize default symptoms with codes
@@ -742,11 +743,19 @@ class DatabaseHelper {
             // Создание индексов для оптимизации производительности
             await _createIndexes(db);
             
-            // Добавляем поле для хранения даты последней очистки кеша в настройки
+            // Проверяем и добавляем поле для хранения даты последней очистки кеша в настройки
             try {
-              await db.execute('ALTER TABLE $settingsTable ADD COLUMN lastCacheCleanup TEXT');
+              final tableInfo = await db.rawQuery("PRAGMA table_info($settingsTable)");
+              final columns = tableInfo.map((row) => row['name'] as String).toList();
+              
+              if (!columns.contains('lastCacheCleanup')) {
+                await db.execute('ALTER TABLE $settingsTable ADD COLUMN lastCacheCleanup TEXT');
+                print('Added lastCacheCleanup column to settings table');
+              } else {
+                print('lastCacheCleanup column already exists in settings table');
+              }
             } catch (e) {
-              // Поле уже существует или произошла другая ошибка
+              print('Error checking/adding lastCacheCleanup column: $e');
             }
             
             print('Database optimized with indexes and cache cleanup support');
@@ -1271,8 +1280,8 @@ class DatabaseHelper {
       final result = await db.query(settingsTable, limit: 1);
       if (result.isNotEmpty) {
         final lastCleanup = result.first['lastCacheCleanup'];
-        if (lastCleanup != null) {
-          return MyDateUtils.fromUtcDateString(lastCleanup as String);
+        if (lastCleanup != null && lastCleanup is String) {
+          return MyDateUtils.fromUtcDateString(lastCleanup);
         }
       }
     } catch (e) {
@@ -1284,9 +1293,16 @@ class DatabaseHelper {
   /// Установка даты последней очистки кеша
   static Future<void> _setLastCleanupDate(Database db, DateTime date) async {
     try {
-      await db.update(settingsTable, {
-        'lastCacheCleanup': MyDateUtils.toUtcDateString(date),
-      });
+      // Получаем первую (и единственную) запись настроек
+      final settingsResult = await db.query(settingsTable, limit: 1);
+      if (settingsResult.isNotEmpty) {
+        final settingsId = settingsResult.first['id'];
+        if (settingsId != null) {
+          await db.update(settingsTable, {
+            'lastCacheCleanup': MyDateUtils.toUtcDateString(date),
+          }, where: 'id = ?', whereArgs: [settingsId]);
+        }
+      }
     } catch (e) {
       print('Error setting last cleanup date: $e');
     }
@@ -1357,6 +1373,32 @@ class DatabaseHelper {
     if (_database != null) {
       await _database!.close();
       _database = null;
+    }
+  }
+
+  /// Принудительная проверка и исправление структуры таблицы settings
+  Future<void> fixSettingsTableStructure() async {
+    Database db = await database;
+    try {
+      final tableInfo = await db.rawQuery("PRAGMA table_info($settingsTable)");
+      final columns = tableInfo.map((row) => row['name'] as String).toList();
+      
+      if (!columns.contains('lastCacheCleanup')) {
+        await db.execute('ALTER TABLE $settingsTable ADD COLUMN lastCacheCleanup TEXT');
+        print('Successfully added lastCacheCleanup column to settings table');
+      } else {
+        print('lastCacheCleanup column already exists in settings table');
+      }
+      
+      if (!columns.contains('dataRetentionPeriod')) {
+        await db.execute('ALTER TABLE $settingsTable ADD COLUMN dataRetentionPeriod INTEGER');
+        print('Successfully added dataRetentionPeriod column to settings table');
+      } else {
+        print('dataRetentionPeriod column already exists in settings table');
+      }
+      
+    } catch (e) {
+      print('Error fixing settings table structure: $e');
     }
   }
 }
