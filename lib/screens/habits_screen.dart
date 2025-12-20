@@ -281,7 +281,6 @@ class _HabitsScreenState extends State<HabitsScreen> {
       });
     } catch (e) {
       _showErrorSnackBar('Ошибка при обновлении привычки: $e');
-      print('Ошибка при обновлении привычки: $e');
     }
   }
 

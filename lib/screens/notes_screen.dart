@@ -265,6 +265,13 @@ class _NotesScreenState extends State<NotesScreen> {
             _createNoteFromSpeech();
           } else {
             debugPrint('No speech text to create note from');
+            
+            // Сбрасываем состояние при отсутствии текста
+            setState(() {
+              _isSpeechListening = false;
+              _speechWords = '';
+            });
+            
             // Показываем сообщение если не удалось распознать речь
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -348,6 +355,7 @@ class _NotesScreenState extends State<NotesScreen> {
       // Пользователь отменил создание заметки
       setState(() {
         _speechWords = '';
+        _isSpeechListening = false; // Сбрасываем состояние записи
       });
       return;
     }
@@ -373,11 +381,17 @@ class _NotesScreenState extends State<NotesScreen> {
       // Очищаем состояние
       setState(() {
         _speechWords = '';
+        _isSpeechListening = false; // Сбрасываем состояние записи
       });
 
       // Перезагружаем заметки
       await _loadData();
     } catch (e) {
+      // При ошибке тоже сбрасываем состояние записи
+      setState(() {
+        _isSpeechListening = false;
+      });
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.noteSaveError(e.toString())),
