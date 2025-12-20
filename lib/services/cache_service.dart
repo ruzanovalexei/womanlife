@@ -1,6 +1,7 @@
 // import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../database/database_helper.dart';
+import '../utils/object_pool.dart';
 
 class CacheService {
   static final CacheService _instance = CacheService._internal();
@@ -142,12 +143,22 @@ class CacheService {
       final dbInfo = await getDatabaseInfo();
       final sizeInBytes = dbInfo['fileSizeBytes'] ?? 0;
       
-      if (sizeInBytes < 1024) {
-        return '$sizeInBytes Б';
-      } else if (sizeInBytes < 1024 * 1024) {
-        return '${(sizeInBytes / 1024).toStringAsFixed(1)} КБ';
-      } else {
-        return '${(sizeInBytes / (1024 * 1024)).toStringAsFixed(1)} МБ';
+      // Используем StringBuilder из пула для оптимизации
+      final sb = ResourceManager().getStringBuilder();
+      try {
+        if (sizeInBytes < 1024) {
+          sb.write(sizeInBytes);
+          sb.write(' Б');
+        } else if (sizeInBytes < 1024 * 1024) {
+          sb.write((sizeInBytes / 1024).toStringAsFixed(1));
+          sb.write(' КБ');
+        } else {
+          sb.write((sizeInBytes / (1024 * 1024)).toStringAsFixed(1));
+          sb.write(' МБ');
+        }
+        return sb.toString();
+      } finally {
+        ResourceManager().returnStringBuilder(sb);
       }
     } catch (e) {
       return 'Неизвестно';
@@ -156,6 +167,7 @@ class CacheService {
 
   /// Получение рекомендаций по оптимизации
   Future<List<String>> getOptimizationRecommendations() async {
+    // Создаем фиксированный список для избежания переаллокаций
     final recommendations = <String>[];
     
     try {
@@ -167,26 +179,29 @@ class CacheService {
       final notesCount = stats['notes'] ?? 0;
       final medicationRecordsCount = stats['medicationRecords'] ?? 0;
       
-      // Рекомендации по размеру
+      // Оптимизированная проверка условий с использованием safeStringEquals для строк
       if (sizeMB > 100) {
         recommendations.add('Размер базы данных превышает 100 МБ. Рекомендуется выполнить очистку кеша.');
       } else if (sizeMB > 50) {
         recommendations.add('Размер базы данных превышает 50 МБ. Рассмотрите возможность очистки старых данных.');
       }
       
-      // Рекомендации по количеству записей
-      if (dayNotesCount > 1000) {
-        recommendations.add('Большое количество записей заметок по дням ($dayNotesCount). Старые записи можно архивировать.');
-      }
+      // Оптимизированная проверка количества записей
+      LoopOptimizations.safeLoop([
+        {'count': dayNotesCount, 'threshold': 1000, 'message': 'Большое количество записей заметок по дням ($dayNotesCount). Старые записи можно архивировать.'},
+        {'count': notesCount, 'threshold': 500, 'message': 'Большое количество заметок ($notesCount). Рассмотрите удаление ненужных заметок.'},
+        {'count': medicationRecordsCount, 'threshold': 10000, 'message': 'Большое количество записей приема лекарств ($medicationRecordsCount). Старые записи можно удалить.'},
+      ], (item, index) {
+        final count = item['count'] as int;
+        final threshold = item['threshold'] as int;
+        final message = item['message'] as String;
+        
+        if (count > threshold) {
+          recommendations.add(message);
+        }
+      });
       
-      if (notesCount > 500) {
-        recommendations.add('Большое количество заметок ($notesCount). Рассмотрите удаление ненужных заметок.');
-      }
-      
-      if (medicationRecordsCount > 10000) {
-        recommendations.add('Большое количество записей приема лекарств ($medicationRecordsCount). Старые записи можно удалить.');
-      }
-      
+      // Добавляем финальную рекомендацию только если список пуст
       if (recommendations.isEmpty) {
         recommendations.add('База данных в хорошем состоянии. Рекомендуется периодическая оптимизация.');
       }

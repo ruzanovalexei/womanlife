@@ -1,16 +1,19 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:period_tracker/l10n/app_localizations.dart';
 import 'package:period_tracker/database/database_helper.dart';
 import 'package:period_tracker/models/settings.dart';
 import 'package:period_tracker/models/period_record.dart';
 import 'package:period_tracker/utils/date_utils.dart';
+import 'package:period_tracker/services/ad_banner_service.dart';
+import 'package:period_tracker/services/speech_service.dart';
 import 'package:period_tracker/screens/day_detail_screen.dart';
 import 'package:period_tracker/screens/settings_screen.dart';
 import 'package:period_tracker/screens/lists_screen.dart';
 import 'package:period_tracker/screens/notes_screen.dart';
 import 'package:period_tracker/screens/habits_screen.dart';
 // import 'package:period_tracker/screens/medications_screen.dart';
-import 'package:yandex_mobileads/mobile_ads.dart';
+// import 'package:yandex_mobileads/mobile_ads.dart';
 // import 'package:yandex_mobileads/ad_widget.dart'; // Добавляем импорт AdWidget
 
 class MenuScreen extends StatefulWidget {
@@ -22,14 +25,17 @@ class MenuScreen extends StatefulWidget {
 
 class _MenuScreenState extends State<MenuScreen> {
   final _databaseHelper = DatabaseHelper();
+  final _adBannerService = AdBannerService();
+  final _speechService = SpeechService();
+  
   late Settings _settings;
   List<PeriodRecord> _periodRecords = [];
   bool _isLoading = true;
   
-  // Исправлено: правильное объявление баннера и флага
-  BannerAd? _bannerAd;
-  bool _isBannerLoading = false;
-  bool _isBannerLoaded = false;
+  // Удаляем старые переменные баннера - теперь управляется сервисом
+  // BannerAd? _bannerAd;
+  // bool _isBannerLoading = false;
+  // bool _isBannerLoaded = false;
 
   @override
   void initState() {
@@ -39,8 +45,8 @@ class _MenuScreenState extends State<MenuScreen> {
 
   @override
   void dispose() {
-    // Очищаем баннер при уничтожении виджета
-    _bannerAd?.destroy();
+    // Удаляем старый код управления баннером - теперь это делает сервис
+    // _bannerAd?.destroy();
     super.dispose();
   }
 
@@ -50,9 +56,26 @@ class _MenuScreenState extends State<MenuScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _loadData();
+        _initializeServices();
       }
     });
-    _createAdBanner();
+  }
+
+  // Инициализация сервисов
+  Future<void> _initializeServices() async {
+    try {
+      // Инициализируем сервис баннеров
+      await _adBannerService.initialize();
+      
+      // Инициализируем сервис распознавания речи
+      await _speechService.initialize();
+      
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e) {
+      debugPrint('Error initializing services: $e');
+    }
   }
 
   // Оптимизированная загрузка данных - один setState
@@ -82,65 +105,6 @@ class _MenuScreenState extends State<MenuScreen> {
         debugPrint('Error loading data: $e');
       }
     }
-  }
-
-  // Исправленное создание баннера с защитой от повторного вызова
-  void _createAdBanner() {
-    // Проверяем, не создается ли уже баннер
-    if (_isBannerLoading || _isBannerLoaded || _bannerAd != null) {
-      return;
-    }
-
-    _isBannerLoading = true;
-    
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) {
-        _isBannerLoading = false;
-        return;
-      }
-
-      try {
-        final bannerAd = _createBanner();
-        if (mounted) {
-          setState(() {
-            _bannerAd = bannerAd;
-            _isBannerLoading = false;
-            _isBannerLoaded = true;
-          });
-        }
-      } catch (e) {
-        _isBannerLoading = false;
-        debugPrint('Banner creation failed: $e');
-      }
-    });
-  }
-
-  // Создание баннера
-  BannerAd _createBanner() {
-    final screenWidth = MediaQuery.of(context).size.width.round();
-    final adSize = BannerAdSize.sticky(width: screenWidth);
-    
-    return BannerAd(
-      adUnitId: 'R-M-17946414-3',
-      adSize: adSize,
-      adRequest: const AdRequest(),
-      onAdLoaded: () {
-        debugPrint('Banner loaded successfully');
-      },
-      onAdFailedToLoad: (error) {
-        debugPrint('Ad failed to load: $error');
-        if (mounted) {
-          setState(() {
-            _isBannerLoaded = false;
-            _bannerAd = null;
-          });
-        }
-      },
-      onAdClicked: () {},
-      onLeftApplication: () {},
-      onReturnedToApplication: () {},
-      onImpression: (impressionData) {}
-    );
   }
 
   void _onMenuItemTap(int index) {
@@ -206,7 +170,9 @@ class _MenuScreenState extends State<MenuScreen> {
     }
   }
 static const _backgroundImage = AssetImage('assets/images/fon1.png');
-  @override
+
+
+@override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     
@@ -229,15 +195,17 @@ static const _backgroundImage = AssetImage('assets/images/fon1.png');
                   ? const Center(child: CircularProgressIndicator())
                   : _buildMenuContent(l10n),
             ),
-            
             // Блок рекламы
-            _buildBannerWidget(),
+            // Убираем жесткий SizedBox, позволяя _buildBannerWidget
+            // полностью контролировать размер
+            _adBannerService.createBannerWidget(),
           ],
         ),
       ),
     );
   }
 
+  // Вынесенный в отдельный метод контент меню с автовысотой
   // Вынесенный в отдельный метод контент меню
   Widget _buildMenuContent(AppLocalizations l10n) {
     return Padding(
@@ -292,21 +260,54 @@ static const _backgroundImage = AssetImage('assets/images/fon1.png');
     );
   }
 
-  // Исправленный виджет баннера
-  Widget _buildBannerWidget() {
-    return Container(
-      alignment: Alignment.bottomCenter,
-      padding: const EdgeInsets.only(bottom: 8),
-      // height: _isBannerLoaded ? 60 : 0,
-      child: _bannerAd != null && _isBannerLoaded
-          ? IgnorePointer(
-          child: AdWidget(bannerAd: _bannerAd!)
-          )
-          : const SizedBox.shrink(),
-    );
-  }
+  // Обновленный виджет баннера с использованием сервиса
+  // Widget _buildBannerWidget() {
+  //   return _adBannerService.createBannerWidget();
+  // }
 
-  Widget _buildMenuTile({
+  // // Отладочный виджет для мониторинга производительности
+  // Widget _buildDebugInfo() {
+  //   return SizedBox(
+  //     height: 120,
+  //     child: Container(
+  //       margin: const EdgeInsets.all(8),
+  //       padding: const EdgeInsets.all(8),
+  //       decoration: BoxDecoration(
+  //         color: Colors.black54,
+  //         borderRadius: BorderRadius.circular(8),
+  //       ),
+  //       child: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         mainAxisSize: MainAxisSize.min,
+  //         children: [
+  //           const Text(
+  //             '🔍 Performance Debug Info',
+  //             style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+  //           ),
+  //           const SizedBox(height: 4),
+  //           Expanded(
+  //             child: StreamBuilder<BannerStats>(
+  //               stream: _adBannerService.statsStream,
+  //               builder: (context, snapshot) {
+  //                 if (!snapshot.hasData) return const SizedBox.shrink();
+                  
+  //                 final stats = snapshot.data!;
+  //                 return Text(
+  //                   '📊 Active: ${stats.activeBanners} | Pool: ${stats.poolSize} | Views: ${stats.platformViewCount}\n'
+  //                   '✅ Created: ${stats.totalCreated} | 🗑️ Destroyed: ${stats.totalDestroyed}\n'
+  //                   '📈 Success: ${stats.successfulLoads} | ❌ Failed: ${stats.failedLoads}',
+  //                   style: const TextStyle(color: Colors.white70, fontSize: 10),
+  //                 );
+  //               },
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
+
+   Widget _buildMenuTile({
     required IconData icon,
     required String title,
     required Color color,

@@ -8,6 +8,8 @@ import 'package:period_tracker/screens/menu_screen.dart';
 import 'package:period_tracker/services/locale_service.dart';
 import 'package:period_tracker/services/simple_background_service.dart';
 import 'package:period_tracker/services/cache_service.dart';
+import 'package:period_tracker/services/ad_banner_service.dart';
+import 'package:period_tracker/utils/object_pool.dart';
 //import 'package:period_tracker/services/notification_service.dart';
 
 void main() async {
@@ -40,6 +42,10 @@ void main() async {
   final cacheService = CacheService();
   await cacheService.initialize();
 
+  // Инициализируем сервис управления баннерами
+  final adBannerService = AdBannerService();
+  await adBannerService.initialize();
+
   // Запускаем фоновый сервис
   await SimpleBackgroundService.initialize();
 
@@ -69,7 +75,83 @@ class MyApp extends StatelessWidget {
       supportedLocales: AppLocalizations.supportedLocales,
       home: LocalizedMenuScreen(),
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        return LifecycleWatcher(child: child);
+      },
     );
+  }
+}
+
+/// Виджет для отслеживания lifecycle событий приложения
+class LifecycleWatcher extends StatefulWidget {
+  final Widget? child;
+  
+  const LifecycleWatcher({super.key, this.child});
+
+  @override
+  State<LifecycleWatcher> createState() => _LifecycleWatcherState();
+}
+
+class _LifecycleWatcherState extends State<LifecycleWatcher> 
+    with WidgetsBindingObserver {
+  
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    
+    switch (state) {
+      case AppLifecycleState.paused:
+        // Приложение свернуто - можно освободить ресурсы
+        _onAppPaused();
+        break;
+      case AppLifecycleState.detached:
+        // Приложение отсоединено - освобождаем все ресурсы
+        _onAppDetached();
+        break;
+      case AppLifecycleState.resumed:
+        // Приложение восстановлено - можно переинициализировать сервисы
+        _onAppResumed();
+        break;
+      case AppLifecycleState.inactive:
+        // Неактивное состояние
+        break;
+      case AppLifecycleState.hidden:
+        // Скрытое состояние
+        break;
+    }
+  }
+
+  void _onAppPaused() {
+    debugPrint('App paused - releasing non-critical resources');
+    // Можно приостановить некоторые сервисы
+  }
+
+  void _onAppDetached() {
+    debugPrint('App detached - disposing all resources');
+    // Освобождаем все ресурсы
+    ResourceManager().disposeAll();
+  }
+
+  void _onAppResumed() {
+    debugPrint('App resumed - reinitializing services if needed');
+    // Переинициализируем сервисы при необходимости
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.child ?? const SizedBox.shrink();
   }
 }
 
