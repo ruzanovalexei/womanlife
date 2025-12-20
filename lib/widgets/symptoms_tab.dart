@@ -24,21 +24,22 @@ class _SymptomsTabState extends State<SymptomsTab> {
 
   Future<void> _loadSymptoms() async {
     try {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
-
       final symptoms = await _databaseHelper.getAllSymptomsAsObjects();
-      setState(() {
-        _symptoms = symptoms;
-        _isLoading = false;
-      });
+      
+      if (mounted) {
+        setState(() {
+          _symptoms = symptoms;
+          _isLoading = false;
+          _errorMessage = null;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -177,14 +178,14 @@ class _SymptomsTabState extends State<SymptomsTab> {
     final l10n = AppLocalizations.of(context)!;
 
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         image: DecorationImage(
           image: AssetImage('assets/images/fon1.png'),
           fit: BoxFit.cover,
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: EdgeInsets.all(32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -238,46 +239,41 @@ class _SymptomsTabState extends State<SymptomsTab> {
                                 final symptom = _symptoms[index];
                                 return Card(
                                   margin: const EdgeInsets.symmetric(vertical: 3),
-                                  elevation: 1, // Возвращаем небольшую тень
+                                  elevation: 1,
                                   child: Container(
-                                    height: 56, // Увеличиваем высоту
+                                    height: 56,
                                     child: ListTile(
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0), // Убираем вертикальный отступ полностью
-                                      minLeadingWidth: 14, // Уменьшаем ширину области иконки
-                                      minVerticalPadding: 0, // Убираем минимальный вертикальный отступ
-                                      //visualDensity: VisualDensity(horizontal: 0, vertical: -1), // Более плотное расположение вверх
-                                      titleAlignment: ListTileTitleAlignment.center, // Центрируем title
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                                      minLeadingWidth: 14,
+                                      minVerticalPadding: 0,
+                                      titleAlignment: ListTileTitleAlignment.center,
                                       leading: Icon(
                                         symptom.isDefault ? Icons.star : Icons.circle,
                                         color: symptom.isDefault ? Colors.amber : Colors.grey,
-                                        size: 20, // Оставляем размер иконки
+                                        size: 20,
                                       ),
                                       title: Text(
                                         symptom.name,
-                                        style: const TextStyle(fontSize: 18), // Уменьшаем шрифт
+                                        style: const TextStyle(fontSize: 18),
                                       ),
-                                      // subtitle: Text(
-                                      //   symptom.isDefault ? 'По умолчанию' : 'Пользовательский',
-                                      //   style: const TextStyle(fontSize: 9),
-                                      // ),
                                       trailing: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           IconButton(
                                             onPressed: () => _showEditSymptomDialog(symptom),
-                                            icon: const Icon(Icons.edit, size: 20), // Уменьшаем кнопку
+                                            icon: const Icon(Icons.edit, size: 20),
                                             tooltip: l10n.editButton,
                                             padding: const EdgeInsets.all(2),
-                                            visualDensity: VisualDensity.compact, // Компактная кнопка
+                                            visualDensity: VisualDensity.compact,
                                           ),
                                           if (!symptom.isDefault)
                                             IconButton(
                                               onPressed: () => _showDeleteSymptomDialog(symptom),
-                                              icon: const Icon(Icons.delete, size: 20), // Уменьшаем кнопку
+                                              icon: const Icon(Icons.delete, size: 20),
                                               color: Colors.red,
                                               tooltip: l10n.deleteButton,
                                               padding: const EdgeInsets.all(2),
-                                              visualDensity: VisualDensity.compact, // Компактная кнопка
+                                              visualDensity: VisualDensity.compact,
                                             ),
                                         ],
                                       ),
@@ -285,6 +281,8 @@ class _SymptomsTabState extends State<SymptomsTab> {
                                   ),
                                 );
                               },
+                              // Ленивая загрузка - создаем элементы только при прокрутке
+                              cacheExtent: 20, // Кэшируем 20 элементов
                             ),
             ),
           ],

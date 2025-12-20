@@ -54,25 +54,34 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return MaterialApp(
+      locale: localeService.locale,
+      onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
+      theme: ThemeData(
+        primarySwatch: Colors.pink,
+      ),
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: LocalizedMenuScreen(),
+      debugShowCheckedModeBanner: false,
+    );
+  }
+}
+
+// Отдельный виджет для локализованного экрана меню
+class LocalizedMenuScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: localeService,
       builder: (context, _) {
-        return MaterialApp(
-          locale: localeService.locale,
-          onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
-          theme: ThemeData(
-            primarySwatch: Colors.pink,
-          ),
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: const MenuScreen(),
-          debugShowCheckedModeBanner: false,
-        );
+        // Только локализация обновляется, остальная часть не перестраивается
+        return MenuScreen();
       },
     );
   }

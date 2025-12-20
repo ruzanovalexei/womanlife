@@ -71,7 +71,12 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _initializeNotifications();
     _initializeBanner();
-    _loadData(includeBanner: false);
+    // Переносим загрузку данных в post-frame callback для лучшей производительности
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _loadData(includeBanner: false);
+      }
+    });
   }
 
 
@@ -85,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     });
   }
-
+      
 
   Future<void> _initializeNotifications() async {
     await _notificationService.initialize();
@@ -99,23 +104,31 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadData({bool includeBanner = false}) async {
     try {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
+      // Параллельная загрузка данных
+      final results = await Future.wait([
+        _databaseHelper.getSettings(),
+        _databaseHelper.getAllPeriodRecords(),
+      ]);
       
-      _settings = await _databaseHelper.getSettings();
-      _periodRecords = await _databaseHelper.getAllPeriodRecords();
+      final settings = results[0] as Settings;
+      final periodRecords = results[1] as List<PeriodRecord>;
       
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _settings = settings;
+          _periodRecords = periodRecords;
+          _isLoading = false;
+          _errorMessage = null;
+        });
+      }
       
     } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
     }
   }
 

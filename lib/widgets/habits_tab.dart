@@ -33,16 +33,16 @@ class _HabitsTabState extends State<HabitsTab> {
 
   Future<void> _loadHabits() async {
     try {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
-
-      final executionHabits = await _databaseHelper.getAllHabitExecutions();
-      final measurableHabits = await _databaseHelper.getAllHabitMeasurables();
+      // Параллельная загрузка всех данных
+      final results = await Future.wait([
+        _databaseHelper.getAllHabitExecutions(),
+        _databaseHelper.getAllHabitMeasurables(),
+        _databaseHelper.getAllFrequencyTypes(),
+      ]);
       
-      // Загружаем все FrequencyTypes из базы данных
-      final allFrequencyTypes = await _databaseHelper.getAllFrequencyTypes();
+      final executionHabits = results[0] as List<HabitExecution>;
+      final measurableHabits = results[1] as List<HabitMeasurable>;
+      final allFrequencyTypes = results[2] as List<FrequencyType>;
       
       // Создаем карту всех FrequencyType
       final frequencyTypesMap = <int, FrequencyType>{};
@@ -62,18 +62,23 @@ class _HabitsTabState extends State<HabitsTab> {
         baseFrequencyTypes.add(foundType);
       }
 
-      setState(() {
-        _executionHabits = executionHabits;
-        _measurableHabits = measurableHabits;
-        _frequencyTypes = baseFrequencyTypes;
-        _frequencyTypesMap = frequencyTypesMap;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _executionHabits = executionHabits;
+          _measurableHabits = measurableHabits;
+          _frequencyTypes = baseFrequencyTypes;
+          _frequencyTypesMap = frequencyTypesMap;
+          _isLoading = false;
+          _errorMessage = null;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -309,7 +314,7 @@ class _HabitsTabState extends State<HabitsTab> {
     final l10n = AppLocalizations.of(context)!;
 
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         image: DecorationImage(
           image: AssetImage('assets/images/fon1.png'),
           fit: BoxFit.cover,
@@ -361,7 +366,7 @@ class _HabitsTabState extends State<HabitsTab> {
                           ? Center(
                               child: Text(
                                 l10n.noHabits,
-                                style: const TextStyle(fontSize: 16, color: Colors.grey),
+                                style: TextStyle(fontSize: 16, color: Colors.grey),
                               ),
                             )
                           : ListView.builder(
@@ -375,6 +380,8 @@ class _HabitsTabState extends State<HabitsTab> {
                                   return _buildHabitMeasurableCard(_measurableHabits[measurableIndex]);
                                 }
                               },
+                              // Ленивая загрузка
+                              cacheExtent: 20,
                             ),
             ),
           ],
@@ -406,7 +413,7 @@ class _HabitsTabState extends State<HabitsTab> {
               '${l10n.habitTypeExecution} • ${frequencyType.description}',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[600],
+                color: Colors.grey,
               ),
             ),
           ],
@@ -475,7 +482,7 @@ class _HabitsTabState extends State<HabitsTab> {
               '${l10n.habitTypeMeasurable} • ${frequencyType.description}',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[600],
+                color: Colors.grey,
               ),
             ),
           ],

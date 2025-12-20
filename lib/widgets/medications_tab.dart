@@ -31,16 +31,21 @@ class _MedicationsTabState extends State<MedicationsTab> {
   Future<void> _loadMedications() async {
     try {
       final medications = await _databaseHelper.getAllMedications();
-      setState(() {
-        _medications = medications;
-        _isLoading = false;
-      });
-      print('DEBUG: Loaded ${medications.length} medications.');
+      
+      if (mounted) {
+        setState(() {
+          _medications = medications;
+          _isLoading = false;
+        });
+        print('DEBUG: Loaded ${medications.length} medications.');
+      }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      // TODO: Обработка ошибки загрузки лекарств
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        // TODO: Обработка ошибки загрузки лекарств
+      }
     }
   }
 
@@ -110,14 +115,14 @@ class _MedicationsTabState extends State<MedicationsTab> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         image: DecorationImage(
           image: AssetImage('assets/images/fon1.png'),
           fit: BoxFit.cover,
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -184,6 +189,8 @@ class _MedicationsTabState extends State<MedicationsTab> {
                               ),
                             );
                           },
+                          // Ленивая загрузка
+                          cacheExtent: 20,
                         ),
             ),
           ],

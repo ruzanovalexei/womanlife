@@ -1256,6 +1256,9 @@ class DatabaseHelper {
     try {
       Database db = await database;
       
+      // Сначала проверяем и исправляем структуру таблицы settings
+      await fixSettingsTableStructure();
+      
       // Проверяем, когда была последняя очистка (используем настройки для хранения даты последней очистки)
       // final settings = await getSettings();
       final lastCleanup = await _getLastCleanupDate(db);
@@ -1277,6 +1280,15 @@ class DatabaseHelper {
   /// Получение даты последней очистки кеша
   static Future<DateTime?> _getLastCleanupDate(Database db) async {
     try {
+      // Сначала проверяем, существует ли колонка lastCacheCleanup
+      final tableInfo = await db.rawQuery("PRAGMA table_info($settingsTable)");
+      final columns = tableInfo.map((row) => row['name'] as String).toList();
+      
+      if (!columns.contains('lastCacheCleanup')) {
+        print('lastCacheCleanup column does not exist, returning null');
+        return null;
+      }
+      
       final result = await db.query(settingsTable, limit: 1);
       if (result.isNotEmpty) {
         final lastCleanup = result.first['lastCacheCleanup'];
@@ -1293,6 +1305,15 @@ class DatabaseHelper {
   /// Установка даты последней очистки кеша
   static Future<void> _setLastCleanupDate(Database db, DateTime date) async {
     try {
+      // Проверяем, существует ли колонка lastCacheCleanup
+      final tableInfo = await db.rawQuery("PRAGMA table_info($settingsTable)");
+      final columns = tableInfo.map((row) => row['name'] as String).toList();
+      
+      if (!columns.contains('lastCacheCleanup')) {
+        print('lastCacheCleanup column does not exist, skipping update');
+        return;
+      }
+      
       // Получаем первую (и единственную) запись настроек
       final settingsResult = await db.query(settingsTable, limit: 1);
       if (settingsResult.isNotEmpty) {
@@ -1301,6 +1322,7 @@ class DatabaseHelper {
           await db.update(settingsTable, {
             'lastCacheCleanup': MyDateUtils.toUtcDateString(date),
           }, where: 'id = ?', whereArgs: [settingsId]);
+          print('Successfully updated lastCacheCleanup date');
         }
       }
     } catch (e) {
@@ -1383,16 +1405,26 @@ class DatabaseHelper {
       final tableInfo = await db.rawQuery("PRAGMA table_info($settingsTable)");
       final columns = tableInfo.map((row) => row['name'] as String).toList();
       
+      // Проверяем и добавляем колонку lastCacheCleanup
       if (!columns.contains('lastCacheCleanup')) {
-        await db.execute('ALTER TABLE $settingsTable ADD COLUMN lastCacheCleanup TEXT');
-        print('Successfully added lastCacheCleanup column to settings table');
+        try {
+          await db.execute('ALTER TABLE $settingsTable ADD COLUMN lastCacheCleanup TEXT');
+          print('Successfully added lastCacheCleanup column to settings table');
+        } catch (e) {
+          print('Error adding lastCacheCleanup column: $e');
+        }
       } else {
         print('lastCacheCleanup column already exists in settings table');
       }
       
+      // Проверяем и добавляем колонку dataRetentionPeriod
       if (!columns.contains('dataRetentionPeriod')) {
-        await db.execute('ALTER TABLE $settingsTable ADD COLUMN dataRetentionPeriod INTEGER');
-        print('Successfully added dataRetentionPeriod column to settings table');
+        try {
+          await db.execute('ALTER TABLE $settingsTable ADD COLUMN dataRetentionPeriod INTEGER');
+          print('Successfully added dataRetentionPeriod column to settings table');
+        } catch (e) {
+          print('Error adding dataRetentionPeriod column: $e');
+        }
       } else {
         print('dataRetentionPeriod column already exists in settings table');
       }

@@ -152,7 +152,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
     
     return DefaultTabController(
-      length: 3,
+      length: 1, //количество вкладок
       child: Scaffold(
         appBar: AppBar(
           title: Text(l10n.settingsTitle),

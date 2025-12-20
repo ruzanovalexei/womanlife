@@ -202,10 +202,15 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
     _initializeScreen();
   }
 
-  // Оптимизированная инициализация экрана
+  // Оптимизированная инициализация экрана - только легкие операции
   void _initializeScreen() {
     _createAdBanner();
-    _loadData();
+    // Переносим загрузку данных в post-frame callback для лучшей производительности
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _loadData();
+      }
+    });
   }
 
   // Создание баннера
@@ -232,7 +237,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
     );
   }
 
-  // Оптимизированное создание баннера
+  // Оптимизированное создание баннера - не блокирует UI
   void _createAdBanner() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && !isBannerAlreadyCreated) {
@@ -243,6 +248,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
           });
         } catch (e) {
           debugPrint('Banner creation failed: $e');
+          // Не блокируем UI при ошибке создания баннера
         }
       }
     });
@@ -251,32 +257,43 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
   // Оптимизированная загрузка данных - один setState
   Future<void> _loadData() async {
     try {
-      // Загружаем заметку дня
-      DayNote? note = await _databaseHelper.getDayNote(widget.selectedDate);
-      _dayNote = note ?? DayNote(
-        date: widget.selectedDate,
-        symptoms: [],
-      );
+      // Параллельная загрузка всех данных
+      final results = await Future.wait([
+        _databaseHelper.getDayNote(widget.selectedDate),
+        _databaseHelper.getAllPeriodRecords(),
+        _databaseHelper.getLastPeriodRecord(),
+        _databaseHelper.getActivePeriodRecord(),
+        _databaseHelper.getAllMedications(),
+        _databaseHelper.getMedicationTakenRecordsForDay(widget.selectedDate),
+        _loadAllSymptoms(), // Возвращает Future<void>
+      ]);
 
-      // Загружаем все периоды из базы данных
-      _allPeriodRecords = await _databaseHelper.getAllPeriodRecords();
+      // Обработка результатов
+      final note = results[0] as DayNote?;
+      final allPeriodRecords = results[1] as List<PeriodRecord>;
+      final lastPeriod = results[2] as PeriodRecord?;
+      final activePeriod = results[3] as PeriodRecord?;
+      final allMedications = results[4] as List<Medication>;
+      final takenRecords = results[5] as List<MedicationTakenRecord>;
       
-      // Загружаем последний период и активный период
-      _lastPeriod = await _databaseHelper.getLastPeriodRecord();
-      _activePeriod = await _databaseHelper.getActivePeriodRecord();
-
-      await _loadAllSymptoms();
-      _allMedications = await _databaseHelper.getAllMedications();
-      _takenRecords = await _databaseHelper.getMedicationTakenRecordsForDay(widget.selectedDate);
-      
+      // Обновляем все состояния за один setState
       if (mounted) {
         setState(() {
+          _dayNote = note ?? DayNote(
+            date: widget.selectedDate,
+            symptoms: [],
+          );
+          _allPeriodRecords = allPeriodRecords;
+          _lastPeriod = lastPeriod;
+          _activePeriod = activePeriod;
+          _allMedications = allMedications;
+          _takenRecords = takenRecords;
           _isLoading = false;
           _errorMessage = null;
         });
         
-        // Проверяем разрешения после загрузки данных
-        await PermissionsService.checkAndRequestPermissions(context);
+        // Проверяем разрешения после загрузки данных (без блокировки UI)
+        PermissionsService.checkAndRequestPermissions(context).catchError((_) {});
       }
     } catch (e) {
       if (mounted) {

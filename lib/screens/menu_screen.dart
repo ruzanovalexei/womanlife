@@ -44,17 +44,28 @@ class _MenuScreenState extends State<MenuScreen> {
     super.dispose();
   }
 
-  // Оптимизированная инициализация экрана
+  // Оптимизированная инициализация экрана - только легкие операции
   void _initializeScreen() {
-    _loadData();
+    // Переносим загрузку данных в post-frame callback для лучшей производительности
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _loadData();
+      }
+    });
     _createAdBanner();
   }
 
   // Оптимизированная загрузка данных - один setState
   Future<void> _loadData() async {
     try {
-      final settings = await _databaseHelper.getSettings();
-      final periodRecords = await _databaseHelper.getAllPeriodRecords();
+      // Параллельная загрузка данных
+      final results = await Future.wait([
+        _databaseHelper.getSettings(),
+        _databaseHelper.getAllPeriodRecords(),
+      ]);
+      
+      final settings = results[0] as Settings;
+      final periodRecords = results[1] as List<PeriodRecord>;
       
       if (mounted) {
         setState(() {

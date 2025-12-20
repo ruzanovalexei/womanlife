@@ -24,15 +24,19 @@ class _CacheManagementTabState extends State<CacheManagementTab> {
   }
 
   Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-    });
-
     try {
-      final dbInfo = await _cacheService.getDatabaseInfo();
-      final stats = await _cacheService.getUsageStatistics();
-      final recommendations = await _cacheService.getOptimizationRecommendations();
-      final formattedSize = await _cacheService.getFormattedDatabaseSize();
+      // Параллельная загрузка всех данных кеша
+      final results = await Future.wait([
+        _cacheService.getDatabaseInfo(),
+        _cacheService.getUsageStatistics(),
+        _cacheService.getOptimizationRecommendations(),
+        _cacheService.getFormattedDatabaseSize(),
+      ]);
+      
+      final dbInfo = results[0] as Map<String, dynamic>;
+      final stats = results[1] as Map<String, dynamic>;
+      final recommendations = results[2] as List<String>;
+      final formattedSize = results[3] as String;
 
       if (mounted) {
         setState(() {
