@@ -286,7 +286,7 @@ static const _backgroundImage = AssetImage('assets/images/fon1.png');
     return Container(
       alignment: Alignment.bottomCenter,
       padding: const EdgeInsets.only(bottom: 8),
-      height: _isBannerLoaded ? 60 : 0,
+      // height: _isBannerLoaded ? 60 : 0,
       child: _bannerAd != null && _isBannerLoaded
           ? IgnorePointer(
           child: AdWidget(bannerAd: _bannerAd!)

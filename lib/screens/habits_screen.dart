@@ -711,6 +711,18 @@ class _HabitsScreenState extends State<HabitsScreen> {
     final record = _measurableRecords[habit.id];
     final actualValue = record?.actualValue;
 
+    // Определяем цвет текста и иконки в зависимости от соотношения факта и цели
+    Color getFactTextColor() {
+      if (actualValue != null) {
+        if (actualValue < habit.goal) {
+          return Colors.orange; // Оранжевый если факт меньше цели
+        } else {
+          return Colors.green; // Зеленый если факт больше или равен цели
+        }
+      }
+      return Colors.grey;
+    }
+
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
@@ -718,21 +730,38 @@ class _HabitsScreenState extends State<HabitsScreen> {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.blue.shade200),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.flag, size: 16, color: Colors.blue),
-          const SizedBox(width: 8),
-          Text(
-            'Цель: ${habit.goal} ${habit.unit}',
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          Row(
+            children: [
+              const Icon(Icons.flag, size: 16, color: Colors.blue),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Цель: ${habit.goal} ${habit.unit}',
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                ),
+              ),
+            ],
           ),
           if (actualValue != null) ...[
-            const SizedBox(width: 16),
-            const Icon(Icons.check_circle, size: 16, color: Colors.green),
-            const SizedBox(width: 4),
-            Text(
-              'Факт: $actualValue ${habit.unit}',
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.green),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(Icons.check_circle, size: 16, color: getFactTextColor()),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Факт: $actualValue ${habit.unit}',
+                    style: TextStyle(
+                      fontSize: 14, 
+                      fontWeight: FontWeight.w500, 
+                      color: getFactTextColor(),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ],

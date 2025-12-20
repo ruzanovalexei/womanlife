@@ -850,7 +850,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
     return Container(
       alignment: Alignment.bottomCenter,
       padding: const EdgeInsets.only(bottom: 8),
-      height: isBannerAlreadyCreated ? 60 : 0, // Фиксированная высота
+      // height: isBannerAlreadyCreated ? 60 : 0, // Фиксированная высота
       child: isBannerAlreadyCreated 
                 ? IgnorePointer(
               child: AdWidget(bannerAd: banner),
