@@ -281,6 +281,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
       });
     } catch (e) {
       _showErrorSnackBar('Ошибка при обновлении привычки: $e');
+      print('Ошибка при обновлении привычки: $e');
     }
   }
 
@@ -366,7 +367,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
         actualValue: value,
         createdAt: now,
       ) ?? HabitMeasurableRecord(
-        habitId: habit.id!,
+        habitId: habit.id ?? 0, // Используем 0 как значение по умолчанию, если id null
         isCompleted: true,
         actualValue: value,
         executionDate: _selectedDate,
@@ -379,19 +380,15 @@ class _HabitsScreenState extends State<HabitsScreen> {
         await _databaseHelper.updateHabitMeasurableRecord(newRecord);
       }
     } else {
-      // Обновляем существующую запись
-      if (existingRecord != null) {
-        final updatedRecord = existingRecord.copyWith(
-          isCompleted: false,
-          actualValue: null,
-        );
-        await _databaseHelper.updateHabitMeasurableRecord(updatedRecord);
+      // Удаляем запись из БД при снятии галки
+      if (existingRecord != null && existingRecord.id != null) {
+        await _databaseHelper.deleteHabitMeasurableRecord(existingRecord.id!);
       }
     }
 
     // Обновляем локальное состояние
     setState(() {
-      if (isCompleted) {
+      if (isCompleted && habit.id != null) {
         _measurableRecords[habit.id!] = existingRecord?.copyWith(
           isCompleted: true,
           actualValue: value,
@@ -404,11 +401,9 @@ class _HabitsScreenState extends State<HabitsScreen> {
           createdAt: now,
         );
       } else {
+        // Удаляем запись из локального состояния при снятии галки
         if (existingRecord != null) {
-          _measurableRecords[habit.id!] = existingRecord.copyWith(
-            isCompleted: false,
-            actualValue: null,
-          );
+          _measurableRecords.remove(habit.id);
         }
       }
     });
