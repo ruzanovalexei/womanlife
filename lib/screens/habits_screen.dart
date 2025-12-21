@@ -553,6 +553,31 @@ class _HabitsScreenState extends State<HabitsScreen> {
       });
     }
 
+    // Сортируем привычки: сначала невыполненные, потом выполненные
+    allHabits.sort((a, b) {
+      final habitA = a['habit'];
+      final habitB = b['habit'];
+      final typeA = a['type'];
+      final typeB = b['type'];
+      
+      // Получаем статус выполнения для каждой привычки
+      final isCompletedA = typeA == 'execution' 
+          ? (_executionRecords[habitA.id]?.isCompleted ?? false)
+          : (_measurableRecords[habitA.id]?.isCompleted ?? false);
+          
+      final isCompletedB = typeB == 'execution' 
+          ? (_executionRecords[habitB.id]?.isCompleted ?? false)
+          : (_measurableRecords[habitB.id]?.isCompleted ?? false);
+      
+      // Сначала сравниваем по статусу выполнения
+      if (isCompletedA != isCompletedB) {
+        return isCompletedA ? 1 : -1; // невыполненные (-1) идут первыми
+      }
+      
+      // Если статус одинаковый, сортируем по дате начала (новые первыми)
+      return habitB.startDate.compareTo(habitA.startDate);
+    });
+
     if (allHabits.isEmpty) {
       return const Center(
         child: Text(

@@ -602,8 +602,19 @@ class _ListsScreenState extends State<ListsScreen> {
                   );
                 }
 
+                // Сортируем элементы: сначала невыполненные, потом выполненные
+                final sortedItems = items.toList()
+                  ..sort((a, b) {
+                    // Сначала сравниваем по статусу выполнения
+                    if (a.isCompleted != b.isCompleted) {
+                      return a.isCompleted ? 1 : -1; // невыполненные (-1) идут первыми
+                    }
+                    // Если статус одинаковый, сортируем по дате создания (новые первыми)
+                    return b.createdDate.compareTo(a.createdDate);
+                  });
+
                 return Column(
-                  children: items.map((item) {
+                  children: sortedItems.map((item) {
                     return _buildListItem(item, l10n);
                   }).toList(),
                 );
