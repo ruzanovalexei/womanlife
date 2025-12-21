@@ -9,7 +9,8 @@ import '../models/habit_execution_record.dart';
 import '../models/habit_measurable_record.dart';
 import '../utils/date_utils.dart';
 import 'habits_settings_screen.dart';
-import 'package:yandex_mobileads/mobile_ads.dart';
+import '../services/ad_banner_service.dart';
+// import 'package:yandex_mobileads/mobile_ads.dart';
 
 class HabitsScreen extends StatefulWidget {
   const HabitsScreen({super.key});
@@ -20,6 +21,7 @@ class HabitsScreen extends StatefulWidget {
 
 class _HabitsScreenState extends State<HabitsScreen> {
   final _databaseHelper = DatabaseHelper();
+  final _adBannerService = AdBannerService();
   late DateTime _selectedDate;
   
   List<HabitExecution> _executionHabits = [];
@@ -33,10 +35,6 @@ class _HabitsScreenState extends State<HabitsScreen> {
   bool _isLoading = true;
   String? _errorMessage;
 
-  // Реклама
-  late BannerAd banner;
-  var isBannerAlreadyCreated = false;
-
   @override
   void initState() {
     super.initState();
@@ -46,49 +44,10 @@ class _HabitsScreenState extends State<HabitsScreen> {
 
   // Оптимизированная инициализация экрана
   void _initializeScreen() {
-    _createAdBanner();
     _loadData();
   }
 
-  // Создание баннера
-  BannerAd _createBanner() {
-    final screenWidth = MediaQuery.of(context).size.width.round();
-    final adSize = BannerAdSize.sticky(width: screenWidth);
-    
-    return BannerAd(
-      adUnitId: 'R-M-17946414-4',
-      adSize: adSize,
-      adRequest: const AdRequest(),
-      onAdLoaded: () {
-        if (mounted) {
-          setState(() {}); // Обновляем только для показа баннера
-        }
-      },
-      onAdFailedToLoad: (error) {
-        debugPrint('Ad failed to load: $error');
-      },
-      onAdClicked: () {},
-      onLeftApplication: () {},
-      onReturnedToApplication: () {},
-      onImpression: (impressionData) {}
-    );
-  }
-
-  // Оптимизированное создание баннера
-  void _createAdBanner() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !isBannerAlreadyCreated) {
-        try {
-          banner = _createBanner();
-          setState(() {
-            isBannerAlreadyCreated = true;
-          });
-        } catch (e) {
-          debugPrint('Banner creation failed: $e');
-        }
-      }
-    });
-  }
+  
 
   Future<void> _loadData() async {
     try {
@@ -465,19 +424,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
     );
   }
 
-  // Вынесенный виджет баннера
-  Widget _buildBannerWidget() {
-    return Container(
-      alignment: Alignment.bottomCenter,
-      padding: const EdgeInsets.only(bottom: 8),
-      height: isBannerAlreadyCreated ? 60 : 0, // Фиксированная высота
-      child: isBannerAlreadyCreated 
-               ? IgnorePointer(
-              child: AdWidget(bannerAd: banner),
-            )
-          : const SizedBox.shrink(),
-    );
-  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -502,7 +449,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
             ),
             
             // Блок рекламы
-            _buildBannerWidget(),
+            _adBannerService.createBannerWidget(),
           ],
         ),
       ),

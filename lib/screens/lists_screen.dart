@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+// import 'package:flutter/services.dart';
 import 'package:period_tracker/l10n/app_localizations.dart';
 import 'package:period_tracker/database/database_helper.dart';
 import 'package:period_tracker/models/list_model.dart';
 import 'package:period_tracker/models/list_item_model.dart';
 // import 'package:period_tracker/utils/date_utils.dart';
 import 'menu_screen.dart';
-import 'package:yandex_mobileads/mobile_ads.dart';
+import '../services/ad_banner_service.dart';
+// import 'package:yandex_mobileads/mobile_ads.dart';
 
 class ListsScreen extends StatefulWidget {
   const ListsScreen({super.key});
@@ -17,16 +18,13 @@ class ListsScreen extends StatefulWidget {
 
 class _ListsScreenState extends State<ListsScreen> {
   final _databaseHelper = DatabaseHelper();
+  final _adBannerService = AdBannerService();
   late List<ListModel> _lists;
   bool _isLoading = true;
   String? _errorMessage;
   static const _backgroundImage = AssetImage('assets/images/fon1.png');
   // ID открытого списка (только один список может быть открыт одновременно)
   int? _expandedListId;
-
-  // Реклама
-  late BannerAd banner;
-  var isBannerAlreadyCreated = false;
 
   @override
   void initState() {
@@ -36,49 +34,10 @@ class _ListsScreenState extends State<ListsScreen> {
 
   // Оптимизированная инициализация экрана
   void _initializeScreen() {
-    _createAdBanner();
     _loadData();
   }
 
-  // Создание баннера
-  BannerAd _createBanner() {
-    final screenWidth = MediaQuery.of(context).size.width.round();
-    final adSize = BannerAdSize.sticky(width: screenWidth);
-    
-    return BannerAd(
-      adUnitId: 'R-M-17946414-5',
-      adSize: adSize,
-      adRequest: const AdRequest(),
-      onAdLoaded: () {
-        if (mounted) {
-          setState(() {}); // Обновляем только для показа баннера
-        }
-      },
-      onAdFailedToLoad: (error) {
-        debugPrint('Ad failed to load: $error');
-      },
-      onAdClicked: () {},
-      onLeftApplication: () {},
-      onReturnedToApplication: () {},
-      onImpression: (impressionData) {}
-    );
-  }
-
-  // Оптимизированное создание баннера
-  void _createAdBanner() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !isBannerAlreadyCreated) {
-        try {
-          banner = _createBanner();
-          setState(() {
-            isBannerAlreadyCreated = true;
-          });
-        } catch (e) {
-          debugPrint('Banner creation failed: $e');
-        }
-      }
-    });
-  }
+  
 
   // Оптимизированная загрузка данных - один setState
   Future<void> _loadData() async {
@@ -396,7 +355,7 @@ class _ListsScreenState extends State<ListsScreen> {
             ),
             
             // Блок рекламы
-            _buildBannerWidget(),
+            _adBannerService.createBannerWidget(),
           ],
         ),
       ),
@@ -509,19 +468,7 @@ class _ListsScreenState extends State<ListsScreen> {
     );
   }
 
-  // Вынесенный виджет баннера
-  Widget _buildBannerWidget() {
-    return Container(
-      alignment: Alignment.bottomCenter,
-      padding: const EdgeInsets.only(bottom: 8),
-      height: isBannerAlreadyCreated ? 60 : 0, // Фиксированная высота
-      child: isBannerAlreadyCreated 
-          ? IgnorePointer(
-              child: AdWidget(bannerAd: banner),
-            )
-          : const SizedBox.shrink(),
-    );
-  }
+  
 
   Widget _buildListBlock(ListModel list, AppLocalizations l10n) {
     final isExpanded = _expandedListId == list.id;

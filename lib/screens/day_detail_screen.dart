@@ -13,8 +13,9 @@ import '../models/medication.dart';
 import '../models/medication_taken_record.dart'; // Импортируем MedicationTakenRecord
 //import '../screens/home_screen.dart';
 
-import 'package:yandex_mobileads/mobile_ads.dart';
+// import 'package:yandex_mobileads/mobile_ads.dart';
 import '../services/permissions_service.dart';
+import '../services/ad_banner_service.dart';
 import 'home_screen.dart';
 import 'menu_screen.dart';
 import 'medications_screen.dart';
@@ -74,13 +75,12 @@ class DayDetailScreen extends StatefulWidget {
 
 class _DayDetailScreenState extends State<DayDetailScreen> {
   final _databaseHelper = DatabaseHelper();
+  final _adBannerService = AdBannerService();
   late DayNote _dayNote;
   bool _isLoading = true;
   String? _errorMessage;
   
   // Реклама
-  late BannerAd banner;
-  var isBannerAlreadyCreated = false;
   static const _backgroundImage = AssetImage('assets/images/fon1.png');
 
   PeriodRecord? _lastPeriod;
@@ -204,7 +204,6 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
 
   // Оптимизированная инициализация экрана - только легкие операции
   void _initializeScreen() {
-    _createAdBanner();
     // Переносим загрузку данных в post-frame callback для лучшей производительности
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -213,46 +212,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
     });
   }
 
-  // Создание баннера
-  BannerAd _createBanner() {
-    final screenWidth = MediaQuery.of(context).size.width.round();
-    final adSize = BannerAdSize.sticky(width: screenWidth);
-    
-    return BannerAd(
-      adUnitId: 'R-M-17946414-3',
-      adSize: adSize,
-      adRequest: const AdRequest(),
-      onAdLoaded: () {
-        if (mounted) {
-          setState(() {}); // Обновляем только для показа баннера
-        }
-      },
-      onAdFailedToLoad: (error) {
-        debugPrint('Ad failed to load: $error');
-      },
-      onAdClicked: () {},
-      onLeftApplication: () {},
-      onReturnedToApplication: () {},
-      onImpression: (impressionData) {}
-    );
-  }
-
-  // Оптимизированное создание баннера - не блокирует UI
-  void _createAdBanner() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !isBannerAlreadyCreated) {
-        try {
-          banner = _createBanner();
-          setState(() {
-            isBannerAlreadyCreated = true;
-          });
-        } catch (e) {
-          debugPrint('Banner creation failed: $e');
-          // Не блокируем UI при ошибке создания баннера
-        }
-      }
-    });
-  }
+  
 
   // Оптимизированная загрузка данных - один setState
   Future<void> _loadData() async {
@@ -731,7 +691,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
             ),
             
             // Блок рекламы
-            _buildBannerWidget(),
+            _adBannerService.createBannerWidget(),
           ],
         ),
       ),
@@ -862,19 +822,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
     );
   }
 
-  // Вынесенный виджет баннера
-  Widget _buildBannerWidget() {
-    return Container(
-      alignment: Alignment.bottomCenter,
-      padding: const EdgeInsets.only(bottom: 8),
-      // height: isBannerAlreadyCreated ? 60 : 0, // Фиксированная высота
-      child: isBannerAlreadyCreated 
-                ? IgnorePointer(
-              child: AdWidget(bannerAd: banner),
-            )
-          : const SizedBox.shrink(),
-    );
-  }
+  
 
 
   // Блок "Месячные"

@@ -11,7 +11,7 @@ import 'day_detail_screen.dart';
 
 
 
-import 'package:yandex_mobileads/mobile_ads.dart';
+// import 'package:yandex_mobileads/mobile_ads.dart';
 
 
 
@@ -22,6 +22,7 @@ import 'package:yandex_mobileads/mobile_ads.dart';
 import '../database/database_helper.dart';
 import '../services/notification_service.dart';
 import '../services/permissions_service.dart';
+import '../services/ad_banner_service.dart';
 //import '../utils/date_utils.dart'; // Добавляем импорт
 class HomeScreen extends StatefulWidget {
   final bool calledFromDetailScreen; // Указывает, был ли вызван из детального экрана
@@ -38,6 +39,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _databaseHelper = DatabaseHelper();
   final _notificationService = NotificationService();
+  final _adBannerService = AdBannerService();
   late Settings _settings;
   List<PeriodRecord> _periodRecords = [];
   bool _isLoading = true;
@@ -45,32 +47,13 @@ class _HomeScreenState extends State<HomeScreen> {
   DateTime _lastSelectedDate = DateTime.now(); // Добавляем последнюю выбранную дату
   static const _backgroundImage = AssetImage('assets/images/fon1.png');
 
-  late BannerAd banner;
-  var isBannerAlreadyCreated = false;
-
-  _createBanner() {
-    final screenWidth = MediaQuery.of(context).size.width.round();
-    final adSize = BannerAdSize.sticky(width: screenWidth);
-    
-    return BannerAd(
-      adUnitId: 'R-M-17946414-4',
-      adSize: adSize,
-      adRequest: const AdRequest(),
-      onAdLoaded: () {},
-      onAdFailedToLoad: (error) {},
-      onAdClicked: () {},
-      onLeftApplication: () {},
-      onReturnedToApplication: () {},
-      onImpression: (impressionData) {}
-    );
-  }
+  
 
 
   @override
   void initState() {
     super.initState();
     _initializeNotifications();
-    _initializeBanner();
     // Переносим загрузку данных в post-frame callback для лучшей производительности
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -80,16 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
 
-  void _initializeBanner() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        banner = _createBanner();
-        setState(() {
-          isBannerAlreadyCreated = true;
-        });
-      }
-    });
-  }
+  
       
 
   Future<void> _initializeNotifications() async {
@@ -240,7 +214,7 @@ Widget build(BuildContext context) {
           Expanded(
             child: _buildMainContent(l10n),
           ),
-          _buildBanner(),
+          _adBannerService.createBannerWidget(),
         ],
       ),
     ),
@@ -280,22 +254,5 @@ Widget _buildErrorWidget(AppLocalizations l10n) {
   );
 }
 
-// Widget _buildBanner() {
-//   return Container(
-//     alignment: Alignment.bottomCenter,
-//     child: isBannerAlreadyCreated ? AdWidget(bannerAd: banner) : const SizedBox.shrink(),
-//   );
-// }
-  Widget _buildBanner() {
-    return Container(
-      alignment: Alignment.bottomCenter,
-      padding: const EdgeInsets.only(bottom: 8),
-      height: isBannerAlreadyCreated ? 60 : 0, // Фиксированная высота
-      child: isBannerAlreadyCreated 
-              ? IgnorePointer(
-              child: AdWidget(bannerAd: banner),
-            )
-          : const SizedBox.shrink(),
-    );
-  }
+
 }

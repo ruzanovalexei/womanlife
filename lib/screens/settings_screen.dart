@@ -6,10 +6,11 @@ import '../database/database_helper.dart';
 import '../models/settings.dart';
 import '../services/locale_service.dart';
 import '../services/permissions_service.dart';
+import '../services/ad_banner_service.dart';
 import '../widgets/settings_tab.dart';
 // import '../widgets/symptoms_tab.dart';
 // import '../widgets/cache_management_tab.dart';
-import 'package:yandex_mobileads/mobile_ads.dart';
+// import 'package:yandex_mobileads/mobile_ads.dart';
 //import 'package:yandex_mobileads/ad_widget.dart';
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -20,12 +21,11 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final _databaseHelper = DatabaseHelper();
+  final _adBannerService = AdBannerService();
   late Settings _settings;
   bool _isLoading = true;
   String? _errorMessage;
   static const _backgroundImage = AssetImage('assets/images/fon1.png');
-  late BannerAd banner;
-  var isBannerAlreadyCreated = false;
 
   @override
   void initState() {
@@ -35,48 +35,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   // Оптимизированная инициализация экрана
   void _initializeScreen() {
-    _createAdBanner();
     _loadSettings();
-  }
-
-  // Создание баннера
-  BannerAd _createBanner() {
-    final screenWidth = MediaQuery.of(context).size.width.round();
-    final adSize = BannerAdSize.sticky(width: screenWidth);
-    
-    return BannerAd(
-      adUnitId: 'R-M-17946414-5',
-      adSize: adSize,
-      adRequest: const AdRequest(),
-      onAdLoaded: () {
-        if (mounted) {
-          setState(() {}); // Обновляем только для показа баннера
-        }
-      },
-      onAdFailedToLoad: (error) {
-        debugPrint('Ad failed to load: $error');
-      },
-      onAdClicked: () {},
-      onLeftApplication: () {},
-      onReturnedToApplication: () {},
-      onImpression: (impressionData) {}
-    );
-  }
-
-  // Оптимизированное создание баннера
-  void _createAdBanner() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !isBannerAlreadyCreated) {
-        try {
-          banner = _createBanner();
-          setState(() {
-            isBannerAlreadyCreated = true;
-          });
-        } catch (e) {
-          debugPrint('Banner creation failed: $e');
-        }
-      }
-    });
   }
 
   // Оптимизированная загрузка настроек - один setState
@@ -179,7 +138,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               
               // Блок рекламы
-              _buildBannerWidget(),
+              _adBannerService.createBannerWidget(),
             ],
           ),
         ),
@@ -233,17 +192,5 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // Вынесенный виджет баннера
-  Widget _buildBannerWidget() {
-    return Container(
-      alignment: Alignment.bottomCenter,
-      padding: const EdgeInsets.only(bottom: 8),
-      height: isBannerAlreadyCreated ? 60 : 0, // Фиксированная высота
-      child: isBannerAlreadyCreated 
-          ? IgnorePointer(
-              child: AdWidget(bannerAd: banner),
-            )
-          : const SizedBox.shrink(),
-    );
-  }
+  
 }

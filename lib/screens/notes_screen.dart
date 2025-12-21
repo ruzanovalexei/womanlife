@@ -5,8 +5,9 @@ import 'package:period_tracker/l10n/app_localizations.dart';
 import 'package:period_tracker/database/database_helper.dart';
 import 'package:period_tracker/models/note_model.dart';
 import 'menu_screen.dart';
-import 'package:yandex_mobileads/mobile_ads.dart';
+import '../services/ad_banner_service.dart';
 import 'package:period_tracker/services/speech_service.dart';
+// import 'package:yandex_mobileads/mobile_ads.dart';
 
 class NotesScreen extends StatefulWidget {
   const NotesScreen({super.key});
@@ -18,6 +19,7 @@ class NotesScreen extends StatefulWidget {
 class _NotesScreenState extends State<NotesScreen> {
   final _databaseHelper = DatabaseHelper();
   final _speechService = SpeechService();
+  final _adBannerService = AdBannerService();
   late List<NoteModel> _notes;
   bool _isLoading = true;
   String? _errorMessage;
@@ -28,10 +30,6 @@ class _NotesScreenState extends State<NotesScreen> {
   String _speechWords = '';
   String _selectedLanguage = 'ru_RU';
   
-  // Реклама
-  late BannerAd banner;
-  var isBannerAlreadyCreated = false;
-
   @override
   void initState() {
     super.initState();
@@ -41,7 +39,6 @@ class _NotesScreenState extends State<NotesScreen> {
   // Оптимизированная инициализация экрана
   void _initializeScreen() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _createAdBanner();
       _loadData();
       _initializeSpeechService();
     });
@@ -484,45 +481,7 @@ class _NotesScreenState extends State<NotesScreen> {
     );
   }
 
-  // Создание баннера
-  BannerAd _createBanner() {
-    final screenWidth = MediaQuery.of(context).size.width.round();
-    final adSize = BannerAdSize.sticky(width: screenWidth);
-    
-    return BannerAd(
-      adUnitId: 'R-M-17946414-4',
-      adSize: adSize,
-      adRequest: const AdRequest(),
-      onAdLoaded: () {
-        if (mounted) {
-          setState(() {}); // Обновляем только для показа баннера
-        }
-      },
-      onAdFailedToLoad: (error) {
-        debugPrint('Ad failed to load: $error');
-      },
-      onAdClicked: () {},
-      onLeftApplication: () {},
-      onReturnedToApplication: () {},
-      onImpression: (impressionData) {}
-    );
-  }
-
-  // Оптимизированное создание баннера
-  void _createAdBanner() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !isBannerAlreadyCreated) {
-        try {
-          banner = _createBanner();
-          setState(() {
-            isBannerAlreadyCreated = true;
-          });
-        } catch (e) {
-          debugPrint('Banner creation failed: $e');
-        }
-      }
-    });
-  }
+  
 
   // Оптимизированная загрузка данных - один setState
   Future<void> _loadData() async {
@@ -795,7 +754,7 @@ Widget build(BuildContext context) {
           ),
           
           // Блок рекламы
-          _buildBannerWidget(),
+          _adBannerService.createBannerWidget(),
         ],
       ),
     ),
@@ -939,19 +898,7 @@ Widget _buildEmptyWidget(AppLocalizations l10n) {
   );
 }
 
-// Виджет баннера
-Widget _buildBannerWidget() {
-  return Container(
-    alignment: Alignment.bottomCenter,
-    padding: const EdgeInsets.only(bottom: 8),
-    height: isBannerAlreadyCreated ? 60 : 0,
-    child: isBannerAlreadyCreated 
-          ? IgnorePointer(
-              child: AdWidget(bannerAd: banner),
-            )
-        : const SizedBox.shrink(),
-  );
-}
+
 
   Widget _buildNoteCard(NoteModel note, AppLocalizations l10n) {
     final localeTag = Localizations.localeOf(context).toString();

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:period_tracker/l10n/app_localizations.dart';
 import '../widgets/habits_tab.dart';
-import 'package:yandex_mobileads/mobile_ads.dart';
+import '../services/ad_banner_service.dart';
+// import 'package:yandex_mobileads/mobile_ads.dart';
 
 class HabitsSettingsScreen extends StatefulWidget {
   const HabitsSettingsScreen({super.key});
@@ -11,8 +12,7 @@ class HabitsSettingsScreen extends StatefulWidget {
 }
 
 class _HabitsSettingsScreenState extends State<HabitsSettingsScreen> {
-  late BannerAd banner;
-  var isBannerAlreadyCreated = false;
+  final _adBannerService = AdBannerService();
   static const _backgroundImage = AssetImage('assets/images/fon1.png');
   bool _hasChanges = false; // Флаг для отслеживания изменений
 
@@ -24,48 +24,10 @@ class _HabitsSettingsScreenState extends State<HabitsSettingsScreen> {
 
   // Оптимизированная инициализация экрана
   void _initializeScreen() {
-    _createAdBanner();
+    // Инициализация экрана без создания баннера
   }
 
-  // Создание баннера
-  BannerAd _createBanner() {
-    final screenWidth = MediaQuery.of(context).size.width.round();
-    final adSize = BannerAdSize.sticky(width: screenWidth);
-    
-    return BannerAd(
-      adUnitId: 'R-M-17946414-5',
-      adSize: adSize,
-      adRequest: const AdRequest(),
-      onAdLoaded: () {
-        if (mounted) {
-          setState(() {}); // Обновляем только для показа баннера
-        }
-      },
-      onAdFailedToLoad: (error) {
-        debugPrint('Ad failed to load: $error');
-      },
-      onAdClicked: () {},
-      onLeftApplication: () {},
-      onReturnedToApplication: () {},
-      onImpression: (impressionData) {}
-    );
-  }
-
-  // Оптимизированное создание баннера
-  void _createAdBanner() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !isBannerAlreadyCreated) {
-        try {
-          banner = _createBanner();
-          setState(() {
-            isBannerAlreadyCreated = true;
-          });
-        } catch (e) {
-          debugPrint('Banner creation failed: $e');
-        }
-      }
-    });
-  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -96,7 +58,7 @@ class _HabitsSettingsScreenState extends State<HabitsSettingsScreen> {
             ),
             
             // Блок рекламы
-            _buildBannerWidget(),
+            _adBannerService.createBannerWidget(),
           ],
         ),
       ),
@@ -114,17 +76,5 @@ class _HabitsSettingsScreenState extends State<HabitsSettingsScreen> {
     );
   }
 
-  // Вынесенный виджет баннера
-  Widget _buildBannerWidget() {
-    return Container(
-      alignment: Alignment.bottomCenter,
-      padding: const EdgeInsets.only(bottom: 8),
-      height: isBannerAlreadyCreated ? 60 : 0, // Фиксированная высота
-      child: isBannerAlreadyCreated 
-                ? IgnorePointer(
-              child: AdWidget(bannerAd: banner),
-            )
-          : const SizedBox.shrink(),
-    );
-  }
+  
 }
