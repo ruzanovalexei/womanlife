@@ -306,15 +306,16 @@ class _BannerWidgetState extends State<BannerWidget> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    // Удаляем жесткие ограничения на размер контейнера,
-    // позволяя AdWidget самому определить свои габариты.
-    // Если AdWidget сам не корректно расширяется, можно задать
-    // минимальную высоту, но без `maxHeight`.
-    return SizedBox( 
-      // Yandex sticky баннер обычно имеет высоту 50px
-      height: 50, // Задаем ожидаемую высоту, чтобы зарезервировать место
-      child: _createAdWidget(),
+ Widget build(BuildContext context) {
+    // Оборачиваем AdWidget в IgnorePointer, чтобы избежать случайных нажатий,
+    // если это нежелательное поведение для текущего сценария.
+    return IgnorePointer(
+      ignoring: true, // Всегда игнорировать жесты
+      child: SizedBox( 
+        // Yandex sticky баннер обычно имеет высоту 50px
+        // height: 50, // Задаем ожидаемую высоту, чтобы зарезервировать место, если нужно
+        child: _createAdWidget(),
+      ),
     );
   }
 
@@ -325,8 +326,8 @@ class _BannerWidgetState extends State<BannerWidget> {
     } catch (e) {
       log('BannerWidget: AdWidget not available, using placeholder: $e');
       return Container(
-        height: 50, // Соответствует ожидаемому размеру баннера
-        width: double.infinity,
+        // height: 50, // Соответствует ожидаемому размеру баннера
+        // width: double.infinity,
         color: Colors.grey[300],
         child: const Center(
           child: Text('Ad loading...'),
