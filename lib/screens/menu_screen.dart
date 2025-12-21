@@ -65,7 +65,7 @@ class _MenuScreenState extends State<MenuScreen> {
   Future<void> _initializeServices() async {
     try {
       // Инициализируем сервис баннеров
-      await _adBannerService.initialize();
+      // await _adBannerService.initialize();
       
       // Инициализируем сервис распознавания речи
       await _speechService.initialize();
