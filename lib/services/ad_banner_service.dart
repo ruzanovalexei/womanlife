@@ -12,12 +12,19 @@ class AdBannerService {
   // Константы для оптимизации
   static const int _maxPoolSize = 3;
   static const Duration _cleanupInterval = Duration(seconds: 30);
-  // Тестовый adUnitId для разработки
-  static const String _adUnitId = 'R-M-17946414-3';
+  // Список adUnitId для round-robin ротации
+  static const List<String> _adUnitIds = [
+    'R-M-17946414-3',
+    'R-M-17946414-4',
+    'R-M-17946414-5',
+  ];
 
   // Пул баннеров
   final List<BannerAd> _bannerPool = [];
   final List<BannerAd> _activeBanners = [];
+  
+  // Round-robin индекс для выбора adUnitId
+  int _currentBannerIndex = 0;
   
   // Мониторинг Platform Views
   int _platformViewCount = 0;
@@ -58,13 +65,15 @@ class AdBannerService {
     log('AdBannerService: Initialized successfully');
   }
 
-  /// Создание пула баннеров заранее
+  /// Создание пула баннеров заранее с разными adUnitId
   Future<void> _createBannerPool() async {
     for (int i = 0; i < _maxPoolSize; i++) {
       try {
-        final banner = await _createBanner();
+        final adUnitId = _adUnitIds[i % _adUnitIds.length]; // Используем разные adUnitId
+        final banner = await _createBanner(adUnitId);
         _bannerPool.add(banner);
         _totalBannersCreated++;
+        log('AdBannerService: Created banner $i with adUnitId: $adUnitId');
       } catch (e) {
         log('AdBannerService: Failed to create banner for pool: $e');
       }
@@ -72,35 +81,35 @@ class AdBannerService {
   }
 
   /// Создание одного баннера с переиспользованием объектов
-  Future<BannerAd> _createBanner() async {
+  Future<BannerAd> _createBanner(String adUnitId) async {
     // Переиспользуем объекты размеров для избежания создания новых
     final screenWidth = 320; // Стандартная ширина
     final adSize = BannerAdSize.sticky(width: screenWidth);
     
     final banner = BannerAd(
-      adUnitId: _adUnitId,
+      adUnitId: adUnitId,
       adSize: adSize,
       adRequest: const AdRequest(), // Переиспользуем объект запроса
       onAdLoaded: () {
         _successfulAdLoads++;
         _emitStats();
-        log('AdBannerService: Banner loaded successfully');
+        log('AdBannerService: Banner loaded successfully with adUnitId: $adUnitId');
       },
       onAdFailedToLoad: (error) {
         _failedAdLoads++;
         _emitStats();
-        log('AdBannerService: Ad failed to load: $error');
+        log('AdBannerService: Ad failed to load with adUnitId $adUnitId: $error');
       },
-      onAdClicked: () => log('AdBannerService: Banner clicked'),
-      onLeftApplication: () => log('AdBannerService: Left application'),
-      onReturnedToApplication: () => log('AdBannerService: Returned to application'),
-      onImpression: (impressionData) => log('AdBannerService: Impression tracked'),
+      onAdClicked: () => log('AdBannerService: Banner clicked with adUnitId: $adUnitId'),
+      onLeftApplication: () => log('AdBannerService: Left application with adUnitId: $adUnitId'),
+      onReturnedToApplication: () => log('AdBannerService: Returned to application with adUnitId: $adUnitId'),
+      onImpression: (impressionData) => log('AdBannerService: Impression tracked with adUnitId: $adUnitId'),
     );
     
     return banner;
   }
 
-  /// Получение баннера из пула или создание нового
+  /// Получение баннера из пула или создание нового с round-robin
   Future<BannerAd?> getBanner() async {
     BannerAd? banner;
     
@@ -112,9 +121,13 @@ class AdBannerService {
     // Создаем новый, если пул пуст и лимит не превышен
     else if (_activeBanners.length < _maxPoolSize) {
       try {
-        banner = await _createBanner();
+        // Round-robin выбор adUnitId
+        final adUnitId = _adUnitIds[_currentBannerIndex % _adUnitIds.length];
+        _currentBannerIndex++; // Переходим к следующему adUnitId
+        
+        banner = await _createBanner(adUnitId);
         _totalBannersCreated++;
-        log('AdBannerService: Created new banner');
+        log('AdBannerService: Created new banner with adUnitId: $adUnitId (round-robin index: $_currentBannerIndex)');
       } catch (e) {
         log('AdBannerService: Failed to create new banner: $e');
         return null;
