@@ -12,8 +12,9 @@ import 'package:period_tracker/screens/settings_screen.dart';
 import 'package:period_tracker/screens/lists_screen.dart';
 import 'package:period_tracker/screens/notes_screen.dart';
 import 'package:period_tracker/screens/habits_screen.dart';
+// import 'package:period_tracker/screens/analytics_screen.dart';
 // import 'package:period_tracker/screens/medications_screen.dart';
-// import 'package:yandex_mobileads/mobile_ads.dart';
+// import 'package:yandex_mobileads/mobile_ads.dart';analytics_screen.dart
 // import 'package:yandex_mobileads/ad_widget.dart'; // Добавляем импорт AdWidget
 
 class MenuScreen extends StatefulWidget {
@@ -107,7 +108,7 @@ class _MenuScreenState extends State<MenuScreen> {
     }
   }
 
-  void _onMenuItemTap(int index) {
+  Future<void> _onMenuItemTap(int index) async {
     switch (index) {
       case 0:
         // Кнопка "Здоровье" - открываем детальный экран на текущую дату
@@ -128,13 +129,23 @@ class _MenuScreenState extends State<MenuScreen> {
         }
         break;
       case 1:
-        // Navigator.push(
+        // await _adBannerService.showRewardedAd(
+        //   context: context,
+        //   onAdCompleted: (reward) {
+        //   // Выдать награду пользователю
+        //           Navigator.push(
         //   context,
-        //   MaterialPageRoute(builder: (context) => const MedicationsScreen()),
+        //   MaterialPageRoute(builder: (context) => const AnalyticsScreen()),
         // ).then((_) {
         //   _loadData();
         // });
-        break;
+        //   print('Получено: ${reward.amount} ${reward.type}');
+        //   },
+        //     onAdDismissed: () {
+        //       print('Реклама закрыта');
+        //   },
+        //   );
+        // break;
       case 2:
         Navigator.push(
           context,

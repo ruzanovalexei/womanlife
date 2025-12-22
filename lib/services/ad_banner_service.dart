@@ -3,27 +3,39 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:yandex_mobileads/mobile_ads.dart';
 
-/// Сервис для управления баннерами с пулом и мониторингом Platform Views
+/// Сервис для управления баннерами и рекламой с вознаграждением с пулом и мониторингом Platform Views
 class AdBannerService {
   static final AdBannerService _instance = AdBannerService._internal();
   factory AdBannerService() => _instance;
   AdBannerService._internal();
 
+  // Флаг инициализации для предотвращения повторной инициализации
+  bool _isInitialized = false;
+
   // Константы для оптимизации
   static const int _maxPoolSize = 3;
   static const Duration _cleanupInterval = Duration(seconds: 30);
-  // Список adUnitId для round-robin ротации
-  static const List<String> _adUnitIds = [
+  // Список adUnitId для round-robin ротации баннеров
+  static const List<String> _bannerAdUnitIds = [
     'R-M-17946414-3',
     'R-M-17946414-4',
     'R-M-17946414-5',
   ];
 
+  // adUnitId для рекламы с вознаграждением
+  static const String _rewardedAdUnitId = 'R-M-17946414-2';
+
   // Пул баннеров
   final List<BannerAd> _bannerPool = [];
   final List<BannerAd> _activeBanners = [];
   
-  // Round-robin индекс для выбора adUnitId
+  // Rewarded Ads
+  RewardedAdLoader? _rewardedAdLoader;
+  RewardedAd? _rewardedAd;
+  bool _isRewardedAdLoading = false;
+  bool _isRewardedAdLoaded = false;
+  
+  // Round-robin индекс для выбора adUnitId баннеров
   int _currentBannerIndex = 0;
   
   // Мониторинг Platform Views
@@ -31,28 +43,56 @@ class AdBannerService {
   int _totalBannersCreated = 0;
   int _totalBannersDestroyed = 0;
   
-  // Статистика
+  // Статистика баннеров
   DateTime? _lastCleanup;
-  int _failedAdLoads = 0;
-  int _successfulAdLoads = 0;
+  int _failedBannerLoads = 0;
+  int _successfulBannerLoads = 0;
+  
+  // Статистика rewarded ads
+  int _rewardedAdLoadAttempts = 0;
+  int _successfulRewardedAdLoads = 0;
+  int _failedRewardedAdLoads = 0;
+  int _rewardedAdShownCount = 0;
+  int _rewardedAdCompletedCount = 0;
 
   // Stream для мониторинга
   final StreamController<BannerStats> _statsController = 
       StreamController<BannerStats>.broadcast();
   Stream<BannerStats> get statsStream => _statsController.stream;
 
-  // Getters для мониторинга
+  // Stream для мониторинга rewarded ads
+  final StreamController<RewardedAdStats> _rewardedStatsController = 
+      StreamController<RewardedAdStats>.broadcast();
+  Stream<RewardedAdStats> get rewardedAdStatsStream => _rewardedStatsController.stream;
+
+  // Getters для мониторинга баннеров
   int get activeBannerCount => _activeBanners.length;
   int get poolSize => _bannerPool.length;
   int get platformViewCount => _platformViewCount;
   int get totalBannersCreated => _totalBannersCreated;
   int get totalBannersDestroyed => _totalBannersDestroyed;
-  int get failedAdLoads => _failedAdLoads;
-  int get successfulAdLoads => _successfulAdLoads;
+  int get failedBannerLoads => _failedBannerLoads;
+  int get successfulBannerLoads => _successfulBannerLoads;
   bool get hasAvailableBanner => _bannerPool.isNotEmpty || _activeBanners.length < _maxPoolSize;
+
+  // Getters для мониторинга rewarded ads
+  bool get isRewardedAdLoaded => _isRewardedAdLoaded;
+  bool get isRewardedAdLoading => _isRewardedAdLoading;
+  int get rewardedAdLoadAttempts => _rewardedAdLoadAttempts;
+  int get successfulRewardedAdLoads => _successfulRewardedAdLoads;
+  int get failedRewardedAdLoads => _failedRewardedAdLoads;
+  int get rewardedAdShownCount => _rewardedAdShownCount;
+  int get rewardedAdCompletedCount => _rewardedAdCompletedCount;
+  bool get hasAvailableRewardedAd => _isRewardedAdLoaded && _rewardedAd != null;
 
   /// Инициализация сервиса
   Future<void> initialize() async {
+    // Предотвращаем повторную инициализацию
+    if (_isInitialized) {
+      log('AdBannerService: Already initialized, skipping...');
+      return;
+    }
+    
     log('AdBannerService: Initializing...');
     
     // Предварительно создаем пул баннеров
@@ -61,7 +101,9 @@ class AdBannerService {
     // Запускаем периодическую очистку
     _startCleanupTimer();
     
+    _isInitialized = true;
     _emitStats();
+    _emitRewardedAdStats();
     log('AdBannerService: Initialized successfully');
   }
 
@@ -69,7 +111,7 @@ class AdBannerService {
   Future<void> _createBannerPool() async {
     for (int i = 0; i < _maxPoolSize; i++) {
       try {
-        final adUnitId = _adUnitIds[i % _adUnitIds.length]; // Используем разные adUnitId
+        final adUnitId = _bannerAdUnitIds[i % _bannerAdUnitIds.length]; // Используем разные adUnitId
         final banner = await _createBanner(adUnitId);
         _bannerPool.add(banner);
         _totalBannersCreated++;
@@ -91,12 +133,12 @@ class AdBannerService {
       adSize: adSize,
       adRequest: const AdRequest(), // Переиспользуем объект запроса
       onAdLoaded: () {
-        _successfulAdLoads++;
+        _successfulBannerLoads++;
         _emitStats();
         log('AdBannerService: Banner loaded successfully with adUnitId: $adUnitId');
       },
       onAdFailedToLoad: (error) {
-        _failedAdLoads++;
+        _failedBannerLoads++;
         _emitStats();
         log('AdBannerService: Ad failed to load with adUnitId $adUnitId: $error');
       },
@@ -122,7 +164,7 @@ class AdBannerService {
     else if (_activeBanners.length < _maxPoolSize) {
       try {
         // Round-robin выбор adUnitId
-        final adUnitId = _adUnitIds[_currentBannerIndex % _adUnitIds.length];
+        final adUnitId = _bannerAdUnitIds[_currentBannerIndex % _bannerAdUnitIds.length];
         _currentBannerIndex++; // Переходим к следующему adUnitId
         
         banner = await _createBanner(adUnitId);
@@ -250,8 +292,23 @@ class AdBannerService {
     }
     _activeBanners.clear();
     
+    // Очищаем rewarded ads
+    _cleanupRewardedAd();
+    
+    // Уничтожаем RewardedAdLoader если он существует
+    if (_rewardedAdLoader != null) {
+      try {
+        _rewardedAdLoader!.destroy();
+      } catch (e) {
+        log('AdBannerService: Error destroying RewardedAdLoader: $e');
+      }
+      _rewardedAdLoader = null;
+    }
+    
     _platformViewCount = 0;
+    _isInitialized = false;
     _statsController.close();
+    _rewardedStatsController.close();
     
     log('AdBannerService: All resources disposed');
   }
@@ -264,12 +321,219 @@ class AdBannerService {
       platformViewCount: _platformViewCount,
       totalCreated: _totalBannersCreated,
       totalDestroyed: _totalBannersDestroyed,
-      successfulLoads: _successfulAdLoads,
-      failedLoads: _failedAdLoads,
+      successfulLoads: _successfulBannerLoads,
+      failedLoads: _failedBannerLoads,
       lastCleanup: _lastCleanup,
     );
     
     _statsController.add(stats);
+  }
+
+  /// Отправка статистики rewarded ads
+  void _emitRewardedAdStats() {
+    final rewardedStats = RewardedAdStats(
+      isLoaded: _isRewardedAdLoaded,
+      isLoading: _isRewardedAdLoading,
+      loadAttempts: _rewardedAdLoadAttempts,
+      successfulLoads: _successfulRewardedAdLoads,
+      failedLoads: _failedRewardedAdLoads,
+      shownCount: _rewardedAdShownCount,
+      completedCount: _rewardedAdCompletedCount,
+    );
+    
+    _rewardedStatsController.add(rewardedStats);
+  }
+
+  /// Инициализация rewarded ad
+  Future<void> _initializeRewardedAd() async {
+    if (_rewardedAdLoader != null) {
+      log('AdBannerService: RewardedAdLoader already initialized');
+      return;
+    }
+    
+    try {
+      // Создаем RewardedAdLoader через фабричный метод
+      _rewardedAdLoader = await RewardedAdLoader.create(
+        onAdLoaded: _onRewardedAdLoaded,
+        onAdFailedToLoad: _onRewardedAdFailedToLoad,
+      );
+      
+      log('AdBannerService: RewardedAdLoader initialized');
+    } catch (e) {
+      log('AdBannerService: Failed to initialize RewardedAdLoader: $e');
+      rethrow;
+    }
+  }
+
+  /// Callback для успешной загрузки rewarded ad
+  void _onRewardedAdLoaded(RewardedAd ad) {
+    _rewardedAd = ad;
+    _isRewardedAdLoaded = true;
+    _isRewardedAdLoading = false;
+    _successfulRewardedAdLoads++;
+    _emitRewardedAdStats();
+    log('AdBannerService: RewardedAd loaded successfully');
+  }
+
+  /// Callback для неудачной загрузки rewarded ad
+  void _onRewardedAdFailedToLoad(dynamic error) {
+    _rewardedAd = null;
+    _isRewardedAdLoaded = false;
+    _isRewardedAdLoading = false;
+    _failedRewardedAdLoads++;
+    _emitRewardedAdStats();
+    log('AdBannerService: RewardedAd failed to load: $error');
+  }
+
+  /// Загрузка rewarded ad
+  Future<bool> loadRewardedAd() async {
+    if (!_isInitialized) {
+      log('AdBannerService: Service not initialized. Call initialize() first.');
+      return false;
+    }
+    
+    if (_isRewardedAdLoading) {
+      log('AdBannerService: RewardedAd is already loading...');
+      return false;
+    }
+    
+    if (_isRewardedAdLoaded && _rewardedAd != null) {
+      log('AdBannerService: RewardedAd already loaded and ready');
+      return true;
+    }
+    
+    // Инициализируем loader если нужно
+    if (_rewardedAdLoader == null) {
+      await _initializeRewardedAd();
+    }
+    
+    _isRewardedAdLoading = true;
+    _rewardedAdLoadAttempts++;
+    _emitRewardedAdStats();
+    
+    try {
+      await _rewardedAdLoader!.loadAd(
+        adRequestConfiguration: AdRequestConfiguration(adUnitId: _rewardedAdUnitId),
+      );
+      log('AdBannerService: RewardedAd load request sent');
+      return true;
+    } catch (e) {
+      _isRewardedAdLoading = false;
+      _failedRewardedAdLoads++;
+      _emitRewardedAdStats();
+      log('AdBannerService: Failed to load RewardedAd: $e');
+      return false;
+    }
+  }
+
+  /// Получение загруженного rewarded ad
+  Future<RewardedAd?> getRewardedAd() async {
+    if (!_isInitialized) {
+      log('AdBannerService: Service not initialized. Call initialize() first.');
+      return null;
+    }
+    
+    // Если ad уже загружен, возвращаем его
+    if (_isRewardedAdLoaded && _rewardedAd != null) {
+      return _rewardedAd;
+    }
+    
+    // Иначе пытаемся загрузить
+    final loaded = await loadRewardedAd();
+    if (loaded) {
+      // Ждем немного для загрузки
+      await Future.delayed(const Duration(milliseconds: 100));
+      return _rewardedAd;
+    }
+    
+    return null;
+  }
+
+  /// Показ rewarded ad с обработкой результата
+  Future<Reward?> showRewardedAd({
+    required BuildContext context,
+    Function()? onAdShown,
+    Function(Reward)? onAdCompleted,
+    Function()? onAdDismissed,
+    Function()? onAdClicked,
+  }) async {
+    if (!_isInitialized) {
+      log('AdBannerService: Service not initialized. Call initialize() first.');
+      return null;
+    }
+    
+    RewardedAd? ad = await getRewardedAd();
+    if (ad == null) {
+      log('AdBannerService: No RewardedAd available to show');
+      return null;
+    }
+    
+    _rewardedAdShownCount++;
+    _emitRewardedAdStats();
+    onAdShown?.call();
+    
+    try {
+      // Устанавливаем слушатель событий
+      ad.setAdEventListener(
+        eventListener: RewardedAdEventListener(
+          onAdShown: () {
+            log('AdBannerService: RewardedAd shown');
+          },
+          onAdFailedToShow: (error) {
+            log('AdBannerService: RewardedAd failed to show: $error');
+            ad.destroy();
+            _rewardedAd = null;
+            _isRewardedAdLoaded = false;
+            _emitRewardedAdStats();
+            loadRewardedAd();
+          },
+          onAdClicked: () {
+            onAdClicked?.call();
+            log('AdBannerService: RewardedAd clicked');
+          },
+          onAdDismissed: () {
+            log('AdBannerService: RewardedAd dismissed');
+            ad.destroy();
+            _rewardedAd = null;
+            _isRewardedAdLoaded = false;
+            _emitRewardedAdStats();
+            onAdDismissed?.call();
+            // Загружаем новую рекламу после закрытия
+            loadRewardedAd();
+          },
+          onAdImpression: (impressionData) {
+            log('AdBannerService: RewardedAd impression recorded');
+          },
+          onRewarded: (Reward reward) {
+            _rewardedAdCompletedCount++;
+            _emitRewardedAdStats();
+            onAdCompleted?.call(reward);
+            log('AdBannerService: RewardedAd completed - reward granted: ${reward.amount} ${reward.type}');
+          },
+        ),
+      );
+      
+      // Показываем рекламу
+      await ad.show();
+      
+      // Ждем завершения просмотра
+      final reward = await ad.waitForDismiss();
+      
+      return reward;
+    } catch (e) {
+      log('AdBannerService: Error showing RewardedAd: $e');
+      return null;
+    }
+  }
+
+  /// Очистка rewarded ad
+  void _cleanupRewardedAd() {
+    if (_rewardedAd != null) {
+      _rewardedAd = null;
+    }
+    _isRewardedAdLoaded = false;
+    _isRewardedAdLoading = false;
+    _emitRewardedAdStats();
   }
 
   /// Получение отчета о состоянии
@@ -281,8 +545,15 @@ AdBannerService Report:
 - Platform Views: $_platformViewCount
 - Total created: $_totalBannersCreated
 - Total references removed: $_totalBannersDestroyed
-- Successful loads: $_successfulAdLoads
-- Failed loads: $_failedAdLoads
+- Successful banner loads: $_successfulBannerLoads
+- Failed banner loads: $_failedBannerLoads
+- RewardedAd loaded: $_isRewardedAdLoaded
+- RewardedAd loading: $_isRewardedAdLoading
+- RewardedAd load attempts: $_rewardedAdLoadAttempts
+- Successful RewardedAd loads: $_successfulRewardedAdLoads
+- Failed RewardedAd loads: $_failedRewardedAdLoads
+- RewardedAd shown count: $_rewardedAdShownCount
+- RewardedAd completed count: $_rewardedAdCompletedCount
 - Last cleanup: ${_lastCleanup ?? 'Never'}
 ''';
   }
@@ -376,5 +647,31 @@ class BannerStats {
   @override
   String toString() {
     return 'BannerStats(active: $activeBanners, pool: $poolSize, views: $platformViewCount)';
+  }
+}
+
+/// Класс для статистики rewarded ads
+class RewardedAdStats {
+  final bool isLoaded;
+  final bool isLoading;
+  final int loadAttempts;
+  final int successfulLoads;
+  final int failedLoads;
+  final int shownCount;
+  final int completedCount;
+
+  const RewardedAdStats({
+    required this.isLoaded,
+    required this.isLoading,
+    required this.loadAttempts,
+    required this.successfulLoads,
+    required this.failedLoads,
+    required this.shownCount,
+    required this.completedCount,
+  });
+
+  @override
+  String toString() {
+    return 'RewardedAdStats(loaded: $isLoaded, loading: $isLoading, shown: $shownCount, completed: $completedCount)';
   }
 }

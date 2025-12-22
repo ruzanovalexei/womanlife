@@ -45,7 +45,7 @@ void main() async {
   // Инициализируем сервис управления баннерами
   final adBannerService = AdBannerService();
   await adBannerService.initialize();
-
+  await adBannerService.loadRewardedAd();
   // Запускаем фоновый сервис
   await SimpleBackgroundService.initialize();
 
