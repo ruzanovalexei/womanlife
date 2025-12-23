@@ -230,13 +230,13 @@ static const _backgroundImage = AssetImage('assets/images/fon1.png');
             color: Colors.pink[200]!,
             onTap: () => _onMenuItemTap(0),
           ),
-          const SizedBox(height: 12),
-          _buildMenuTile(
-            icon: Icons.schedule,
-            title: l10n.menu2,
-            color: const Color.fromARGB(255, 116, 114, 115),
-            onTap: () => _onMenuItemTap(1),
-          ),
+          // const SizedBox(height: 12),
+          // _buildMenuTile(
+          //   icon: Icons.schedule,
+          //   title: l10n.menu2,
+          //   color: const Color.fromARGB(255, 116, 114, 115),
+          //   onTap: () => _onMenuItemTap(1),
+          // ),
           const SizedBox(height: 12),
           _buildMenuTile(
             icon: Icons.checklist,

@@ -73,7 +73,8 @@ class DatabaseHelper {
         planningMonths INTEGER NOT NULL,
         locale TEXT NOT NULL,
         firstDayOfWeek TEXT NOT NULL,
-        dataRetentionPeriod INTEGER
+        dataRetentionPeriod INTEGER,
+        lastCacheCleanup TEXT
       )
     ''');
 
