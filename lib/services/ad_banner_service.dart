@@ -303,22 +303,22 @@ class AdBannerService {
     _activeBanners.clear();
     
     // Очищаем rewarded ads
-    _cleanupRewardedAd();
+    // _cleanupRewardedAd();
     
-    // Уничтожаем RewardedAdLoader если он существует
-    if (_rewardedAdLoader != null) {
-      try {
-        _rewardedAdLoader!.destroy();
-      } catch (e) {
-        log('AdBannerService: Error destroying RewardedAdLoader: $e');
-      }
-      _rewardedAdLoader = null;
-    }
+    // // Уничтожаем RewardedAdLoader если он существует
+    // if (_rewardedAdLoader != null) {
+    //   try {
+    //     _rewardedAdLoader!.destroy();
+    //   } catch (e) {
+    //     log('AdBannerService: Error destroying RewardedAdLoader: $e');
+    //   }
+    //   _rewardedAdLoader = null;
+    // }
     
     _platformViewCount = 0;
     _isInitialized = false;
     _statsController.close();
-    _rewardedStatsController.close();
+    // _rewardedStatsController.close();
     
     log('AdBannerService: All resources disposed');
   }

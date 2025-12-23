@@ -67,6 +67,7 @@ class _MenuScreenState extends State<MenuScreen> {
     try {
       // Инициализируем сервис баннеров
       // await _adBannerService.initialize();
+      await _adBannerService.loadRewardedAd(); // Загружаем рекламу при инициализации экрана
       
       // Инициализируем сервис распознавания речи
       await _speechService.initialize();
@@ -125,6 +126,7 @@ class _MenuScreenState extends State<MenuScreen> {
             ),
           ).then((_) {
             _loadData(); // Обновляем данные при возврате
+            _adBannerService.loadRewardedAd(); // Загружаем новую рекламу
           });
         }
         break;
@@ -230,13 +232,13 @@ static const _backgroundImage = AssetImage('assets/images/fon1.png');
             color: Colors.pink[200]!,
             onTap: () => _onMenuItemTap(0),
           ),
-          // const SizedBox(height: 12),
-          // _buildMenuTile(
-          //   icon: Icons.schedule,
-          //   title: l10n.menu2,
-          //   color: const Color.fromARGB(255, 116, 114, 115),
-          //   onTap: () => _onMenuItemTap(1),
-          // ),
+          const SizedBox(height: 12),
+          _buildMenuTile(
+            icon: Icons.schedule,
+            title: l10n.menu2,
+            color: const Color.fromARGB(255, 116, 114, 115),
+            onTap: () => _onMenuItemTap(1),
+          ),
           const SizedBox(height: 12),
           _buildMenuTile(
             icon: Icons.checklist,
