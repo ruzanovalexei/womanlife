@@ -536,15 +536,15 @@ class AdBannerService {
     }
   }
 
-  /// Очистка rewarded ad
-  void _cleanupRewardedAd() {
-    if (_rewardedAd != null) {
-      _rewardedAd = null;
-    }
-    _isRewardedAdLoaded = false;
-    _isRewardedAdLoading = false;
-    _emitRewardedAdStats();
-  }
+  // /// Очистка rewarded ad
+  // void _cleanupRewardedAd() {
+  //   if (_rewardedAd != null) {
+  //     _rewardedAd = null;
+  //   }
+  //   _isRewardedAdLoaded = false;
+  //   _isRewardedAdLoading = false;
+  //   _emitRewardedAdStats();
+  // }
 
   /// Получение отчета о состоянии
   String getReport() {
