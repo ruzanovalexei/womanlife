@@ -12,7 +12,8 @@ import 'package:period_tracker/screens/settings_screen.dart';
 import 'package:period_tracker/screens/lists_screen.dart';
 import 'package:period_tracker/screens/notes_screen.dart';
 import 'package:period_tracker/screens/habits_screen.dart';
-import 'package:period_tracker/screens/analytics_screen.dart';
+// import 'package:period_tracker/screens/analytics_screen.dart';
+import 'package:period_tracker/screens/day_report_screen.dart';
 // import 'package:period_tracker/screens/medications_screen.dart';
 // import 'package:yandex_mobileads/mobile_ads.dart';analytics_screen.dart
 // import 'package:yandex_mobileads/ad_widget.dart'; // Добавляем импорт AdWidget
@@ -130,14 +131,14 @@ class _MenuScreenState extends State<MenuScreen> {
           });
         }
         break;
-      case 1:
+      case 111:
         await _adBannerService.showRewardedAd(
           context: context,
           onAdCompleted: (reward) {
           // Выдать награду пользователю
                   Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const AnalyticsScreen()),
+          MaterialPageRoute(builder: (context) => const DayReportScreen()),
         ).then((_) {
           _loadData();
         });
@@ -148,6 +149,13 @@ class _MenuScreenState extends State<MenuScreen> {
           },
           );
         break;
+        //         Navigator.push(
+        //   context,
+        //   MaterialPageRoute(builder: (context) => const DayReportScreen()),
+        // ).then((_) {
+        //   _loadData();
+        // });
+        // break;
       case 2:
         Navigator.push(
           context,
@@ -225,6 +233,13 @@ static const _backgroundImage = AssetImage('assets/images/fon1.png');
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
+          const SizedBox(height: 12),
+          _buildMenuTile(
+            icon: Icons.favorite,
+            title: l10n.menu0,
+            color: const Color.fromARGB(255, 91, 194, 108),
+            onTap: () => _onMenuItemTap(111),
+          ),
           const SizedBox(height: 12),
           _buildMenuTile(
             icon: Icons.favorite,

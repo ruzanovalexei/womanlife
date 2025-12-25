@@ -827,6 +827,12 @@ abstract class AppLocalizations {
   /// **'Analytics'**
   String get analyticsTitle;
 
+  /// No description provided for @dayReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Report'**
+  String get dayReportTitle;
+
   /// No description provided for @medicationsReportTitle.
   ///
   /// In en, this message translates to:
@@ -941,6 +947,12 @@ abstract class AppLocalizations {
   /// **'Choose the section you need'**
   String get menuSubtitle;
 
+  /// No description provided for @menu0.
+  ///
+  /// In en, this message translates to:
+  /// **'Информация за день'**
+  String get menu0;
+
   /// No description provided for @menu1.
   ///
   /// In en, this message translates to:
@@ -950,7 +962,7 @@ abstract class AppLocalizations {
   /// No description provided for @menu2.
   ///
   /// In en, this message translates to:
-  /// **'Daily Schedule'**
+  /// **'Ежедневник'**
   String get menu2;
 
   /// No description provided for @menu3.

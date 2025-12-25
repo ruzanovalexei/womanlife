@@ -419,6 +419,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get analyticsTitle => 'Аналитика';
 
   @override
+  String get dayReportTitle => 'Отчет за день';
+
+  @override
   String get medicationsReportTitle => 'Отчет по приему лекарств';
 
   @override
@@ -476,10 +479,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get menuSubtitle => 'Выберите нужный раздел';
 
   @override
+  String get menu0 => 'План/отчет за день (просмотр рекламы)';
+
+  @override
   String get menu1 => 'Здоровье';
 
   @override
-  String get menu2 => 'Распорядок дня(Ожидайте в новых релизах)';
+  String get menu2 => 'Ежедневник';
 
   @override
   String get menu3 => 'Списки';
