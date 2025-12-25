@@ -68,7 +68,7 @@ class _MenuScreenState extends State<MenuScreen> {
     try {
       // Инициализируем сервис баннеров
       // await _adBannerService.initialize();
-      await _adBannerService.loadRewardedAd(); // Загружаем рекламу при инициализации экрана
+      // await _adBannerService.loadRewardedAd(); // Загружаем рекламу при инициализации экрана
       
       // Инициализируем сервис распознавания речи
       await _speechService.initialize();
@@ -127,7 +127,7 @@ class _MenuScreenState extends State<MenuScreen> {
             ),
           ).then((_) {
             _loadData(); // Обновляем данные при возврате
-            _adBannerService.loadRewardedAd(); // Загружаем новую рекламу
+            // _adBannerService.loadRewardedAd(); // Загружаем новую рекламу
           });
         }
         break;
