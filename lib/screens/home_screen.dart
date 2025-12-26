@@ -5,25 +5,10 @@ import '../widgets/calendar_widget.dart';
 import '../models/settings.dart';
 import '../models/period_record.dart';
 import 'day_detail_screen.dart';
-// import 'settings_screen.dart';
-// import 'menu_screen.dart';
-
-
-
-
-// import 'package:yandex_mobileads/mobile_ads.dart';
-
-
-
-
-
-
-//import 'analytics_screen.dart'; // вернуть, когда воскресим экран аналитики
 import '../database/database_helper.dart';
 import '../services/notification_service.dart';
 import '../services/permissions_service.dart';
-import '../services/ad_banner_service.dart';
-//import '../utils/date_utils.dart'; // Добавляем импорт
+// import '../services/ad_banner_service.dart';
 class HomeScreen extends StatefulWidget {
   final bool calledFromDetailScreen; // Указывает, был ли вызван из детального экрана
 
@@ -39,7 +24,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _databaseHelper = DatabaseHelper();
   final _notificationService = NotificationService();
-  final _adBannerService = AdBannerService();
+  // final _adBannerService = AdBannerService();
   late Settings _settings;
   List<PeriodRecord> _periodRecords = [];
   bool _isLoading = true;
@@ -106,30 +91,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // void _openSettings() async {
-  //   final result = await Navigator.push(
-  //     context,
-  //     MaterialPageRoute(builder: (context) => const SettingsScreen()),
-  //   );
-    
-  //   if (result == true) {
-  //     _loadData(includeBanner: true);
-  //   }
-  // }
-
-  // void _openMenu() {
-  //   Navigator.push(
-  //     context,
-  //     MaterialPageRoute(builder: (context) => const MenuScreen()),
-  //   );
-  // }
-//Аналитику пока скрыли, позже к ней вернемся
-  // void _openAnalytics() {
-  //   Navigator.push(
-  //     context,
-  //     MaterialPageRoute(builder: (context) => const AnalyticsScreen()),
-  //   );
-  // }
 
   void _openDayDetail(DateTime day) {
     setState(() {
@@ -185,9 +146,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // void _closeApp() {
-  //   SystemNavigator.pop();
-  // }
 
   @override
 Widget build(BuildContext context) {
@@ -214,7 +172,7 @@ Widget build(BuildContext context) {
           Expanded(
             child: _buildMainContent(l10n),
           ),
-          _adBannerService.createBannerWidget(),
+          // _adBannerService.createBannerWidget(),
         ],
       ),
     ),

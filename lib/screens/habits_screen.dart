@@ -9,7 +9,7 @@ import '../models/habit_execution_record.dart';
 import '../models/habit_measurable_record.dart';
 import '../utils/date_utils.dart';
 import 'habits_settings_screen.dart';
-import '../services/ad_banner_service.dart';
+// import '../services/ad_banner_service.dart';
 // import 'package:yandex_mobileads/mobile_ads.dart';
 
 class HabitsScreen extends StatefulWidget {
@@ -21,7 +21,7 @@ class HabitsScreen extends StatefulWidget {
 
 class _HabitsScreenState extends State<HabitsScreen> {
   final _databaseHelper = DatabaseHelper();
-  final _adBannerService = AdBannerService();
+  // final _adBannerService = AdBannerService();
   late DateTime _selectedDate;
   
   List<HabitExecution> _executionHabits = [];
@@ -449,7 +449,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
             ),
             
             // Блок рекламы
-            _adBannerService.createBannerWidget(),
+            // _adBannerService.createBannerWidget(),
           ],
         ),
       ),

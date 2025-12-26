@@ -6,7 +6,7 @@ import '../database/database_helper.dart';
 import '../models/settings.dart';
 import '../services/locale_service.dart';
 import '../services/permissions_service.dart';
-import '../services/ad_banner_service.dart';
+// import '../services/ad_banner_service.dart';
 import '../widgets/settings_tab.dart';
 // import '../widgets/symptoms_tab.dart';
 // import '../widgets/cache_management_tab.dart';
@@ -21,7 +21,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final _databaseHelper = DatabaseHelper();
-  final _adBannerService = AdBannerService();
+  // final _adBannerService = AdBannerService();
   late Settings _settings;
   bool _isLoading = true;
   String? _errorMessage;
@@ -138,7 +138,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               
               // Блок рекламы
-              _adBannerService.createBannerWidget(),
+              // _adBannerService.createBannerWidget(),
             ],
           ),
         ),

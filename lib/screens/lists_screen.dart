@@ -1,14 +1,14 @@
+// lib/screens/lists_screen_optimized.dart
 import 'package:flutter/material.dart';
-// import 'package:flutter/services.dart';
 import 'package:period_tracker/l10n/app_localizations.dart';
 import 'package:period_tracker/database/database_helper.dart';
 import 'package:period_tracker/models/list_model.dart';
 import 'package:period_tracker/models/list_item_model.dart';
-// import 'package:period_tracker/utils/date_utils.dart';
 import 'menu_screen.dart';
 import '../services/ad_banner_service.dart';
-// import 'package:yandex_mobileads/mobile_ads.dart';
 
+/// Оптимизированный экран списков
+/// Реклама и основной экран не пересоздаются при обновлении списков
 class ListsScreen extends StatefulWidget {
   const ListsScreen({super.key});
 
@@ -17,27 +17,86 @@ class ListsScreen extends StatefulWidget {
 }
 
 class _ListsScreenState extends State<ListsScreen> {
-  final _databaseHelper = DatabaseHelper();
   final _adBannerService = AdBannerService();
+  static const _backgroundImage = AssetImage('assets/images/fon1.png');
+
+  @override
+  void initState() {
+    super.initState();
+    // Инициализация сервиса рекламы при создании экрана
+    _adBannerService.initialize();
+  }
+
+  // @override
+  // void dispose() {
+  //   // Очистка рекламы при закрытии экрана
+  //   _adBannerService.clearBannerOnScreenChange();
+  //   super.dispose();
+  // }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const MenuScreen()),
+              (route) => false,
+            );
+          },
+        ),
+        title: Text(l10n.listsTitle),
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: _backgroundImage,
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Column(
+          children: [
+            // Основной контент - только списки (обновляются независимо)
+            const Expanded(
+              child: ListsWidget(),
+            ),
+            
+            // Блок рекламы (статичный, не пересоздается)
+            _adBannerService.createBannerWidget(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Отдельный виджет для работы со списками
+/// Содержит всю логику управления списками и обновляется независимо от основного экрана
+class ListsWidget extends StatefulWidget {
+  const ListsWidget({super.key});
+
+  @override
+  _ListsWidgetState createState() => _ListsWidgetState();
+}
+
+class _ListsWidgetState extends State<ListsWidget> {
+  final _databaseHelper = DatabaseHelper();
   late List<ListModel> _lists;
   bool _isLoading = true;
   String? _errorMessage;
-  static const _backgroundImage = AssetImage('assets/images/fon1.png');
   // ID открытого списка (только один список может быть открыт одновременно)
   int? _expandedListId;
 
   @override
   void initState() {
     super.initState();
-    _initializeScreen();
-  }
-
-  // Оптимизированная инициализация экрана
-  void _initializeScreen() {
     _loadData();
   }
-
-  
 
   // Оптимизированная загрузка данных - один setState
   Future<void> _loadData() async {
@@ -104,40 +163,40 @@ class _ListsScreenState extends State<ListsScreen> {
       return;
     }
 
-  try {
-    final now = DateTime.now();
-    final newList = ListModel(
-      name: trimmedName,
-      createdDate: now,
-      updatedDate: now,
-    );
-
-    await _databaseHelper.insertList(newList);
-    
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.listSaved),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 1),
-        ),
+    try {
+      final now = DateTime.now();
+      final newList = ListModel(
+        name: trimmedName,
+        createdDate: now,
+        updatedDate: now,
       );
 
-      await _loadData();
-    }
-  } catch (e) {
-    if (mounted) {
-      final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.listSaveError(e.toString())),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
-      debugPrint('Error saving list: $e');
+      await _databaseHelper.insertList(newList);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.listSaved),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 1),
+          ),
+        );
+
+        await _loadData();
+      }
+    } catch (e) {
+      if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.listSaveError(e.toString())),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+        debugPrint('Error saving list: $e');
+      }
     }
   }
-}
 
   Future<void> _updateList(ListModel list, String name) async {
     final l10n = AppLocalizations.of(context)!;
@@ -164,15 +223,17 @@ class _ListsScreenState extends State<ListsScreen> {
 
       await _databaseHelper.updateList(updatedList);
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.listUpdated),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 1),
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.listUpdated),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 1),
+          ),
+        );
 
-      await _loadData();
+        await _loadData();
+      }
     } catch (e) {
       final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -212,15 +273,17 @@ class _ListsScreenState extends State<ListsScreen> {
       try {
         await _databaseHelper.deleteList(list.id!);
         
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.listDeleted),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 1),
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.listDeleted),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 1),
+            ),
+          );
 
-        await _loadData();
+          await _loadData();
+        }
       } catch (e) {
         final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -272,14 +335,7 @@ class _ListsScreenState extends State<ListsScreen> {
 
       await _databaseHelper.insertListItem(newItem);
       
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   SnackBar(
-      //     content: Text(l10n.listItemAdded),
-      //     backgroundColor: Colors.green,
-      //     duration: const Duration(seconds: 1),
-      //   ),
-      // );
-
+      // Обновляем только списки, не весь экран
       await _loadData();
     } catch (e) {
       final l10n = AppLocalizations.of(context)!;
@@ -295,6 +351,7 @@ class _ListsScreenState extends State<ListsScreen> {
   Future<void> _toggleListItemStatus(ListItemModel item) async {
     try {
       await _databaseHelper.toggleListItemStatus(item.id!, !item.isCompleted);
+      // Обновляем только списки, не весь экран
       await _loadData();
     } catch (e) {
       final l10n = AppLocalizations.of(context)!;
@@ -319,51 +376,6 @@ class _ListsScreenState extends State<ListsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => const MenuScreen()),
-              (route) => false,
-            );
-          },
-        ),
-        title: Text(l10n.listsTitle),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadData,
-            tooltip: l10n.refreshTooltip,
-          ),
-        ],
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: _backgroundImage,
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: Column(
-          children: [
-            // Основной контент
-            Expanded(
-              child: _buildMainContent(l10n),
-            ),
-            
-            // Блок рекламы
-            _adBannerService.createBannerWidget(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Вынесенный основной контент
-  Widget _buildMainContent(AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -467,8 +479,6 @@ class _ListsScreenState extends State<ListsScreen> {
       ),
     );
   }
-
-  
 
   Widget _buildListBlock(ListModel list, AppLocalizations l10n) {
     final isExpanded = _expandedListId == list.id;
@@ -681,15 +691,17 @@ class _ListsScreenState extends State<ListsScreen> {
       try {
         await _databaseHelper.deleteListItem(item.id!);
         
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.listItemDeleted),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 1),
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.listItemDeleted),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 1),
+            ),
+          );
 
-        await _loadData();
+          await _loadData();
+        }
       } catch (e) {
         final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(

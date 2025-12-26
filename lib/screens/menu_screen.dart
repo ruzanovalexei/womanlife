@@ -34,10 +34,8 @@ class _MenuScreenState extends State<MenuScreen> {
   List<PeriodRecord> _periodRecords = [];
   bool _isLoading = true;
   
-  // Удаляем старые переменные баннера - теперь управляется сервисом
-  // BannerAd? _bannerAd;
-  // bool _isBannerLoading = false;
-  // bool _isBannerLoaded = false;
+  // Виджет баннера создается один раз и переиспользуется
+  Widget? _bannerWidget;
 
   @override
   void initState() {
@@ -47,8 +45,8 @@ class _MenuScreenState extends State<MenuScreen> {
 
   @override
   void dispose() {
-    // Удаляем старый код управления баннером - теперь это делает сервис
-    // _bannerAd?.destroy();
+    // Очищаем виджет баннера при уничтожении экрана
+    _bannerWidget = null;
     super.dispose();
   }
 
@@ -59,8 +57,19 @@ class _MenuScreenState extends State<MenuScreen> {
       if (mounted) {
         _loadData();
         _initializeServices();
+        _initializeBannerWidget();
       }
     });
+  }
+
+  // Инициализация виджета баннера - создается один раз
+  void _initializeBannerWidget() {
+    if (_bannerWidget == null) {
+      _bannerWidget = _adBannerService.createBannerWidget();
+      if (mounted) {
+        setState(() {});
+      }
+    }
   }
 
   // Инициализация сервисов
@@ -127,7 +136,7 @@ class _MenuScreenState extends State<MenuScreen> {
             ),
           ).then((_) {
             _loadData(); // Обновляем данные при возврате
-            // _adBannerService.loadRewardedAd(); // Загружаем новую рекламу
+            // Убираем создание нового виджета баннера - он уже существует
           });
         }
         break;
@@ -141,6 +150,7 @@ class _MenuScreenState extends State<MenuScreen> {
           MaterialPageRoute(builder: (context) => const DayReportScreen()),
         ).then((_) {
           _loadData();
+          // Убираем создание нового виджета баннера - он уже существует
         });
           print('Получено: ${reward.amount} ${reward.type}');
           },
@@ -162,6 +172,7 @@ class _MenuScreenState extends State<MenuScreen> {
           MaterialPageRoute(builder: (context) => const ListsScreen()),
         ).then((_) {
           _loadData();
+          // Убираем создание нового виджета баннера - он уже существует
         });
         break;
       case 3:
@@ -170,6 +181,7 @@ class _MenuScreenState extends State<MenuScreen> {
           MaterialPageRoute(builder: (context) => const HabitsScreen()),
         ).then((_) {
           _loadData();
+          // Убираем создание нового виджета баннера - он уже существует
         });
         break;
       case 4:
@@ -178,6 +190,7 @@ class _MenuScreenState extends State<MenuScreen> {
           MaterialPageRoute(builder: (context) => const NotesScreen()),
         ).then((_) {
           _loadData();
+          // Убираем создание нового виджета баннера - он уже существует
         });
         break;
       case 5:
@@ -186,6 +199,7 @@ class _MenuScreenState extends State<MenuScreen> {
           MaterialPageRoute(builder: (context) => const SettingsScreen()),
         ).then((_) {
           _loadData();
+          // Убираем создание нового виджета баннера - он уже существует
         });
         break;
     }
@@ -216,10 +230,16 @@ static const _backgroundImage = AssetImage('assets/images/fon1.png');
                   ? const Center(child: CircularProgressIndicator())
                   : _buildMenuContent(l10n),
             ),
-            // Блок рекламы
-            // Убираем жесткий SizedBox, позволяя _buildBannerWidget
-            // полностью контролировать размер
-            _adBannerService.createBannerWidget(),
+            // Блок рекламы - используем созданный один раз виджет
+            if (_bannerWidget != null) ...[
+              _bannerWidget!,
+            ] else ...[
+              // Показываем загрузку, если виджет еще не создан
+              const SizedBox(
+                height: 50,
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ],
           ],
         ),
       ),
