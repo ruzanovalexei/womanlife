@@ -4,7 +4,7 @@ import 'package:period_tracker/l10n/app_localizations.dart';
 import 'package:period_tracker/database/database_helper.dart';
 import 'package:period_tracker/models/list_model.dart';
 import 'package:period_tracker/models/list_item_model.dart';
-import 'menu_screen.dart';
+// import 'menu_screen.dart';
 import '../services/ad_banner_service.dart';
 
 /// Оптимизированный экран списков
@@ -20,34 +20,44 @@ class _ListsScreenState extends State<ListsScreen> {
   final _adBannerService = AdBannerService();
   static const _backgroundImage = AssetImage('assets/images/fon1.png');
 
+  // Виджет баннера создается один раз и переиспользуется
+  Widget? _bannerWidget;
+
   @override
   void initState() {
     super.initState();
     // Инициализация сервиса рекламы при создании экрана
-    _adBannerService.initialize();
+    // _adBannerService.initialize();
+    _initializeBannerWidget();
   }
 
-  // @override
-  // void dispose() {
-  //   // Очистка рекламы при закрытии экрана
-  //   _adBannerService.clearBannerOnScreenChange();
-  //   super.dispose();
-  // }
+  // Инициализация виджета баннера - создается один раз
+  void _initializeBannerWidget() {
+    if (_bannerWidget == null) {
+      _bannerWidget = _adBannerService.createBannerWidget();
+      if (mounted) {
+        setState(() {});
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    // Очищаем виджет баннера при уничтожении экрана
+    _bannerWidget = null;
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => const MenuScreen()),
-              (route) => false,
-            );
+            Navigator.of(context).pop(); // Обычная навигация назад
           },
         ),
         title: Text(l10n.listsTitle),
@@ -66,8 +76,16 @@ class _ListsScreenState extends State<ListsScreen> {
               child: ListsWidget(),
             ),
             
-            // Блок рекламы (статичный, не пересоздается)
-            _adBannerService.createBannerWidget(),
+            // Блок рекламы - используем созданный один раз виджет
+            if (_bannerWidget != null) ...[
+              _bannerWidget!,
+            ] else ...[
+              // Показываем загрузку, если виджет еще не создан
+              const SizedBox(
+                height: 50,
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ],
           ],
         ),
       ),

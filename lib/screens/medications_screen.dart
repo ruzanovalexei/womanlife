@@ -16,12 +16,32 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
   static const _backgroundImage = AssetImage('assets/images/fon1.png');
   bool _hasChanges = false; // Флаг для отслеживания изменений
 
+
+  // Виджет баннера создается один раз и переиспользуется
+  Widget? _bannerWidget;
+
   @override
   void initState() {
     super.initState();
+    _initializeBannerWidget();
   }
 
-  
+   // Инициализация виджета баннера - создается один раз
+  void _initializeBannerWidget() {
+    if (_bannerWidget == null) {
+      _bannerWidget = _adBannerService.createBannerWidget();
+      if (mounted) {
+        setState(() {});
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    // Очищаем виджет баннера при уничтожении экрана
+    _bannerWidget = null;
+    super.dispose();
+  } 
 
   
 
@@ -60,7 +80,16 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
             ),
             
             // Блок рекламы
-            _adBannerService.createBannerWidget(),
+                      // Блок рекламы - используем созданный один раз виджет
+            if (_bannerWidget != null) ...[
+              _bannerWidget!,
+            ] else ...[
+              // Показываем загрузку, если виджет еще не создан
+              const SizedBox(
+                height: 50,
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ],
           ],
         ),
       ),

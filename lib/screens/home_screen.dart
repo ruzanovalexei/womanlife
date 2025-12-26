@@ -8,7 +8,7 @@ import 'day_detail_screen.dart';
 import '../database/database_helper.dart';
 import '../services/notification_service.dart';
 import '../services/permissions_service.dart';
-// import '../services/ad_banner_service.dart';
+import '../services/ad_banner_service.dart';
 class HomeScreen extends StatefulWidget {
   final bool calledFromDetailScreen; // Указывает, был ли вызван из детального экрана
 
@@ -24,7 +24,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _databaseHelper = DatabaseHelper();
   final _notificationService = NotificationService();
-  // final _adBannerService = AdBannerService();
+  final _adBannerService = AdBannerService();
   late Settings _settings;
   List<PeriodRecord> _periodRecords = [];
   bool _isLoading = true;
@@ -32,19 +32,33 @@ class _HomeScreenState extends State<HomeScreen> {
   DateTime _lastSelectedDate = DateTime.now(); // Добавляем последнюю выбранную дату
   static const _backgroundImage = AssetImage('assets/images/fon1.png');
 
+  // Виджет баннера создается один раз и переиспользуется
+  Widget? _bannerWidget;
   
+
 
 
   @override
   void initState() {
     super.initState();
     _initializeNotifications();
+    _initializeBannerWidget();
     // Переносим загрузку данных в post-frame callback для лучшей производительности
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _loadData(includeBanner: false);
       }
     });
+  }
+
+  // Инициализация виджета баннера - создается один раз
+  void _initializeBannerWidget() {
+    if (_bannerWidget == null) {
+      _bannerWidget = _adBannerService.createBannerWidget();
+      if (mounted) {
+        setState(() {});
+      }
+    }
   }
 
 
@@ -148,6 +162,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
 
   @override
+  void dispose() {
+    // Очищаем виджет баннера при уничтожении экрана
+    _bannerWidget = null;
+    super.dispose();
+  }
+
+  @override
 Widget build(BuildContext context) {
   final l10n = AppLocalizations.of(context)!;
   
@@ -172,7 +193,16 @@ Widget build(BuildContext context) {
           Expanded(
             child: _buildMainContent(l10n),
           ),
-          // _adBannerService.createBannerWidget(),
+          // Блок рекламы - используем созданный один раз виджет
+          if (_bannerWidget != null) ...[
+            _bannerWidget!,
+          ] else ...[
+            // Показываем загрузку, если виджет еще не создан
+            const SizedBox(
+              height: 50,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          ],
         ],
       ),
     ),

@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:period_tracker/l10n/app_localizations.dart';
 import 'package:period_tracker/database/database_helper.dart';
 import 'package:period_tracker/models/note_model.dart';
-import 'menu_screen.dart';
+// import 'menu_screen.dart';
 import '../services/ad_banner_service.dart';
 import 'package:period_tracker/services/speech_service.dart';
 // import 'package:yandex_mobileads/mobile_ads.dart';
@@ -25,6 +25,9 @@ class _NotesScreenState extends State<NotesScreen> {
   String? _errorMessage;
   static const _backgroundImage = AssetImage('assets/images/fon1.png');
   
+  // Виджет баннера создается один раз и переиспользуется
+  Widget? _bannerWidget;
+  
   // Состояние распознавания речи
   bool _isSpeechListening = false;
   String _speechWords = '';
@@ -34,6 +37,17 @@ class _NotesScreenState extends State<NotesScreen> {
   void initState() {
     super.initState();
     _initializeScreen();
+    _initializeBannerWidget();
+  }
+
+  // Инициализация виджета баннера - создается один раз
+  void _initializeBannerWidget() {
+    if (_bannerWidget == null) {
+      _bannerWidget = _adBannerService.createBannerWidget();
+      if (mounted) {
+        setState(() {});
+      }
+    }
   }
 
   // Оптимизированная инициализация экрана
@@ -659,6 +673,13 @@ class _NotesScreenState extends State<NotesScreen> {
     }
   }
 
+  @override
+  void dispose() {
+    // Очищаем виджет баннера при уничтожении экрана
+    _bannerWidget = null;
+    super.dispose();
+  }
+
 @override
 Widget build(BuildContext context) {
   final l10n = AppLocalizations.of(context)!;
@@ -668,11 +689,7 @@ Widget build(BuildContext context) {
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
         onPressed: () {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const MenuScreen()),
-            (route) => false,
-          );
+          Navigator.of(context).pop(); // Обычная навигация назад
         },
       ),
       title: Row(
@@ -753,8 +770,16 @@ Widget build(BuildContext context) {
             ),
           ),
           
-          // Блок рекламы
-          _adBannerService.createBannerWidget(),
+          // Блок рекламы - используем созданный один раз виджет
+          if (_bannerWidget != null) ...[
+            _bannerWidget!,
+          ] else ...[
+            // Показываем загрузку, если виджет еще не создан
+            const SizedBox(
+              height: 50,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          ],
         ],
       ),
     ),

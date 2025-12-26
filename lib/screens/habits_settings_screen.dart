@@ -16,10 +16,14 @@ class _HabitsSettingsScreenState extends State<HabitsSettingsScreen> {
   static const _backgroundImage = AssetImage('assets/images/fon1.png');
   bool _hasChanges = false; // Флаг для отслеживания изменений
 
+  // Виджет баннера создается один раз и переиспользуется
+  Widget? _bannerWidget;
+
   @override
   void initState() {
     super.initState();
     _initializeScreen();
+    _initializeBannerWidget();
   }
 
   // Оптимизированная инициализация экрана
@@ -27,8 +31,23 @@ class _HabitsSettingsScreenState extends State<HabitsSettingsScreen> {
     // Инициализация экрана без создания баннера
   }
 
+  // Инициализация виджета баннера - создается один раз
+  void _initializeBannerWidget() {
+    if (_bannerWidget == null) {
+      _bannerWidget = _adBannerService.createBannerWidget();
+      if (mounted) {
+        setState(() {});
+      }
+    }
+  }
   
 
+@override
+  void dispose() {
+    // Очищаем виджет баннера при уничтожении экрана
+    _bannerWidget = null;
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -57,8 +76,16 @@ class _HabitsSettingsScreenState extends State<HabitsSettingsScreen> {
               child: _buildMainContent(),
             ),
             
-            // Блок рекламы
-            _adBannerService.createBannerWidget(),
+            // Блок рекламы - используем созданный один раз виджет
+            if (_bannerWidget != null) ...[
+              _bannerWidget!,
+            ] else ...[
+              // Показываем загрузку, если виджет еще не создан
+              const SizedBox(
+                height: 50,
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ],
           ],
         ),
       ),

@@ -17,7 +17,7 @@ import '../models/medication_taken_record.dart'; // Импортируем Medic
 import '../services/permissions_service.dart';
 import '../services/ad_banner_service.dart';
 import 'home_screen.dart';
-import 'menu_screen.dart';
+// import 'menu_screen.dart';
 import 'medications_screen.dart';
 //import 'package:yandex_mobileads/ad_widget.dart';
 
@@ -82,6 +82,9 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
   
   // Реклама
   static const _backgroundImage = AssetImage('assets/images/fon1.png');
+
+  // Виджет баннера создается один раз и переиспользуется
+  Widget? _bannerWidget;
 
   PeriodRecord? _lastPeriod;
   PeriodRecord? _activePeriod;
@@ -200,6 +203,17 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
   void initState() {
     super.initState();
     _initializeScreen();
+    _initializeBannerWidget();
+  }
+
+  // Инициализация виджета баннера - создается один раз
+  void _initializeBannerWidget() {
+    if (_bannerWidget == null) {
+      _bannerWidget = _adBannerService.createBannerWidget();
+      if (mounted) {
+        setState(() {});
+      }
+    }
   }
 
   // Оптимизированная инициализация экрана - только легкие операции
@@ -660,11 +674,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => const MenuScreen()),
-              (route) => false,
-            );
+            Navigator.of(context).pop(); // Обычная навигация назад
           },
         ),
         title: Text(l10n.dayDetailsTitle),
@@ -690,8 +700,16 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
               child: _buildMainContent(l10n),
             ),
             
-            // Блок рекламы
-            _adBannerService.createBannerWidget(),
+            // Блок рекламы - используем созданный один раз виджет
+            if (_bannerWidget != null) ...[
+              _bannerWidget!,
+            ] else ...[
+              // Показываем загрузку, если виджет еще не создан
+              const SizedBox(
+                height: 50,
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ],
           ],
         ),
       ),
@@ -1641,6 +1659,8 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
 
   @override
   void dispose() {
+    // Очищаем виджет баннера при уничтожении экрана
+    _bannerWidget = null;
     super.dispose();
   }
 
