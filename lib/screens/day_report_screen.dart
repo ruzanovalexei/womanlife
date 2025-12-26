@@ -231,8 +231,23 @@ class _DayReportScreenState extends State<DayReportScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+
+          const Divider(
+            color: Colors.black,
+            thickness: 2,
+            height: 2,
+          ),
+          const SizedBox(height: 8),
+
           // Заголовок с датой
           _buildDateHeader(l10n),
+          const SizedBox(height: 8),
+          // Толстая черная линия под заголовком
+          const Divider(
+            color: Colors.black,
+            thickness: 2,
+            height: 2,
+          ),
           const SizedBox(height: 16),
 
           // --- Лекарства ---
@@ -243,6 +258,13 @@ class _DayReportScreenState extends State<DayReportScreen> {
           const SizedBox(height: 8),
           ..._generateMedicationsReport(l10n),
           const SizedBox(height: 16),
+          // Тонкая серая линия
+          const Divider(
+            color: Colors.grey,
+            thickness: 1,
+            height: 1,
+          ),
+          const SizedBox(height: 16),
 
           // --- Привычки ---
           const Text(
@@ -252,57 +274,74 @@ class _DayReportScreenState extends State<DayReportScreen> {
           const SizedBox(height: 8),
           ..._generateHabitsReport(l10n),
           const SizedBox(height: 16),
-
-          // --- Активные списки задач ---
-          const Text(
-            'Активные списки задач',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-          ),
-          const SizedBox(height: 8),
-          FutureBuilder<List<ListWithProgressAndItems>>(
-            future: _getActiveListsWithProgress(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Text('Загрузка списков задач...');
-              }
-              if (snapshot.hasError) {
-                return Text('Ошибка загрузки списков задач: ${snapshot.error}');
-              }
-              
-              final activeLists = snapshot.data!;
-              if (activeLists.isEmpty) {
-                return const Text('Нет активных списков задач', style: TextStyle(color: Colors.grey));
-              }
-              
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: activeLists.map((listWithItems) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        // '• ${listWithItems.list.name}: ${listWithItems.completed}/${listWithItems.total} выполнено',
-                        '• ${listWithItems.list.name}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      // Показываем невыполненные задачи с отступом
-                      ...listWithItems.incompleteItems.map((item) {
-                        return Padding(
-                          padding: const EdgeInsets.only(left: 16, top: 2),
-                          child: Text(
-                            '  - ${item.text}',
-                            style: const TextStyle(color: Colors.grey),
-                          ),
-                        );
-                      }),
-                      const SizedBox(height: 8),
-                    ],
-                  );
-                }).toList(),
-              );
-            },
+          // Тонкая серая линия
+          const Divider(
+            color: Colors.grey,
+            thickness: 1,
+            height: 1,
           ),
           const SizedBox(height: 16),
+
+          // --- Активные списки задач ---
+          // Отображаем только на текущую дату и в будущем
+          if (!_isDateInPast(_selectedDate)) ...[
+            const Text(
+              'Активные списки задач',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+            const SizedBox(height: 8),
+            FutureBuilder<List<ListWithProgressAndItems>>(
+              future: _getActiveListsWithProgress(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Text('Загрузка списков задач...');
+                }
+                if (snapshot.hasError) {
+                  return Text('Ошибка загрузки списков задач: ${snapshot.error}');
+                }
+                
+                final activeLists = snapshot.data!;
+                if (activeLists.isEmpty) {
+                  return const Text('Нет активных списков задач', style: TextStyle(color: Colors.grey));
+                }
+                
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: activeLists.map((listWithItems) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          // '• ${listWithItems.list.name}: ${listWithItems.completed}/${listWithItems.total} выполнено',
+                          '• ${listWithItems.list.name}',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        // Показываем невыполненные задачи с отступом
+                        ...listWithItems.incompleteItems.map((item) {
+                          return Padding(
+                            padding: const EdgeInsets.only(left: 16, top: 2),
+                            child: Text(
+                              '  - ${item.text}',
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                          );
+                        }),
+                        const SizedBox(height: 8),
+                      ],
+                    );
+                  }).toList(),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            // Тонкая серая линия
+            const Divider(
+              color: Colors.grey,
+              thickness: 1,
+              height: 1,
+            ),
+            const SizedBox(height: 16),
+          ],
 
           // --- Информация о месячных ---
           const Text(
@@ -311,6 +350,13 @@ class _DayReportScreenState extends State<DayReportScreen> {
           ),
           const SizedBox(height: 8),
           ..._generatePeriodInfoReport(l10n),
+          const SizedBox(height: 16),
+          // Тонкая серая линия
+          const Divider(
+            color: Colors.grey,
+            thickness: 1,
+            height: 1,
+          ),
           const SizedBox(height: 16),
 
           // --- Информация о сексе ---
@@ -322,6 +368,13 @@ class _DayReportScreenState extends State<DayReportScreen> {
             const SizedBox(height: 8),
             ..._generateSexReport(l10n),
             const SizedBox(height: 16),
+            // Тонкая серая линия
+            const Divider(
+              color: Colors.grey,
+              thickness: 1,
+              height: 1,
+            ),
+            const SizedBox(height: 16),
           ],
 
           // --- Симптомы ---
@@ -332,6 +385,13 @@ class _DayReportScreenState extends State<DayReportScreen> {
             ),
             const SizedBox(height: 8),
             ..._generateSymptomsReport(l10n),
+            const SizedBox(height: 16),
+            // Тонкая серая линия
+            const Divider(
+              color: Colors.grey,
+              thickness: 1,
+              height: 1,
+            ),
             const SizedBox(height: 16),
           ],
 
@@ -639,6 +699,12 @@ class _DayReportScreenState extends State<DayReportScreen> {
     
     return (date.isAfter(startDate.subtract(const Duration(days: 1))) || date.isAtSameMomentAs(startDate)) && 
            (endDate == null || date.isBefore(endDate.add(const Duration(days: 1))) || date.isAtSameMomentAs(endDate));
+  }
+
+  // Проверяет, является ли дата прошедшей (меньше текущей даты)
+  bool _isDateInPast(DateTime date) {
+    final today = MyDateUtils.getUtcToday();
+    return date.isBefore(DateTime(today.year, today.month, today.day));
   }
 }
 
