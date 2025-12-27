@@ -472,5 +472,17 @@
   "speechNoteCreated": "Voice note created",
   "noMicrophonePermission": "No microphone permission",
   "listeningIndicator": "Listening...",
-  "errorDialogTitle": "Error"
+  "errorDialogTitle": "Error",
+  "plannerTitle": "Daily Planner",
+  "dayStartTime": "Day Start Time",
+  "dayEndTime": "Day End Time",
+  "addTask": "Add Task",
+  "taskTitle": "Task Title",
+  "taskDescription": "Description (optional)",
+  "taskStartTime": "Start Time",
+  "taskEndTime": "End Time",
+  "selectDate": "Select Date",
+  "save": "Save",
+  "deleteTask": "Delete Task",
+  "deleteTaskConfirm": "Are you sure you want to delete this task?"
 }

@@ -890,4 +890,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorDialogTitle => 'Error';
+
+  @override
+  String get plannerTitle => 'Daily Planner';
+
+  @override
+  String get dayStartTime => 'Day Start Time';
+
+  @override
+  String get dayEndTime => 'Day End Time';
+
+  @override
+  String get addTask => 'Add Task';
+
+  @override
+  String get taskTitle => 'Task Title';
+
+  @override
+  String get taskDescription => 'Description (optional)';
+
+  @override
+  String get taskStartTime => 'Start Time';
+
+  @override
+  String get taskEndTime => 'End Time';
+
+  @override
+  String get selectDate => 'Select Date';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get deleteTask => 'Delete Task';
+
+  @override
+  String get deleteTaskConfirm => 'Are you sure you want to delete this task?';
 }

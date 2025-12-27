@@ -474,6 +474,18 @@
   "speechNoteCreated": "Аудиозаметка создана",
   "noMicrophonePermission": "Нет разрешения на использование микрофона",
   "listeningIndicator": "Слушаю...",
-  "errorDialogTitle": "Ошибка"
+  "errorDialogTitle": "Ошибка",
+  "plannerTitle": "Ежедневник",
+  "dayStartTime": "Начало дня",
+  "dayEndTime": "Окончание дня",
+  "addTask": "Добавить задачу",
+  "taskTitle": "Название задачи",
+  "taskDescription": "Описание (необязательно)",
+  "taskStartTime": "Начало",
+  "taskEndTime": "Окончание",
+  "selectDate": "Выберите дату",
+  "save": "Сохранить",
+  "deleteTask": "Удалить задачу",
+  "deleteTaskConfirm": "Вы уверены, что хотите удалить эту задачу?"
 }
 

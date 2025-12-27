@@ -7,6 +7,8 @@ class Settings {
   final String firstDayOfWeek;
   final int? dataRetentionPeriod; // Период хранения данных в месяцах (null = неограниченно)
   final String? lastCacheCleanup; // Дата последней очистки кеша
+  final String dayStartTime; // Время начала дня для ежедневника
+  final String dayEndTime; // Время окончания дня для ежедневника
 
   const Settings({
     this.id,
@@ -17,6 +19,8 @@ class Settings {
     required this.firstDayOfWeek,
     this.dataRetentionPeriod,
     this.lastCacheCleanup,
+    this.dayStartTime = '00:00',
+    this.dayEndTime = '24:00',
   });
 
   Map<String, dynamic> toMap() {
@@ -29,6 +33,8 @@ class Settings {
       'firstDayOfWeek': firstDayOfWeek,
       'dataRetentionPeriod': dataRetentionPeriod,
       'lastCacheCleanup': lastCacheCleanup,
+      'dayStartTime': dayStartTime,
+      'dayEndTime': dayEndTime,
     };
   }
 
@@ -37,11 +43,13 @@ class Settings {
       id: map['id'],
       cycleLength: map['cycleLength'],
       periodLength: map['periodLength'],
-      planningMonths: map['planningMonths'] ?? 3, // По умолчанию 3 месяца
+      planningMonths: map['planningMonths'] ?? 3,
       locale: map['locale'] ?? 'ru',
       firstDayOfWeek: map['firstDayOfWeek'] ?? 'monday',
-      dataRetentionPeriod: map['dataRetentionPeriod'], // null = неограниченно
-      lastCacheCleanup: map['lastCacheCleanup'], // Дата последней очистки кеша
+      dataRetentionPeriod: map['dataRetentionPeriod'],
+      lastCacheCleanup: map['lastCacheCleanup'],
+      dayStartTime: map['dayStartTime'] ?? '00:00',
+      dayEndTime: map['dayEndTime'] ?? '24:00',
     );
   }
 
@@ -54,6 +62,8 @@ class Settings {
     String? firstDayOfWeek,
     int? dataRetentionPeriod,
     String? lastCacheCleanup,
+    String? dayStartTime,
+    String? dayEndTime,
   }) {
     return Settings(
       id: id ?? this.id,
@@ -64,11 +74,13 @@ class Settings {
       firstDayOfWeek: firstDayOfWeek ?? this.firstDayOfWeek,
       dataRetentionPeriod: dataRetentionPeriod ?? this.dataRetentionPeriod,
       lastCacheCleanup: lastCacheCleanup ?? this.lastCacheCleanup,
+      dayStartTime: dayStartTime ?? this.dayStartTime,
+      dayEndTime: dayEndTime ?? this.dayEndTime,
     );
   }
 
   @override
   String toString() {
-    return 'Settings{id: $id, cycleLength: $cycleLength, periodLength: $periodLength, planningMonths: $planningMonths, locale: $locale, firstDayOfWeek: $firstDayOfWeek, dataRetentionPeriod: $dataRetentionPeriod, lastCacheCleanup: $lastCacheCleanup}';
+    return 'Settings{id: $id, cycleLength: $cycleLength, periodLength: $periodLength, planningMonths: $planningMonths, locale: $locale, firstDayOfWeek: $firstDayOfWeek, dataRetentionPeriod: $dataRetentionPeriod, lastCacheCleanup: $lastCacheCleanup, dayStartTime: $dayStartTime, dayEndTime: $dayEndTime}';
   }
 }

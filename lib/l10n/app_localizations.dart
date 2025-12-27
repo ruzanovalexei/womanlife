@@ -1708,6 +1708,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error'**
   String get errorDialogTitle;
+
+  /// No description provided for @plannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Planner'**
+  String get plannerTitle;
+
+  /// No description provided for @dayStartTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Day Start Time'**
+  String get dayStartTime;
+
+  /// No description provided for @dayEndTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Day End Time'**
+  String get dayEndTime;
+
+  /// No description provided for @addTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Task'**
+  String get addTask;
+
+  /// No description provided for @taskTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Task Title'**
+  String get taskTitle;
+
+  /// No description provided for @taskDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description (optional)'**
+  String get taskDescription;
+
+  /// No description provided for @taskStartTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Time'**
+  String get taskStartTime;
+
+  /// No description provided for @taskEndTime.
+  ///
+  /// In en, this message translates to:
+  /// **'End Time'**
+  String get taskEndTime;
+
+  /// No description provided for @selectDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Date'**
+  String get selectDate;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @deleteTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Task'**
+  String get deleteTask;
+
+  /// No description provided for @deleteTaskConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this task?'**
+  String get deleteTaskConfirm;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

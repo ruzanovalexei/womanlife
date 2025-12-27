@@ -890,4 +890,40 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get errorDialogTitle => 'Ошибка';
+
+  @override
+  String get plannerTitle => 'Ежедневник';
+
+  @override
+  String get dayStartTime => 'Начало дня';
+
+  @override
+  String get dayEndTime => 'Окончание дня';
+
+  @override
+  String get addTask => 'Добавить задачу';
+
+  @override
+  String get taskTitle => 'Название задачи';
+
+  @override
+  String get taskDescription => 'Описание (необязательно)';
+
+  @override
+  String get taskStartTime => 'Начало';
+
+  @override
+  String get taskEndTime => 'Окончание';
+
+  @override
+  String get selectDate => 'Выберите дату';
+
+  @override
+  String get save => 'Сохранить';
+
+  @override
+  String get deleteTask => 'Удалить задачу';
+
+  @override
+  String get deleteTaskConfirm => 'Вы уверены, что хотите удалить эту задачу?';
 }

@@ -14,6 +14,7 @@ import 'package:period_tracker/screens/notes_screen.dart';
 import 'package:period_tracker/screens/habits_screen.dart';
 // import 'package:period_tracker/screens/analytics_screen.dart';
 import 'package:period_tracker/screens/day_report_screen.dart';
+import 'package:period_tracker/screens/planner_screen.dart';
 // import 'package:period_tracker/screens/medications_screen.dart';
 // import 'package:yandex_mobileads/mobile_ads.dart';analytics_screen.dart
 // import 'package:yandex_mobileads/ad_widget.dart'; // Добавляем импорт AdWidget
@@ -196,6 +197,14 @@ class _MenuScreenState extends State<MenuScreen> {
       case 5:
         Navigator.push(
           context,
+          MaterialPageRoute(builder: (context) => const PlannerScreen()),
+        ).then((_) {
+          _loadData();
+        });
+        break;
+      case 6:
+        Navigator.push(
+          context,
           MaterialPageRoute(builder: (context) => const SettingsScreen()),
         ).then((_) {
           _loadData();
@@ -267,13 +276,13 @@ static const _backgroundImage = AssetImage('assets/images/fon1.png');
             color: Colors.pink[200]!,
             onTap: () => _onMenuItemTap(0),
           ),
-          // const SizedBox(height: 12),
-          // _buildMenuTile(
-          //   icon: Icons.schedule,
-          //   title: l10n.menu2,
-          //   color: const Color.fromARGB(255, 116, 114, 115),
-          //   onTap: () => _onMenuItemTap(1),
-          // ),
+          const SizedBox(height: 12),
+          _buildMenuTile(
+            icon: Icons.calendar_today,
+            title: l10n.plannerTitle,
+            color: Colors.pink[200]!,
+            onTap: () => _onMenuItemTap(5),
+          ),
           const SizedBox(height: 12),
           _buildMenuTile(
             icon: Icons.checklist,
@@ -295,12 +304,13 @@ static const _backgroundImage = AssetImage('assets/images/fon1.png');
             color: Colors.pink[200]!,
             onTap: () => _onMenuItemTap(4),
           ),
+
           const SizedBox(height: 12),
           _buildMenuTile(
             icon: Icons.settings,
             title: l10n.settingsTitle,
             color: Colors.pink[200]!,
-            onTap: () => _onMenuItemTap(5),
+            onTap: () => _onMenuItemTap(6),
           ),
           const SizedBox(height: 12),
         ],

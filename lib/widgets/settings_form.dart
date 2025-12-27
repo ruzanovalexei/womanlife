@@ -1,3 +1,4 @@
+// lib/widgets/settings_form.dart
 import 'package:flutter/material.dart';
 import 'package:period_tracker/l10n/app_localizations.dart';
 
@@ -25,6 +26,8 @@ class _SettingsFormState extends State<SettingsForm> {
   late String _selectedLocale;
   late String _selectedFirstDay;
   late bool _isDataRetentionEnabled;
+  late String _dayStartTime;
+  late String _dayEndTime;
 
   final _formKey = GlobalKey<FormState>();
 
@@ -40,6 +43,32 @@ class _SettingsFormState extends State<SettingsForm> {
     _selectedLocale = widget.settings.locale;
     _selectedFirstDay = widget.settings.firstDayOfWeek;
     _isDataRetentionEnabled = widget.settings.dataRetentionPeriod != null;
+    _dayStartTime = widget.settings.dayStartTime;
+    _dayEndTime = widget.settings.dayEndTime;
+  }
+
+  TimeOfDay _parseTime(String timeStr) {
+    final parts = timeStr.split(':');
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+  }
+
+  Future<void> _selectDayTime({required bool isStart}) async {
+    final currentTime = isStart ? _parseTime(_dayStartTime) : _parseTime(_dayEndTime);
+    
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: currentTime,
+    );
+    
+    if (picked != null) {
+      setState(() {
+        if (isStart) {
+          _dayStartTime = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+        } else {
+          _dayEndTime = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+        }
+      });
+    }
   }
 
   @override
@@ -70,30 +99,6 @@ class _SettingsFormState extends State<SettingsForm> {
             min: 1,
             max: 12,
           ),
-          // const SizedBox(height: 16),
-          // DropdownButtonFormField<String>(
-          //   initialValue: _selectedLocale,
-          //   decoration: InputDecoration(
-          //     labelText: l10n.settingsFormLanguageLabel,
-          //     border: const OutlineInputBorder(),
-          //   ),
-          //   items: [
-          //     DropdownMenuItem(
-          //       value: 'en',
-          //       child: Text(l10n.settingsFormLanguageEnglish),
-          //     ),
-          //     DropdownMenuItem(
-          //       value: 'ru',
-          //       child: Text(l10n.settingsFormLanguageRussian),
-          //     ),
-          //   ],
-          //   onChanged: (value) {
-          //     if (value == null) return;
-          //     setState(() {
-          //       _selectedLocale = value;
-          //     });
-          //   },
-          // ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             initialValue: _selectedFirstDay,
@@ -118,45 +123,33 @@ class _SettingsFormState extends State<SettingsForm> {
               });
             },
           ),
+          const SizedBox(height: 24),
+          // Настройки ежедневника
+          Text(
+            l10n.plannerTitle,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 16),
-          // Настройка периода хранения данных
-          // CheckboxListTile(
-          //   title: const Text('Автоматическая очистка старых данных'),
-          //   subtitle: const Text('Удалять записи старше указанного периода'),
-          //   value: _isDataRetentionEnabled,
-          //   onChanged: (value) {
-          //     setState(() {
-          //       _isDataRetentionEnabled = value ?? false;
-          //       if (!_isDataRetentionEnabled) {
-          //         _dataRetentionController.clear();
-          //       }
-          //     });
-          //   },
-          // ),
-          // if (_isDataRetentionEnabled) ...[
-          //   const SizedBox(height: 8),
-          //   TextFormField(
-          //     controller: _dataRetentionController,
-          //     decoration: const InputDecoration(
-          //       labelText: 'Период хранения данных (месяцев)',
-          //       border: OutlineInputBorder(),
-          //       helperText: '0 = без ограничений, null = не удалять автоматически',
-          //     ),
-          //     keyboardType: TextInputType.number,
-          //     validator: (value) {
-          //       if (_isDataRetentionEnabled && (value == null || value.isEmpty)) {
-          //         return 'Введите период хранения данных';
-          //       }
-          //       if (value != null && value.isNotEmpty) {
-          //         final numValue = int.tryParse(value);
-          //         if (numValue == null || numValue < 0) {
-          //           return 'Введите корректное число (0 или больше)';
-          //         }
-          //       }
-          //       return null;
-          //     },
-          //   ),
-          // ],
+          Row(
+            children: [
+              Expanded(
+                child: ListTile(
+                  title: Text(l10n.dayStartTime),
+                  subtitle: Text(_dayStartTime),
+                  trailing: const Icon(Icons.access_time),
+                  onTap: () => _selectDayTime(isStart: true),
+                ),
+              ),
+              Expanded(
+                child: ListTile(
+                  title: Text(l10n.dayEndTime),
+                  subtitle: Text(_dayEndTime),
+                  trailing: const Icon(Icons.access_time),
+                  onTap: () => _selectDayTime(isStart: false),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 32),
           ElevatedButton(
             onPressed: _saveSettings,
@@ -205,6 +198,8 @@ class _SettingsFormState extends State<SettingsForm> {
         locale: _selectedLocale,
         firstDayOfWeek: _selectedFirstDay,
         dataRetentionPeriod: dataRetentionPeriod,
+        dayStartTime: _dayStartTime,
+        dayEndTime: _dayEndTime,
       );
       
       widget.onSave(newSettings);

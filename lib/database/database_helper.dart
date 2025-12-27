@@ -19,11 +19,12 @@ import '../models/habit_execution.dart'; // Импортируем модель 
 import '../models/habit_measurable.dart'; // Импортируем модель привычек типа измеримый результат
 import '../models/habit_execution_record.dart'; // Импортируем модель записей выполнения привычек
 import '../models/habit_measurable_record.dart'; // Импортируем модель записей выполнения измеримых привычек
+import '../models/planner_task.dart'; // Импортируем модель задачи ежедневника
 //import '../utils/date_utils.dart';
 
 class DatabaseHelper {
   static const _databaseName = "PeriodTracker.db";
-  static const _databaseVersion = 22; // Добавляем настраиваемый период хранения данных
+  static const _databaseVersion = 23; // Версия 23 - добавлены настройки времени дня для ежедневника
 
   static const settingsTable = 'settings';
   static const dayNotesTable = 'day_notes';
@@ -39,6 +40,7 @@ class DatabaseHelper {
   static const habitsMeasurableTable = 'habits_measurable'; // Таблица для привычек типа измеримый результат
   static const habitExecutionRecordsTable = 'habit_execution_records'; // Таблица для записей выполнения привычек
   static const habitMeasurableRecordsTable = 'habit_measurable_records'; // Таблица для записей выполнения измеримых привычек
+  static const plannerTasksTable = 'planner_tasks'; // Таблица для задач ежедневника
 
   // Singleton
   DatabaseHelper._privateConstructor();
@@ -219,6 +221,18 @@ class DatabaseHelper {
         executionDate TEXT NOT NULL,
         createdAt TEXT NOT NULL,
         FOREIGN KEY (habitId) REFERENCES $habitsMeasurableTable (id) ON DELETE CASCADE
+      )
+    ''');
+
+    // Создание таблицы для задач ежедневника
+    await db.execute('''
+      CREATE TABLE $plannerTasksTable (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT NOT NULL,
+        startTime TEXT NOT NULL,
+        endTime TEXT NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT
       )
     ''');
 
@@ -771,6 +785,37 @@ class DatabaseHelper {
             print('Added dataRetentionPeriod column to settings table');
           } catch (e) {
             print('Error adding dataRetentionPeriod column: $e');
+          }
+          break;
+        case 23:
+          try {
+            // Добавляем поля для настроек времени дня в ежедневнике
+            await db.execute('ALTER TABLE $settingsTable ADD COLUMN dayStartTime TEXT DEFAULT "00:00"');
+            print('Added dayStartTime column to settings table');
+          } catch (e) {
+            print('Error adding dayStartTime column: $e');
+          }
+          try {
+            await db.execute('ALTER TABLE $settingsTable ADD COLUMN dayEndTime TEXT DEFAULT "24:00"');
+            print('Added dayEndTime column to settings table');
+          } catch (e) {
+            print('Error adding dayEndTime column: $e');
+          }
+          try {
+            // Создаем таблицу для задач ежедневника
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS $plannerTasksTable (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                date TEXT NOT NULL,
+                startTime TEXT NOT NULL,
+                endTime TEXT NOT NULL,
+                title TEXT NOT NULL,
+                description TEXT
+              )
+            ''');
+            print('Created planner_tasks table');
+          } catch (e) {
+            print('Error creating planner_tasks table: $e');
           }
           break;
       }
@@ -1430,8 +1475,94 @@ class DatabaseHelper {
         print('dataRetentionPeriod column already exists in settings table');
       }
       
+      // Проверяем и добавляем колонки dayStartTime и dayEndTime
+      if (!columns.contains('dayStartTime')) {
+        try {
+          await db.execute('ALTER TABLE $settingsTable ADD COLUMN dayStartTime TEXT DEFAULT "00:00"');
+          print('Successfully added dayStartTime column to settings table');
+        } catch (e) {
+          print('Error adding dayStartTime column: $e');
+        }
+      }
+      if (!columns.contains('dayEndTime')) {
+        try {
+          await db.execute('ALTER TABLE $settingsTable ADD COLUMN dayEndTime TEXT DEFAULT "24:00"');
+          print('Successfully added dayEndTime column to settings table');
+        } catch (e) {
+          print('Error adding dayEndTime column: $e');
+        }
+      }
+      
+      // Проверяем и создаем таблицу planner_tasks если её нет
+      await ensurePlannerTasksTableExists();
+      
     } catch (e) {
       print('Error fixing settings table structure: $e');
+    }
+  }
+
+  // ===================== PLANNER TASK METHODS =====================
+  
+  Future<int> insertPlannerTask(PlannerTask task) async {
+    Database db = await database;
+    return await db.insert(plannerTasksTable, task.toMap());
+  }
+
+  Future<int> updatePlannerTask(PlannerTask task) async {
+    Database db = await database;
+    return await db.update(
+      plannerTasksTable, 
+      task.toMap(), 
+      where: 'id = ?', 
+      whereArgs: [task.id]
+    );
+  }
+
+  Future<int> deletePlannerTask(int id) async {
+    Database db = await database;
+    return await db.delete(plannerTasksTable, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<PlannerTask>> getTasksForDate(DateTime date) async {
+    Database db = await database;
+    final dateStr = MyDateUtils.toUtcDateString(date);
+    List<Map<String, dynamic>> maps = await db.query(
+      plannerTasksTable,
+      where: 'date = ?',
+      whereArgs: [dateStr],
+      orderBy: 'startTime ASC',
+    );
+    return maps.map((e) => PlannerTask.fromMap(e)).toList();
+  }
+
+  Future<PlannerTask?> getPlannerTaskById(int id) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query(
+      plannerTasksTable,
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    return maps.isNotEmpty ? PlannerTask.fromMap(maps[0]) : null;
+  }
+
+  /// Проверка и создание таблицы planner_tasks если она не существует
+  Future<void> ensurePlannerTasksTableExists() async {
+    Database db = await database;
+    try {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS $plannerTasksTable (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          date TEXT NOT NULL,
+          startTime TEXT NOT NULL,
+          endTime TEXT NOT NULL,
+          title TEXT NOT NULL,
+          description TEXT
+        )
+      ''');
+      print('planner_tasks table ensured');
+    } catch (e) {
+      print('Error ensuring planner_tasks table: $e');
     }
   }
 }

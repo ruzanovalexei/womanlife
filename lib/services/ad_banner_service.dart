@@ -16,24 +16,24 @@ class AdBannerService {
   static const int _maxPoolSize = 3;
   static const Duration _cleanupInterval = Duration(seconds: 30);
   // Список adUnitId для round-robin ротации баннеров DEV
-  // static const List<String> _bannerAdUnitIds = [
-  //   'R-M-17946414-6',
-  //   'R-M-17946414-6',
-  //   'R-M-17946414-6',
-  // ];
-  // Список adUnitId для round-robin ротации баннеров Прод
   static const List<String> _bannerAdUnitIds = [
-    'R-M-17946414-3',
-    'R-M-17946414-4',
-    'R-M-17946414-5',
+    'R-M-17946414-6',
+    'R-M-17946414-6',
+    'R-M-17946414-6',
   ];
+  // Список adUnitId для round-robin ротации баннеров Прод
+  // static const List<String> _bannerAdUnitIds = [
+  //   'R-M-17946414-3',
+  //   'R-M-17946414-4',
+  //   'R-M-17946414-5',
+  // ];
 
 
 
   // adUnitId для рекламы с вознаграждением DEV
-  // static const String _rewardedAdUnitId = 'R-M-17946414-7';
+  static const String _rewardedAdUnitId = 'R-M-17946414-7';
   // adUnitId для рекламы с вознаграждением Прод
-   static const String _rewardedAdUnitId = 'R-M-17946414-2';
+  //  static const String _rewardedAdUnitId = 'R-M-17946414-2';
 
   // Пул баннеров
   final List<BannerAd> _bannerPool = [];
