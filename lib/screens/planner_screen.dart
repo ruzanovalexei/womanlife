@@ -78,25 +78,38 @@ class _PlannerScreenState extends State<PlannerScreen> {
     return int.tryParse(parts[0]) ?? 0;
   }
 
-  int _calculateHourCount() {
-    final startParts = _settings.dayStartTime.split(':');
-    final endParts = _settings.dayEndTime.split(':');
-    final start = int.parse(startParts[0]) + (int.parse(startParts[1]) / 60);
-    final end = int.parse(endParts[0]) + (int.parse(endParts[1]) / 60);
-    return (end - start).ceil();
+  int _getEndHour() {
+    final parts = _settings.dayEndTime.split(':');
+    return int.tryParse(parts[0]) ?? 24;
   }
 
-  bool _timesOverlap(TimeOfDay start1, TimeOfDay end1, TimeOfDay start2, TimeOfDay end2) {
-    final s1 = start1.hour * 60 + start1.minute;
-    final e1 = end1.hour * 60 + end1.minute;
-    final s2 = start2.hour * 60 + start2.minute;
-    final e2 = end2.hour * 60 + end2.minute;
-    return s1 < e2 && s2 < e1;
+  int _calculateHourCount() {
+    return _getEndHour() - _getStartHour();
+  }
+
+  /// Преобразуем TimeOfDay в минуты от начала дня
+  int _timeToMinutes(TimeOfDay time) {
+    return time.hour * 60 + time.minute;
+  }
+
+  /// Получаем смещение задачи относительно начала рабочего дня
+  double _getTaskTopOffset(PlannerTask task) {
+    final dayStartMinutes = _getStartHour() * 60;
+    final taskStartMinutes = _timeToMinutes(task.startTime);
+    final relativeMinutes = taskStartMinutes - dayStartMinutes;
+    return (relativeMinutes / 60) * _hourBlockHeight;
+  }
+
+  /// Получаем высоту задачи
+  double _getTaskHeight(PlannerTask task) {
+    final duration = _timeToMinutes(task.endTime) - _timeToMinutes(task.startTime);
+    return (duration / 60) * _hourBlockHeight;
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final totalHeight = _calculateHourCount() * _hourBlockHeight;
 
     return Scaffold(
       appBar: AppBar(
@@ -113,6 +126,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
+                // Заголовок с датой
                 Card(
                   margin: const EdgeInsets.all(8),
                   child: Padding(
@@ -138,12 +152,44 @@ class _PlannerScreenState extends State<PlannerScreen> {
                     ),
                   ),
                 ),
+                // Основная область с часами и задачами
                 Expanded(
-                  child: ListView.builder(
-                    itemCount: _calculateHourCount(),
-                    itemBuilder: (context, index) {
-                      final hourStart = _getStartHour() + index;
-                      return _buildHourBlock(context, hourStart);
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Ширина области задач (без колонки времени)
+                      final tasksAreaWidth = constraints.maxWidth - 60 - 1;
+                      
+                      return SingleChildScrollView(
+                        child: SizedBox(
+                          height: totalHeight,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Колонка времени
+                              SizedBox(
+                                width: 60,
+                                child: _buildTimeColumn(),
+                              ),
+                              // Разделительная линия
+                              Container(
+                                width: 1,
+                                color: Colors.grey[300],
+                              ),
+                              // Область слотов и задач
+                              Expanded(
+                                child: Stack(
+                                  children: [
+                                    // Сетка часов
+                                    _buildHourGrid(),
+                                    // Задачи
+                                    ..._buildTaskCards(context, tasksAreaWidth),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
                     },
                   ),
                 ),
@@ -152,155 +198,193 @@ class _PlannerScreenState extends State<PlannerScreen> {
     );
   }
 
-  Widget _buildHourBlock(BuildContext context, int hour) {
-    final hourStart = TimeOfDay(hour: hour, minute: 0);
-    final hourEnd = TimeOfDay(hour: hour, minute: 60);
-
-    final overlappingTasks = _tasks.where((task) {
-      return _timesOverlap(task.startTime, task.endTime, hourStart, hourEnd);
-    }).toList();
-
-    overlappingTasks.sort((a, b) => a.startTime.compareTo(b.startTime));
-    final count = overlappingTasks.length;
-
-    return SizedBox(
-      height: _hourBlockHeight,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 60,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 4.0, right: 8.0),
-              child: Text(
-                '${hour.toString().padLeft(2, '0')}:00',
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
-                textAlign: TextAlign.end,
-              ),
-            ),
-          ),
-          // Разделительная линия
-          Container(
-            width: 1,
-            color: Colors.grey[300],
-          ),
-          // Слоты для задач
-          if (count == 0)
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  border: Border(top: BorderSide(color: Colors.grey[300]!)),
-                ),
-              ),
-            )
-          else
-            ..._buildTaskWidgets(context, overlappingTasks, hour, count),
-        ],
-      ),
-    );
-  }
-
-  List<Widget> _buildTaskWidgets(
-    BuildContext context,
-    List<PlannerTask> tasks,
-    int currentHour,
-    int taskCount,
-  ) {
-    if (tasks.isEmpty) return [];
-
+  /// Строит колонку с временем
+  Widget _buildTimeColumn() {
     final List<Widget> widgets = [];
-    
-    for (int i = 0; i < tasks.length; i++) {
-      final task = tasks[i];
+    final startHour = _getStartHour();
+    final endHour = _getEndHour();
 
-      // Вычисляем время начала и конца задачи внутри текущего часа
-      int taskStartMinute = 0;
-      if (task.startTime.hour == currentHour) {
-        taskStartMinute = task.startTime.minute;
-      }
-
-      int taskEndMinute = 60;
-      if (task.endTime.hour == currentHour) {
-        taskEndMinute = task.endTime.minute;
-      } else if (task.endTime.hour > currentHour) {
-        taskEndMinute = 60;
-      }
-
-      // Длительность задачи в минутах
-      final taskDuration = taskEndMinute - taskStartMinute;
-
+    for (int hour = startHour; hour < endHour; hour++) {
       widgets.add(
-        // Равная ширина для всех пересекающихся задач
-        Flexible(
-          flex: 1, // Все задачи получают равную ширину
-          child: Container(
-            height: _hourBlockHeight,
-            margin: const EdgeInsets.symmetric(horizontal: 1),
-            child: Stack(
-              children: [
-                // Фоновая линия часа
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border(top: BorderSide(color: Colors.grey[300]!)),
-                    ),
-                  ),
-                ),
-                // Задача позиционируется пропорционально времени
-                Positioned(
-                  top: (taskStartMinute / 60) * _hourBlockHeight,
-                  left: 0,
-                  right: 0,
-                  height: (taskDuration / 60) * _hourBlockHeight,
-                  child: GestureDetector(
-                    onTap: () => _openTaskScreen(task),
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 2),
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Colors.blue[100],
-                        border: Border.all(color: Colors.blue),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              task.title,
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            if (task.description != null && task.description!.isNotEmpty)
-                              Text(
-                                task.description!,
-                                style: const TextStyle(fontSize: 10),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 2,
-                              ),
-                            Text(
-                              '${task.startTime.format(context)} - ${task.endTime.format(context)}',
-                              style: const TextStyle(fontSize: 10),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+        SizedBox(
+          height: _hourBlockHeight,
+          child: Padding(
+            padding: const EdgeInsets.only(top: 4.0, right: 8.0),
+            child: Text(
+              '${hour.toString().padLeft(2, '0')}:00',
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+              textAlign: TextAlign.end,
             ),
           ),
         ),
       );
     }
 
-    return widgets;
+    return Column(children: widgets);
+  }
+
+  /// Строит сетку часовых линий
+  Widget _buildHourGrid() {
+    final List<Widget> lines = [];
+    final startHour = _getStartHour();
+    final endHour = _getEndHour();
+
+    for (int hour = startHour; hour < endHour; hour++) {
+      lines.add(
+        Positioned(
+          left: 0,
+          right: 0,
+          top: (hour - startHour) * _hourBlockHeight,
+          child: Container(
+            height: _hourBlockHeight,
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(color: Colors.grey[300]!),
+                right: BorderSide(color: Colors.grey[300]!),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Stack(children: lines);
+  }
+
+  /// Строит карточки задач
+  List<Widget> _buildTaskCards(BuildContext context, double tasksAreaWidth) {
+    final List<Widget> cards = [];
+    final startHour = _getStartHour();
+    final endHour = _getEndHour();
+
+    // Находим задачи, пересекающиеся в пределах рабочего дня
+    final visibleTasks = _tasks.where((task) {
+      final taskEndMinutes = _timeToMinutes(task.endTime);
+      final taskStartMinutes = _timeToMinutes(task.startTime);
+      final dayEndMinutes = endHour * 60;
+      final dayStartMinutes = startHour * 60;
+      
+      return taskEndMinutes > dayStartMinutes && taskStartMinutes < dayEndMinutes;
+    }).toList();
+
+    // Сортируем по времени начала
+    visibleTasks.sort((a, b) => a.startTime.compareTo(b.startTime));
+
+    // Распределяем задачи по столбцам
+    // В каждом столбце задачи не должны пересекаться
+    final List<List<PlannerTask>> columns = [];
+
+    for (final task in visibleTasks) {
+      final taskStart = _timeToMinutes(task.startTime);
+      final taskEnd = _timeToMinutes(task.endTime);
+
+      // Пытаемся найти столбец, где задача не пересекается с существующими
+      bool placed = false;
+      for (final column in columns) {
+        bool canPlace = true;
+        for (final existingTask in column) {
+          final existingStart = _timeToMinutes(existingTask.startTime);
+          final existingEnd = _timeToMinutes(existingTask.endTime);
+          
+          // Проверяем пересечение
+          if (taskStart < existingEnd && taskEnd > existingStart) {
+            canPlace = false;
+            break;
+          }
+        }
+        
+        if (canPlace) {
+          column.add(task);
+          placed = true;
+          break;
+        }
+      }
+
+      // Если не удалось разместить ни в одном столбце, создаем новый
+      if (!placed) {
+        columns.add([task]);
+      }
+    }
+
+    // Создаем карточки для каждого столбца
+    final columnCount = columns.length;
+    final columnWidth = tasksAreaWidth / columnCount;
+
+    for (int colIndex = 0; colIndex < columns.length; colIndex++) {
+      final column = columns[colIndex];
+      final columnLeft = columnWidth * colIndex;
+
+      for (final task in column) {
+        final taskTop = _getTaskTopOffset(task);
+        final taskHeight = _getTaskHeight(task);
+
+        cards.add(
+          Positioned(
+            top: taskTop,
+            left: columnLeft,
+            width: columnWidth,
+            height: taskHeight,
+            child: GestureDetector(
+              onTap: () => _openTaskScreen(task),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.blue[100],
+                  border: Border.all(color: Colors.blue, width: 1.5),
+                  borderRadius: BorderRadius.circular(6),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 2,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        task.title,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (task.description != null && task.description!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            task.description!,
+                            style: const TextStyle(fontSize: 10),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 2,
+                          ),
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          '${task.startTime.format(context)} - ${task.endTime.format(context)}',
+                          style: const TextStyle(
+                            fontSize: 9,
+                            color: Color(0xFF9E9E9E),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+    }
+
+    return cards;
   }
 
   void _openTaskScreen(PlannerTask? task) async {
