@@ -257,7 +257,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
     final startHour = _getStartHour();
     final endHour = _getEndHour();
 
-    // Находим задачи, пересекающиеся в пределах рабочего дня
+    // Находим задачи в пределах рабочего дня
     final visibleTasks = _tasks.where((task) {
       final taskEndMinutes = _timeToMinutes(task.endTime);
       final taskStartMinutes = _timeToMinutes(task.startTime);
@@ -270,23 +270,43 @@ class _PlannerScreenState extends State<PlannerScreen> {
     // Сортируем по времени начала
     visibleTasks.sort((a, b) => a.startTime.compareTo(b.startTime));
 
-    // Распределяем задачи по столбцам
-    // В каждом столбце задачи не должны пересекаться
-    final List<List<PlannerTask>> columns = [];
-
+    // Находим задачи, которые пересекаются хотя бы с одной другой задачей
+    final Set<int> intersectingIds = {};
     for (final task in visibleTasks) {
       final taskStart = _timeToMinutes(task.startTime);
       final taskEnd = _timeToMinutes(task.endTime);
 
-      // Пытаемся найти столбец, где задача не пересекается с существующими
+      for (final other in visibleTasks) {
+        if (task.id == other.id) continue;
+        final otherStart = _timeToMinutes(other.startTime);
+        final otherEnd = _timeToMinutes(other.endTime);
+        
+        if (taskStart < otherEnd && taskEnd > otherStart) {
+          intersectingIds.add(task.id!);
+          intersectingIds.add(other.id!);
+        }
+      }
+    }
+
+    // Отделяем пересекающиеся задачи от непересекающихся
+    final intersectingTasks = visibleTasks.where((t) => intersectingIds.contains(t.id)).toList();
+    final nonIntersectingTasks = visibleTasks.where((t) => !intersectingIds.contains(t.id)).toList();
+
+    // Распределяем пересекающиеся задачи по столбцам
+    final Map<int, List<PlannerTask>> intersectingColumns = {};
+    for (final task in intersectingTasks) {
+      final taskStart = _timeToMinutes(task.startTime);
+      final taskEnd = _timeToMinutes(task.endTime);
+      
       bool placed = false;
-      for (final column in columns) {
+      for (final columnId in intersectingColumns.keys) {
+        final column = intersectingColumns[columnId]!;
         bool canPlace = true;
+        
         for (final existingTask in column) {
           final existingStart = _timeToMinutes(existingTask.startTime);
           final existingEnd = _timeToMinutes(existingTask.endTime);
           
-          // Проверяем пересечение
           if (taskStart < existingEnd && taskEnd > existingStart) {
             canPlace = false;
             break;
@@ -300,19 +320,17 @@ class _PlannerScreenState extends State<PlannerScreen> {
         }
       }
 
-      // Если не удалось разместить ни в одном столбце, создаем новый
       if (!placed) {
-        columns.add([task]);
+        intersectingColumns[intersectingColumns.length] = [task];
       }
     }
 
-    // Создаем карточки для каждого столбца
-    final columnCount = columns.length;
-    final columnWidth = tasksAreaWidth / columnCount;
-
-    for (int colIndex = 0; colIndex < columns.length; colIndex++) {
-      final column = columns[colIndex];
-      final columnLeft = columnWidth * colIndex;
+    // Обрабатываем пересекающиеся задачи
+    for (final column in intersectingColumns.values) {
+      final columnCount = intersectingColumns.length;
+      final columnWidth = tasksAreaWidth / columnCount;
+      final columnIndex = intersectingColumns.keys.toList().indexOf(intersectingColumns.keys.firstWhere((k) => intersectingColumns[k] == column));
+      final columnLeft = columnWidth * columnIndex;
 
       for (final task in column) {
         final taskTop = _getTaskTopOffset(task);
@@ -382,6 +400,76 @@ class _PlannerScreenState extends State<PlannerScreen> {
           ),
         );
       }
+    }
+
+    // Обрабатываем непересекающиеся задачи (на всю ширину)
+    for (final task in nonIntersectingTasks) {
+      final taskTop = _getTaskTopOffset(task);
+      final taskHeight = _getTaskHeight(task);
+
+      cards.add(
+        Positioned(
+          top: taskTop,
+          left: 0,
+          width: tasksAreaWidth,
+          height: taskHeight,
+          child: GestureDetector(
+            onTap: () => _openTaskScreen(task),
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 2),
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.blue[100],
+                border: Border.all(color: Colors.blue, width: 1.5),
+                borderRadius: BorderRadius.circular(6),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 2,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      task.title,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (task.description != null && task.description!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          task.description!,
+                          style: const TextStyle(fontSize: 10),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
+                        ),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        '${task.startTime.format(context)} - ${task.endTime.format(context)}',
+                        style: const TextStyle(
+                          fontSize: 9,
+                          color: Color(0xFF9E9E9E),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
     }
 
     return cards;

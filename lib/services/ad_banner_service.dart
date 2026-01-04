@@ -355,7 +355,7 @@ class AdBannerService {
       
       // Ждем загрузки с таймаутом
       int attempts = 0;
-      const maxAttempts = 50; // Максимум 5 секунд (50 * 100ms)
+      const maxAttempts = 100; // Максимум 5 секунд (50 * 100ms)
       
       while (!adLoaded && attempts < maxAttempts) {
         await Future.delayed(const Duration(milliseconds: 100));
@@ -518,7 +518,7 @@ class _BannerWidgetState extends State<BannerWidget> {
       ignoring: true, // Всегда игнорировать жесты
       child: SizedBox( 
         // Yandex sticky баннер обычно имеет высоту 50px
-        // height: 50, // Задаем ожидаемую высоту, чтобы зарезервировать место, если нужно
+        height: 50, // Задаем ожидаемую высоту, чтобы зарезервировать место, если нужно
         child: _createAdWidget(),
       ),
     );
@@ -531,7 +531,7 @@ class _BannerWidgetState extends State<BannerWidget> {
     } catch (e) {
       log('BannerWidget: AdWidget not available, using placeholder: $e');
       return Container(
-        // height: 50, // Соответствует ожидаемому размеру баннера
+        height: 50, // Соответствует ожидаемому размеру баннера
         // width: double.infinity,
         color: Colors.grey[300],
         child: const Center(
