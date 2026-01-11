@@ -1,5 +1,3 @@
-// lib/screens/planner_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:period_tracker/l10n/app_localizations.dart';
@@ -7,6 +5,7 @@ import 'package:period_tracker/database/database_helper.dart';
 import 'package:period_tracker/models/settings.dart';
 import 'package:period_tracker/models/planner_task.dart';
 import 'package:period_tracker/utils/date_utils.dart';
+import 'package:period_tracker/services/ad_banner_service.dart';
 import 'planner_task_screen.dart';
 
 class PlannerScreen extends StatefulWidget {
@@ -18,6 +17,7 @@ class PlannerScreen extends StatefulWidget {
 
 class _PlannerScreenState extends State<PlannerScreen> {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
+  final _adBannerService = AdBannerService();
   late DateTime _selectedDate;
   Settings _settings = const Settings(
     cycleLength: 28,
@@ -29,12 +29,43 @@ class _PlannerScreenState extends State<PlannerScreen> {
   List<PlannerTask> _tasks = [];
   bool _isLoading = true;
   static const double _hourBlockHeight = 80.0;
+  static const _backgroundImage = AssetImage('assets/images/fon1.png');
+
+  // Виджет баннера создается один раз и переиспользуется
+  Widget? _bannerWidget;
 
   @override
   void initState() {
     super.initState();
     _selectedDate = MyDateUtils.getUtcToday();
-    _loadData();
+    _initializeScreen();
+    _initializeBannerWidget();
+  }
+
+  // Оптимизированная инициализация экрана
+  void _initializeScreen() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _loadData();
+      }
+    });
+  }
+
+  // Инициализация виджета баннера - создается один раз
+  void _initializeBannerWidget() {
+    if (_bannerWidget == null) {
+      _bannerWidget = _adBannerService.createBannerWidget();
+      if (mounted) {
+        setState(() {});
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    // Очищаем виджет баннера при уничтожении экрана
+    _bannerWidget = null;
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -122,79 +153,102 @@ class _PlannerScreenState extends State<PlannerScreen> {
           )
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                // Заголовок с датой
-                Card(
-                  margin: const EdgeInsets.all(8),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Row(
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: _backgroundImage,
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : Column(
                       children: [
-                        IconButton(
-                          onPressed: _goToPrevDay,
-                          icon: const Icon(Icons.chevron_left),
-                        ),
-                        Expanded(
-                          child: Text(
-                            _formatDate(context, _selectedDate),
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        // Заголовок с датой
+                        Card(
+                          margin: const EdgeInsets.all(8),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Row(
+                              children: [
+                                IconButton(
+                                  onPressed: _goToPrevDay,
+                                  icon: const Icon(Icons.chevron_left),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    _formatDate(context, _selectedDate),
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: _goToNextDay,
+                                  icon: const Icon(Icons.chevron_right),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        IconButton(
-                          onPressed: _goToNextDay,
-                          icon: const Icon(Icons.chevron_right),
+                        // Основная область с часами и задачами
+                        Expanded(
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              // Ширина области задач (без колонки времени)
+                              final tasksAreaWidth = constraints.maxWidth - 60 - 1;
+                              return SingleChildScrollView(
+                                child: SizedBox(
+                                  height: totalHeight,
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // Колонка времени
+                                      SizedBox(
+                                        width: 60,
+                                        child: _buildTimeColumn(),
+                                      ),
+                                      // Разделительная линия
+                                      Container(
+                                        width: 1,
+                                        color: Colors.black,
+                                      ),
+                                      // Область слотов и задач
+                                      Expanded(
+                                        child: Stack(
+                                          children: [
+                                            // Сетка часов
+                                            _buildHourGrid(),
+                                            // Задачи
+                                            ..._buildTaskCards(context, tasksAreaWidth),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ),
-                // Основная область с часами и задачами
-                Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      // Ширина области задач (без колонки времени)
-                      final tasksAreaWidth = constraints.maxWidth - 60 - 1;
-                      
-                      return SingleChildScrollView(
-                        child: SizedBox(
-                          height: totalHeight,
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Колонка времени
-                              SizedBox(
-                                width: 60,
-                                child: _buildTimeColumn(),
-                              ),
-                              // Разделительная линия
-                              Container(
-                                width: 1,
-                                color: Colors.grey[300],
-                              ),
-                              // Область слотов и задач
-                              Expanded(
-                                child: Stack(
-                                  children: [
-                                    // Сетка часов
-                                    _buildHourGrid(),
-                                    // Задачи
-                                    ..._buildTaskCards(context, tasksAreaWidth),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
             ),
+            // Блок рекламы - используем созданный один раз виджет
+            if (_bannerWidget != null) ...[
+              _bannerWidget!,
+            ] else ...[
+              // Показываем загрузку, если виджет еще не создан
+              const SizedBox(
+                height: 50,
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -212,7 +266,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
             padding: const EdgeInsets.only(top: 4.0, right: 8.0),
             child: Text(
               '${hour.toString().padLeft(2, '0')}:00',
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
+              style: const TextStyle(fontSize: 12, color: Colors.black),
               textAlign: TextAlign.end,
             ),
           ),
@@ -239,8 +293,8 @@ class _PlannerScreenState extends State<PlannerScreen> {
             height: _hourBlockHeight,
             decoration: BoxDecoration(
               border: Border(
-                top: BorderSide(color: Colors.grey[300]!),
-                right: BorderSide(color: Colors.grey[300]!),
+                top: BorderSide(color: Colors.black),
+                right: BorderSide(color: Colors.black),
               ),
             ),
           ),

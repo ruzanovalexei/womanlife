@@ -1,5 +1,3 @@
-// lib/screens/planner_task_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:period_tracker/l10n/app_localizations.dart';
 import 'package:period_tracker/database/database_helper.dart';
@@ -24,6 +22,7 @@ class _PlannerTaskScreenState extends State<PlannerTaskScreen> {
   final _titleController = TextEditingController();
   final _descController = TextEditingController();
   final _databaseHelper = DatabaseHelper();
+  static const _backgroundImage = AssetImage('assets/images/fon1.png');
 
   late TimeOfDay _startTime;
   late TimeOfDay _endTime;
@@ -129,49 +128,57 @@ class _PlannerTaskScreenState extends State<PlannerTaskScreen> {
             ),
         ],
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            ListTile(
-              title: Text(l10n.selectDate),
-              subtitle: Text(
-                '${widget.date.day}.${widget.date.month}.${widget.date.year}',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: _backgroundImage,
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              ListTile(
+                title: Text(l10n.selectDate),
+                subtitle: Text(
+                  '${widget.date.day}.${widget.date.month}.${widget.date.year}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
-            ),
-            const Divider(),
-            ListTile(
-              title: Text(l10n.taskStartTime),
-              subtitle: Text(_startTime.format(context)),
-              trailing: const Icon(Icons.access_time),
-              onTap: () => _selectTime(isStart: true),
-            ),
-            ListTile(
-              title: Text(l10n.taskEndTime),
-              subtitle: Text(_endTime.format(context)),
-              trailing: const Icon(Icons.access_time),
-              onTap: () => _selectTime(isStart: false),
-            ),
-            const Divider(),
-            TextFormField(
-              controller: _titleController,
-              decoration: InputDecoration(labelText: l10n.taskTitle),
-              validator: (value) => value == null || value.isEmpty ? 'Обязательное поле' : null,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _descController,
-              decoration: InputDecoration(labelText: l10n.taskDescription),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _saveTask,
-              child: Text(l10n.save),
-            ),
-          ],
+              const Divider(),
+              ListTile(
+                title: Text(l10n.taskStartTime),
+                subtitle: Text(_startTime.format(context)),
+                trailing: const Icon(Icons.access_time),
+                onTap: () => _selectTime(isStart: true),
+              ),
+              ListTile(
+                title: Text(l10n.taskEndTime),
+                subtitle: Text(_endTime.format(context)),
+                trailing: const Icon(Icons.access_time),
+                onTap: () => _selectTime(isStart: false),
+              ),
+              const Divider(),
+              TextFormField(
+                controller: _titleController,
+                decoration: InputDecoration(labelText: l10n.taskTitle),
+                validator: (value) => value == null || value.isEmpty ? 'Обязательное поле' : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _descController,
+                decoration: InputDecoration(labelText: l10n.taskDescription),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _saveTask,
+                child: Text(l10n.save),
+              ),
+            ],
+          ),
         ),
       ),
     );
