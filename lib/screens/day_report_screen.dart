@@ -14,6 +14,7 @@ import 'package:period_tracker/models/habit_measurable_record.dart';
 import 'package:period_tracker/models/list_model.dart';
 import 'package:period_tracker/models/list_item_model.dart';
 import 'package:period_tracker/models/note_model.dart';
+import 'package:period_tracker/models/planner_task.dart';
 import 'package:period_tracker/utils/date_utils.dart';
 import 'package:period_tracker/utils/period_calculator.dart';
 // import 'package:period_tracker/services/ad_banner_service.dart';
@@ -50,6 +51,7 @@ class _DayReportScreenState extends State<DayReportScreen> {
   List<HabitMeasurableRecord> _measurableRecords = [];
   List<ListModel> _lists = [];
   List<NoteModel> _allNotes = [];
+  List<PlannerTask> _plannerTasks = [];
 
   @override
   void initState() {
@@ -97,6 +99,7 @@ class _DayReportScreenState extends State<DayReportScreen> {
         _databaseHelper.getHabitMeasurableRecordsForDate(_selectedDate),
         _databaseHelper.getAllLists(),
         _databaseHelper.getAllNotes(),
+        _databaseHelper.getTasksForDate(_selectedDate),
       ]);
 
       if (mounted) {
@@ -112,6 +115,7 @@ class _DayReportScreenState extends State<DayReportScreen> {
           _measurableRecords = results[8] as List<HabitMeasurableRecord>;
           _lists = results[9] as List<ListModel>;
           _allNotes = results[10] as List<NoteModel>;
+          _plannerTasks = results[11] as List<PlannerTask>;
           _isLoading = false;
         });
       }
@@ -265,6 +269,17 @@ class _DayReportScreenState extends State<DayReportScreen> {
             color: Colors.black,
             thickness: 2,
             height: 2,
+          ),
+          const SizedBox(height: 16),
+
+          // --- Задачи на сегодня ---
+          ..._generatePlannerTasksReport(l10n),
+          const SizedBox(height: 16),
+          // Тонкая серая линия
+          const Divider(
+            color: Colors.grey,
+            thickness: 1,
+            height: 1,
           ),
           const SizedBox(height: 16),
 
@@ -685,6 +700,74 @@ class _DayReportScreenState extends State<DayReportScreen> {
     return dayNotes.map<Widget>((note) {
       return Text('• ${note.title}: ${_truncateText(note.content, 2)}');
     }).toList();
+  }
+
+  List<Widget> _generatePlannerTasksReport(AppLocalizations l10n) {
+    if (_plannerTasks.isEmpty) {
+      return [
+        const Text(
+          'Задачи на сегодня',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
+        const SizedBox(height: 8),
+        const Text('Нет запланированных задач', style: TextStyle(color: Colors.grey)),
+      ];
+    }
+
+    // Сортируем задачи по времени начала (уже отсортировано в БД, но на всякий случай)
+    final sortedTasks = List<PlannerTask>.from(_plannerTasks)
+      ..sort((a, b) {
+        final aMinutes = a.startTime.hour * 60 + a.startTime.minute;
+        final bMinutes = b.startTime.hour * 60 + b.startTime.minute;
+        return aMinutes.compareTo(bMinutes);
+      });
+
+    final now = DateTime.now();
+    final currentTimeInMinutes = now.hour * 60 + now.minute;
+
+    final taskWidgets = <Widget>[
+      const Text(
+        'Задачи на сегодня',
+        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+      ),
+      const SizedBox(height: 8),
+    ];
+
+    for (final task in sortedTasks) {
+      // Вычисляем время окончания задачи в минутах от начала дня
+      final endTimeInMinutes = task.endTime.hour * 60 + task.endTime.minute;
+      
+      // Определяем цвет: серый - если время окончания уже прошло, черный - если еще не прошло
+      final isPast = endTimeInMinutes < currentTimeInMinutes;
+      final textColor = isPast ? Colors.grey : Colors.black;
+
+      final startTimeStr = task.startTime.format(context);
+      final endTimeStr = task.endTime.format(context);
+
+      taskWidgets.add(
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '$startTimeStr - $endTimeStr',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                task.title,
+                style: TextStyle(color: textColor),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return taskWidgets;
   }
 
   String _truncateText(String text, int maxLines) {
