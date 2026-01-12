@@ -142,31 +142,31 @@ class _MenuScreenState extends State<MenuScreen> {
         }
         break;
       case 111:
-        // await _adBannerService.showRewardedAd(
-        //   context: context,
-        //   onAdCompleted: (reward) {
-        //   // Выдать награду пользователю
-        //           Navigator.push(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => const DayReportScreen()),
-        // ).then((_) {
-        //   _loadData();
-        //   // Убираем создание нового виджета баннера - он уже существует
-        // });
-        //   print('Получено: ${reward.amount} ${reward.type}');
-        //   },
-        //     onAdDismissed: () {
-        //       print('Реклама закрыта');
-        //   },
-        //   );
-        // break;
-                Navigator.push(
+        await _adBannerService.showRewardedAd(
+          context: context,
+          onAdCompleted: (reward) {
+          // Выдать награду пользователю
+                  Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const DayReportScreen()),
         ).then((_) {
           _loadData();
+          // Убираем создание нового виджета баннера - он уже существует
         });
+          print('Получено: ${reward.amount} ${reward.type}');
+          },
+            onAdDismissed: () {
+              print('Реклама закрыта');
+          },
+          );
         break;
+        //         Navigator.push(
+        //   context,
+        //   MaterialPageRoute(builder: (context) => const DayReportScreen()),
+        // ).then((_) {
+        //   _loadData();
+        // });
+        // break;
       case 2:
         Navigator.push(
           context,

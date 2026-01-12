@@ -5,6 +5,7 @@ import 'package:period_tracker/utils/background_localizations.dart';
 import 'package:period_tracker/models/habit_execution.dart';
 import 'package:period_tracker/models/habit_measurable.dart';
 import 'package:period_tracker/models/frequency_type.dart';
+// import 'package:period_tracker/models/planner_task.dart';
 // import 'package:period_tracker/utils/date_utils.dart';
 
 @pragma('vm:entry-point')
@@ -38,6 +39,8 @@ void callbackDispatcher() {
       await _processMedicationsNotification(databaseHelper, notifications, now, fifteenMinutesLater);
     } else if (task == "simpleHabitsReminder") {
       await _processHabitsNotification(databaseHelper, notifications, now, fifteenMinutesLater);
+    } else if (task == "simplePlannerTasksReminder") {
+      await _processPlannerTasksNotification(databaseHelper, notifications, now, fifteenMinutesLater);
     }
 
     return Future.value(true);
@@ -215,6 +218,68 @@ Future<void> _processHabitsNotification(
   }
 }
 
+// Функция для обработки уведомлений о задачах на день
+Future<void> _processPlannerTasksNotification(
+  DatabaseHelper databaseHelper,
+  FlutterLocalNotificationsPlugin notifications,
+  DateTime now,
+  DateTime fifteenMinutesLater
+) async {
+  // Получаем задачи на сегодня
+  final todayTasks = await databaseHelper.getTasksForDate(now);
+
+  List<String> upcomingTasks = [];
+
+  for (var task in todayTasks) {
+    // Проверяем, установлено ли время начала задачи
+    final taskScheduledTime = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      task.startTime.hour,
+      task.startTime.minute,
+    );
+    
+    // Проверяем, попадает ли запланированное время начала в ближайшие 15 минут
+    if (taskScheduledTime.isAfter(now) &&
+        taskScheduledTime.isBefore(fifteenMinutesLater)) {
+      final startTimeStr = '${task.startTime.hour.toString().padLeft(2, '0')}:${task.startTime.minute.toString().padLeft(2, '0')}';
+      final endTimeStr = '${task.endTime.hour.toString().padLeft(2, '0')}:${task.endTime.minute.toString().padLeft(2, '0')}';
+      upcomingTasks.add(
+        "$startTimeStr - $endTimeStr: ${task.title}",
+      );
+    }
+  }
+
+  // Показываем уведомление о задачах, если есть запланированные
+  if (upcomingTasks.isNotEmpty) {
+    const AndroidNotificationDetails tasksAndroidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'planner_tasks_channel',
+      'Напоминания о задачах',
+      channelDescription: 'Уведомления о запланированных задачах',
+      importance: Importance.high,
+      priority: Priority.high,
+    );
+    
+    const NotificationDetails tasksPlatformChannelSpecifics =
+        NotificationDetails(
+      android: tasksAndroidPlatformChannelSpecifics,
+      iOS: DarwinNotificationDetails(),
+    );
+
+    final tasksTitle = 'Задачи на сегодня';
+    final tasksBody = "Не забудьте выполнить:\n${upcomingTasks.join('\n')}";
+
+    await notifications.show(
+      DateTime.now().millisecondsSinceEpoch.remainder(100000) + 2, // Уникальный ID
+      tasksTitle,
+      tasksBody,
+      tasksPlatformChannelSpecifics,
+    );
+  }
+}
+
 // Функция проверки, должна ли привычка типа выполнение выполняться в конкретный день
 bool _shouldExecuteHabitOnDate(HabitExecution habit, DateTime date, Map<int, FrequencyType> frequencyTypesMap) {
   final frequencyType = frequencyTypesMap[habit.frequencyId];
@@ -301,6 +366,13 @@ class SimpleBackgroundService {
     await Workmanager().registerPeriodicTask(
       "simple-habits-reminder",
       "simpleHabitsReminder", 
+      frequency: const Duration(minutes: 15),
+    );
+    
+    // Задача для уведомлений о задачах на день
+    await Workmanager().registerPeriodicTask(
+      "simple-planner-tasks-reminder",
+      "simplePlannerTasksReminder",
       frequency: const Duration(minutes: 15),
     );
   }
