@@ -479,7 +479,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get menuSubtitle => 'Выберите нужный раздел';
 
   @override
-  String get menu0 => 'План/отчет за день (просмотр рекламы)';
+  String get menu0 => 'План/отчет за день';
 
   @override
   String get menu1 => 'Здоровье';

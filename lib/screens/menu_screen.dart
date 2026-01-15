@@ -142,31 +142,31 @@ class _MenuScreenState extends State<MenuScreen> {
         }
         break;
       case 111:
-        await _adBannerService.showRewardedAd(
-          context: context,
-          onAdCompleted: (reward) {
-          // Выдать награду пользователю
-                  Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const DayReportScreen()),
-        ).then((_) {
-          _loadData();
-          // Убираем создание нового виджета баннера - он уже существует
-        });
-          print('Получено: ${reward.amount} ${reward.type}');
-          },
-            onAdDismissed: () {
-              print('Реклама закрыта');
-          },
-          );
-        break;
-        //         Navigator.push(
+        // await _adBannerService.showRewardedAd(
+        //   context: context,
+        //   onAdCompleted: (reward) {
+        //   // Выдать награду пользователю
+        //           Navigator.push(
         //   context,
         //   MaterialPageRoute(builder: (context) => const DayReportScreen()),
         // ).then((_) {
         //   _loadData();
+        //   // Убираем создание нового виджета баннера - он уже существует
         // });
+        //   print('Получено: ${reward.amount} ${reward.type}');
+        //   },
+        //     onAdDismissed: () {
+        //       print('Реклама закрыта');
+        //   },
+        //   );
         // break;
+                Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const DayReportScreen()),
+        ).then((_) {
+          _loadData();
+        });
+        break;
       case 2:
         Navigator.push(
           context,
@@ -266,7 +266,7 @@ static const _backgroundImage = AssetImage('assets/images/fon1.png');
           _buildMenuTile(
             icon: Icons.book,
             title: l10n.menu0,
-            color: const Color.fromARGB(255, 116, 114, 115),
+            color: Colors.pink[200]!,
             onTap: () => _onMenuItemTap(111),
           ),
           const SizedBox(height: 12),
