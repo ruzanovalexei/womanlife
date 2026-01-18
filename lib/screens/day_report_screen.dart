@@ -17,7 +17,7 @@ import 'package:period_tracker/models/note_model.dart';
 import 'package:period_tracker/models/planner_task.dart';
 import 'package:period_tracker/utils/date_utils.dart';
 import 'package:period_tracker/utils/period_calculator.dart';
-// import 'package:period_tracker/services/ad_banner_service.dart';
+import 'package:period_tracker/services/ad_banner_service.dart';
 // import 'menu_screen.dart';
 
 class DayReportScreen extends StatefulWidget {
@@ -30,14 +30,14 @@ class DayReportScreen extends StatefulWidget {
 // ... остальной код ...
 class _DayReportScreenState extends State<DayReportScreen> {
   final _databaseHelper = DatabaseHelper();
-  // final _adBannerService = AdBannerService();
+  final _adBannerService = AdBannerService();
   
   late DateTime _selectedDate;
   bool _isLoading = true;
   String? _errorMessage;
   
-  // // Виджет баннера создается один раз и переиспользуется
-  // Widget? _bannerWidget;
+  // Виджет баннера создается один раз и переиспользуется
+  Widget? _bannerWidget;
   
   // Данные для отчета
   DayNote? _dayNote;
@@ -58,18 +58,18 @@ class _DayReportScreenState extends State<DayReportScreen> {
     super.initState();
     _selectedDate = MyDateUtils.getUtcToday();
     _initializeScreen();
-    // _initializeBannerWidget();
+    _initializeBannerWidget();
   }
 
-  // // Инициализация виджета баннера - создается один раз
-  // void _initializeBannerWidget() {
-  //   if (_bannerWidget == null) {
-  //     _bannerWidget = _adBannerService.createBannerWidget();
-  //     if (mounted) {
-  //       setState(() {});
-  //     }
-  //   }
-  // }
+  // Инициализация виджета баннера - создается один раз
+  void _initializeBannerWidget() {
+    if (_bannerWidget == null) {
+      _bannerWidget = _adBannerService.createBannerWidget();
+      if (mounted) {
+        setState(() {});
+      }
+    }
+  }
 
   void _initializeScreen() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -210,12 +210,7 @@ class _DayReportScreenState extends State<DayReportScreen> {
         ],
       ),
       body: Container(
-        // decoration: const BoxDecoration(
-        //   image: DecorationImage(
-        //     image: AssetImage('assets/images/fon1.png'),
-        //     fit: BoxFit.cover,
-        //   ),
-        // ),
+        color: const Color(0xFFFFF8F0),
         child: Column(
           children: [
             // Основной контент
@@ -223,16 +218,16 @@ class _DayReportScreenState extends State<DayReportScreen> {
               child: _buildMainContent(l10n),
             ),
             
-            // // Блок рекламы - используем созданный один раз виджет
-            // if (_bannerWidget != null) ...[
-            //   _bannerWidget!,
-            // ] else ...[
-            //   // Показываем загрузку, если виджет еще не создан
-            //   const SizedBox(
-            //     height: 50,
-            //     child: Center(child: CircularProgressIndicator()),
-            //   ),
-            // ],
+            // Блок рекламы - используем созданный один раз виджет
+            if (_bannerWidget != null) ...[
+              _bannerWidget!,
+            ] else ...[
+              // Показываем загрузку, если виджет еще не создан
+              const SizedBox(
+                height: 50,
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ],
           ],
         ),
       ),
@@ -808,12 +803,12 @@ class _DayReportScreenState extends State<DayReportScreen> {
     return date.isBefore(DateTime(today.year, today.month, today.day));
   }
 
-  // @override
-  // void dispose() {
-  //   // Очищаем виджет баннера при уничтожении экрана
-  //   _bannerWidget = null;
-  //   super.dispose();
-  // }
+  @override
+  void dispose() {
+    // Очищаем виджет баннера при уничтожении экрана
+    _bannerWidget = null;
+    super.dispose();
+  }
 }
 
 // Вспомогательные классы для отчета

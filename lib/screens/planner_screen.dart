@@ -442,7 +442,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
                           '${task.startTime.format(context)} - ${task.endTime.format(context)}',
                           style: const TextStyle(
                             fontSize: 9,
-                            color: Color(0xFF9E9E9E),
+                            color: Colors.black,
                           ),
                         ),
                       ),
