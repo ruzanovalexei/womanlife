@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:period_tracker/l10n/app_localizations.dart';
 import 'package:period_tracker/database/database_helper.dart';
 import 'package:period_tracker/models/planner_task.dart';
+import 'package:period_tracker/utils/date_utils.dart';
 
 class PlannerTaskScreen extends StatefulWidget {
   final DateTime date;
@@ -24,15 +25,24 @@ class _PlannerTaskScreenState extends State<PlannerTaskScreen> {
   final _databaseHelper = DatabaseHelper();
   static const _backgroundImage = AssetImage('assets/images/fon1.png');
 
+  late DateTime _selectedDate;
   late TimeOfDay _startTime;
   late TimeOfDay _endTime;
 
   @override
   void initState() {
     super.initState();
+    // Используем локальное время для корректного отображения даты
+    _selectedDate = DateTime(
+      widget.date.year,
+      widget.date.month,
+      widget.date.day,
+    );
     if (widget.task != null) {
       _titleController.text = widget.task!.title;
       _descController.text = widget.task!.description ?? '';
+      // Конвертируем UTC дату обратно в локальную для редактирования
+      _selectedDate = MyDateUtils.toLocalDay(widget.task!.date);
       _startTime = widget.task!.startTime;
       _endTime = widget.task!.endTime;
     } else {
@@ -42,6 +52,20 @@ class _PlannerTaskScreenState extends State<PlannerTaskScreen> {
   }
 
   int _timeToMinutes(TimeOfDay time) => time.hour * 60 + time.minute;
+
+  Future<void> _selectDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedDate = DateTime(picked.year, picked.month, picked.day);
+      });
+    }
+  }
 
   Future<void> _selectTime({required bool isStart}) async {
     final TimeOfDay? picked = await showTimePicker(
@@ -65,9 +89,12 @@ class _PlannerTaskScreenState extends State<PlannerTaskScreen> {
   void _saveTask() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // Преобразуем локальную дату в UTC дату того же дня
+    final utcDate = MyDateUtils.fromLocalDayToUtcDay(_selectedDate);
+
     final task = PlannerTask(
       id: widget.task?.id,
-      date: widget.date,
+      date: utcDate,
       startTime: _startTime,
       endTime: _endTime,
       title: _titleController.text.trim(),
@@ -140,42 +167,103 @@ class _PlannerTaskScreenState extends State<PlannerTaskScreen> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              ListTile(
-                title: Text(l10n.selectDate),
-                subtitle: Text(
-                  '${widget.date.day}.${widget.date.month}.${widget.date.year}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+              // Белая подложка с тенью
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Выбор даты
+                    ListTile(
+                      title: Text(l10n.selectDate),
+                      subtitle: Text(
+                        '${_selectedDate.day}.${_selectedDate.month}.${_selectedDate.year}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      trailing: const Icon(Icons.calendar_today),
+                      onTap: _selectDate,
+                    ),
+                    const Divider(),
+                    // Время начала
+                    ListTile(
+                      title: Text(l10n.taskStartTime),
+                      subtitle: Text(_startTime.format(context)),
+                      trailing: const Icon(Icons.access_time),
+                      onTap: () => _selectTime(isStart: true),
+                    ),
+                    const Divider(),
+                    // Время окончания
+                    ListTile(
+                      title: Text(l10n.taskEndTime),
+                      subtitle: Text(_endTime.format(context)),
+                      trailing: const Icon(Icons.access_time),
+                      onTap: () => _selectTime(isStart: false),
+                    ),
+                  ],
                 ),
               ),
-              const Divider(),
-              ListTile(
-                title: Text(l10n.taskStartTime),
-                subtitle: Text(_startTime.format(context)),
-                trailing: const Icon(Icons.access_time),
-                onTap: () => _selectTime(isStart: true),
-              ),
-              ListTile(
-                title: Text(l10n.taskEndTime),
-                subtitle: Text(_endTime.format(context)),
-                trailing: const Icon(Icons.access_time),
-                onTap: () => _selectTime(isStart: false),
-              ),
-              const Divider(),
-              TextFormField(
-                controller: _titleController,
-                decoration: InputDecoration(labelText: l10n.taskTitle),
-                validator: (value) => value == null || value.isEmpty ? 'Обязательное поле' : null,
+              const SizedBox(height: 16),
+              // Белая подложка для полей ввода
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextFormField(
+                      controller: _titleController,
+                      decoration: InputDecoration(labelText: l10n.taskTitle),
+                      validator: (value) => value == null || value.isEmpty ? 'Обязательное поле' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _descController,
+                      decoration: InputDecoration(labelText: l10n.taskDescription),
+                      maxLines: 3,
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _descController,
-                decoration: InputDecoration(labelText: l10n.taskDescription),
-                maxLines: 3,
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _saveTask,
-                child: Text(l10n.save),
+              // Белая подложка для кнопки
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: ElevatedButton(
+                  onPressed: _saveTask,
+                  child: Text(l10n.save),
+                ),
               ),
             ],
           ),
