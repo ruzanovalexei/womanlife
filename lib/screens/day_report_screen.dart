@@ -720,6 +720,9 @@ class _DayReportScreenState extends State<DayReportScreen> {
     final now = DateTime.now();
     final currentTimeInMinutes = now.hour * 60 + now.minute;
 
+    // Проверяем, является ли выбранная дата прошедшей
+    final isSelectedDateInPast = _isDateInPast(_selectedDate);
+
     final taskWidgets = <Widget>[
       const Text(
         'Задачи на сегодня',
@@ -732,9 +735,20 @@ class _DayReportScreenState extends State<DayReportScreen> {
       // Вычисляем время окончания задачи в минутах от начала дня
       final endTimeInMinutes = task.endTime.hour * 60 + task.endTime.minute;
       
-      // Определяем цвет: серый - если время окончания уже прошло, черный - если еще не прошло
-      final isPast = endTimeInMinutes < currentTimeInMinutes;
-      final textColor = isPast ? Colors.grey : Colors.black;
+      // Определяем цвет задачи:
+      // 1. Если дата в прошлом - все задачи серые
+      // 2. Если дата сегодня - серый только если время окончания прошло
+      // 3. Если дата в будущем - все задачи черные
+      Color textColor;
+
+      if (isSelectedDateInPast) {
+        // Прошедшая дата - все задачи серые
+        textColor = Colors.grey;
+      } else {
+        // Текущая или будущая дата - используем логику по времени
+        final isPast = endTimeInMinutes < currentTimeInMinutes;
+        textColor = isPast ? Colors.grey : Colors.black;
+      }
 
       final startTimeStr = task.startTime.format(context);
       final endTimeStr = task.endTime.format(context);
