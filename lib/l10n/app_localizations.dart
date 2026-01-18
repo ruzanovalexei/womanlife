@@ -1780,6 +1780,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to delete this task?'**
   String get deleteTaskConfirm;
+
+  /// No description provided for @dayTimeRangeError.
+  ///
+  /// In en, this message translates to:
+  /// **'The difference between day end and day start must be at least 1 hour'**
+  String get dayTimeRangeError;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

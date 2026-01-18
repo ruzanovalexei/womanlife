@@ -44,12 +44,33 @@ class _SettingsFormState extends State<SettingsForm> {
     _selectedFirstDay = widget.settings.firstDayOfWeek;
     _isDataRetentionEnabled = widget.settings.dataRetentionPeriod != null;
     _dayStartTime = widget.settings.dayStartTime;
-    _dayEndTime = widget.settings.dayEndTime;
+    // Если в БД 24:00, отображаем как 00:00
+     _dayEndTime = widget.settings.dayEndTime;
   }
 
   TimeOfDay _parseTime(String timeStr) {
     final parts = timeStr.split(':');
     return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+  }
+
+  /// Вычисляет разницу в минутах между временем окончания и начала дня
+  /// Учитывает случай, когда окончание = "24:00" (следующий день)
+  int _calculateTimeDifferenceInMinutes(String startTime, String endTime) {
+    final start = _parseTime(startTime);
+    final endHour = endTime == '24:00' ? 24 : int.parse(endTime.split(':')[0]);
+    final end = TimeOfDay(hour: endHour, minute: int.parse(endTime.split(':')[1]));
+
+    final startMinutes = start.hour * 60 + start.minute;
+    final endMinutes = end.hour * 60 + end.minute;
+
+    // Если окончание "24:00", это следующий день
+    return end.hour == 24 ? (24 * 60 - startMinutes) : (endMinutes - startMinutes);
+  }
+
+  /// Проверяет, что разница между окончанием и началом дня >= 1 час
+  bool _validateDayTimeRange() {
+    final diffMinutes = _calculateTimeDifferenceInMinutes(_dayStartTime, _dayEndTime);
+    return diffMinutes >= 60;
   }
 
   Future<void> _selectDayTime({required bool isStart}) async {
@@ -65,7 +86,12 @@ class _SettingsFormState extends State<SettingsForm> {
         if (isStart) {
           _dayStartTime = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
         } else {
-          _dayEndTime = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+          // При выборе 00:00 для окончания дня записываем 24:00 в БД
+          if (picked.hour == 0 && picked.minute == 0) {
+            _dayEndTime = '24:00';
+          } else {
+            _dayEndTime = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+          }
         }
       });
     }
@@ -186,11 +212,22 @@ class _SettingsFormState extends State<SettingsForm> {
 
   void _saveSettings() {
     if (_formKey.currentState!.validate()) {
+      // Проверка: разница между окончанием и началом дня должна быть >= 1 час
+      if (!_validateDayTimeRange()) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.dayTimeRangeError),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+      
       int? dataRetentionPeriod;
       if (_isDataRetentionEnabled && _dataRetentionController.text.isNotEmpty) {
         dataRetentionPeriod = int.parse(_dataRetentionController.text);
       }
-      
+
       final newSettings = widget.settings.copyWith(
         cycleLength: int.parse(_cycleLengthController.text),
         periodLength: int.parse(_periodLengthController.text),

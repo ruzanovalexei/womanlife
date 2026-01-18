@@ -484,5 +484,6 @@
   "selectDate": "Select Date",
   "save": "Save",
   "deleteTask": "Delete Task",
-  "deleteTaskConfirm": "Are you sure you want to delete this task?"
+  "deleteTaskConfirm": "Are you sure you want to delete this task?",
+  "dayTimeRangeError": "The difference between day end and day start must be at least 1 hour"
 }

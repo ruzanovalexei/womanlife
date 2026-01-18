@@ -210,7 +210,7 @@ class _DayReportScreenState extends State<DayReportScreen> {
         ],
       ),
       body: Container(
-        color: const Color(0xFFFFF8F0),
+        color: const Color(0xFFF5F5F5),
         child: Column(
           children: [
             // Основной контент
@@ -350,7 +350,7 @@ class _DayReportScreenState extends State<DayReportScreen> {
                             padding: const EdgeInsets.only(left: 16, top: 2),
                             child: Text(
                               '  - ${item.text}',
-                              style: const TextStyle(color: Colors.grey),
+                              style: const TextStyle(color: Color(0xFF212121)),
                             ),
                           );
                         }),
@@ -532,8 +532,10 @@ class _DayReportScreenState extends State<DayReportScreen> {
       return [const Text('На выбранный день лекарства не запланированы', style: TextStyle(color: Colors.grey))];
     }
     return medicationEvents.map<Widget>((event) {
+      final color = event.isTaken ? const Color(0xFF7E57C2) : const Color(0xFF212121);
       return Text(
         '• ${event.name} (${TimeOfDay.fromDateTime(event.scheduledTime).format(context)}) - ${event.isTaken ? "Принято" : "Не принято"}${event.isTaken && event.actualTakenTime != null ? " в ${DateFormat('HH:mm').format(event.actualTakenTime!.toLocal())}" : ""}',
+        style: TextStyle(color: color),
       );
     }).toList();
   }
@@ -589,7 +591,8 @@ class _DayReportScreenState extends State<DayReportScreen> {
       if (report.type == 'measurable' && report.actualValue != null) {
         habitText += ', Цель: ${report.goal} ${report.unit}, Факт: ${report.actualValue} ${report.unit}';
       }
-      return Text(habitText);
+      final color = report.actual ? const Color(0xFF7E57C2) : const Color(0xFF212121);
+      return Text(habitText, style: TextStyle(color: color));
     }).toList();
   }
 
@@ -619,7 +622,7 @@ class _DayReportScreenState extends State<DayReportScreen> {
         }).take(1).toList();
         
         if (nextPlannedPeriods.isEmpty) {
-          periodInfoTexts.add(const Text('Следующие плановые месячные не рассчитаны', style: TextStyle(color: Colors.grey)));
+          periodInfoTexts.add(const Text('Следующие плановые месячные не рассчитаны', style: TextStyle(color: Color(0xFF212121))));
         } else {
           final nextPeriod = nextPlannedPeriods.first;
           final daysUntil = nextPeriod.startDate.difference(_selectedDate).inDays;
@@ -743,11 +746,11 @@ class _DayReportScreenState extends State<DayReportScreen> {
 
       if (isSelectedDateInPast) {
         // Прошедшая дата - все задачи серые
-        textColor = Colors.grey;
+        textColor = const Color(0xFF757575);
       } else {
         // Текущая или будущая дата - используем логику по времени
         final isPast = endTimeInMinutes < currentTimeInMinutes;
-        textColor = isPast ? Colors.grey : Colors.black;
+        textColor = isPast ? const Color(0xFF757575) : const Color(0xFF212121);
       }
 
       final startTimeStr = task.startTime.format(context);

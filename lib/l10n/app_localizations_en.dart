@@ -926,4 +926,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteTaskConfirm => 'Are you sure you want to delete this task?';
+
+  @override
+  String get dayTimeRangeError => 'The difference between day end and day start must be at least 1 hour';
 }

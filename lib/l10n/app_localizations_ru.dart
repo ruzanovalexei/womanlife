@@ -926,4 +926,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get deleteTaskConfirm => 'Вы уверены, что хотите удалить эту задачу?';
+
+  @override
+  String get dayTimeRangeError => 'Разница между окончанием и началом дня должна быть не менее 1 часа';
 }
