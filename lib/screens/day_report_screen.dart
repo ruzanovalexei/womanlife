@@ -11,6 +11,7 @@ import 'package:period_tracker/models/habit_execution.dart';
 import 'package:period_tracker/models/habit_measurable.dart';
 import 'package:period_tracker/models/habit_execution_record.dart';
 import 'package:period_tracker/models/habit_measurable_record.dart';
+import 'package:period_tracker/models/frequency_type.dart';
 import 'package:period_tracker/models/list_model.dart';
 import 'package:period_tracker/models/list_item_model.dart';
 import 'package:period_tracker/models/note_model.dart';
@@ -49,6 +50,7 @@ class _DayReportScreenState extends State<DayReportScreen> {
   List<HabitMeasurable> _measurableHabits = [];
   List<HabitExecutionRecord> _executionRecords = [];
   List<HabitMeasurableRecord> _measurableRecords = [];
+  Map<int, FrequencyType> _frequencyTypesMap = {};
   List<ListModel> _lists = [];
   List<NoteModel> _allNotes = [];
   List<PlannerTask> _plannerTasks = [];
@@ -97,10 +99,20 @@ class _DayReportScreenState extends State<DayReportScreen> {
         _databaseHelper.getAllHabitMeasurables(),
         _databaseHelper.getHabitExecutionRecordsForDate(_selectedDate),
         _databaseHelper.getHabitMeasurableRecordsForDate(_selectedDate),
+        _databaseHelper.getAllFrequencyTypes(),
         _databaseHelper.getAllLists(),
         _databaseHelper.getAllNotes(),
         _databaseHelper.getTasksForDate(_selectedDate),
       ]);
+
+      // Создаем карту FrequencyType
+      final allFrequencyTypes = results[9] as List<FrequencyType>;
+      final frequencyTypesMap = <int, FrequencyType>{};
+      for (final frequencyType in allFrequencyTypes) {
+        if (frequencyType.id != null) {
+          frequencyTypesMap[frequencyType.id!] = frequencyType;
+        }
+      }
 
       if (mounted) {
         setState(() {
@@ -113,9 +125,10 @@ class _DayReportScreenState extends State<DayReportScreen> {
           _measurableHabits = results[6] as List<HabitMeasurable>;
           _executionRecords = results[7] as List<HabitExecutionRecord>;
           _measurableRecords = results[8] as List<HabitMeasurableRecord>;
-          _lists = results[9] as List<ListModel>;
-          _allNotes = results[10] as List<NoteModel>;
-          _plannerTasks = results[11] as List<PlannerTask>;
+          _frequencyTypesMap = frequencyTypesMap;
+          _lists = results[10] as List<ListModel>;
+          _allNotes = results[11] as List<NoteModel>;
+          _plannerTasks = results[12] as List<PlannerTask>;
           _isLoading = false;
         });
       }
@@ -588,8 +601,11 @@ class _DayReportScreenState extends State<DayReportScreen> {
     }
     return habitReports.map<Widget>((report) {
       String habitText = '• ${report.name}: ${report.actual ? "Выполнено" : "Не выполнено"}';
-      if (report.type == 'measurable' && report.actualValue != null) {
-        habitText += ', Цель: ${report.goal} ${report.unit}, Факт: ${report.actualValue} ${report.unit}';
+      if (report.type == 'measurable' && report.goal != null) {
+        habitText += ', Цель: ${report.goal} ${report.unit ?? ''}';
+        if (report.actualValue != null) {
+          habitText += ', Факт: ${report.actualValue} ${report.unit ?? ''}';
+        }
       }
       final color = report.actual ? const Color(0xFF7E57C2) : const Color(0xFF212121);
       return Text(habitText, style: TextStyle(color: color));
@@ -798,20 +814,72 @@ class _DayReportScreenState extends State<DayReportScreen> {
            (endDate == null || date.isBefore(endDate.add(const Duration(days: 1))) || date.isAtSameMomentAs(endDate));
   }
 
-  bool _shouldExecuteHabitOnDate(HabitExecution habit, DateTime date) {
-    final startDate = habit.startDate;
-    final endDate = habit.endDate;
-    
-    return (date.isAfter(startDate.subtract(const Duration(days: 1))) || date.isAtSameMomentAs(startDate)) && 
-           (endDate == null || date.isBefore(endDate.add(const Duration(days: 1))) || date.isAtSameMomentAs(endDate));
+  // Получить начало недели (понедельник)
+  DateTime _getWeekStart(DateTime date) {
+    final dayOfWeek = date.weekday;
+    return date.subtract(Duration(days: dayOfWeek - 1));
   }
 
+  // Проверка, должна ли привычка типа выполнение выполняться в конкретный день на основе частоты
+  bool _shouldExecuteHabitOnDate(HabitExecution habit, DateTime date) {
+    final frequencyType = _frequencyTypesMap[habit.frequencyId];
+    if (frequencyType == null) return false;
+
+    // Проверяем, активна ли привычка в этот день по датам начала/окончания
+    if (!habit.isActiveOn(date)) return false;
+
+    final dayOfWeek = date.weekday; // 1 = понедельник, 7 = воскресенье
+    final daysFromStart = date.difference(habit.startDate).inDays;
+
+    switch (frequencyType.type) {
+      case 1: // Каждый день
+        return true;
+      case 2: // Каждый X день
+        final interval = frequencyType.intervalValue ?? 2;
+        return daysFromStart >= 0 && daysFromStart % interval == 0;
+      case 3: // Дни недели
+        final selectedDays = frequencyType.selectedDaysOfWeek ?? [];
+        return selectedDays.contains(dayOfWeek);
+      case 4: // X раз в неделю
+        final timesPerWeek = frequencyType.intervalValue ?? 3;
+        // Простая логика: если это один из первых дней недели с учетом количества раз
+        final weekStart = _getWeekStart(date);
+        final daysFromWeekStart = date.difference(weekStart).inDays;
+        return daysFromWeekStart < timesPerWeek;
+      default:
+        return false;
+    }
+  }
+
+  // Проверка, должна ли измеримая привычка выполняться в конкретный день на основе частоты
   bool _shouldExecuteMeasurableHabitOnDate(HabitMeasurable habit, DateTime date) {
-    final startDate = habit.startDate;
-    final endDate = habit.endDate;
-    
-    return (date.isAfter(startDate.subtract(const Duration(days: 1))) || date.isAtSameMomentAs(startDate)) && 
-           (endDate == null || date.isBefore(endDate.add(const Duration(days: 1))) || date.isAtSameMomentAs(endDate));
+    final frequencyType = _frequencyTypesMap[habit.frequencyId];
+    if (frequencyType == null) return false;
+
+    // Проверяем, активна ли привычка в этот день по датам начала/окончания
+    if (!habit.isActiveOn(date)) return false;
+
+    final dayOfWeek = date.weekday; // 1 = понедельник, 7 = воскресенье
+    final daysFromStart = date.difference(habit.startDate).inDays;
+
+    switch (frequencyType.type) {
+      case 1: // Каждый день
+        return true;
+      case 2: // Каждый X день
+        final interval = frequencyType.intervalValue ?? 2;
+        return daysFromStart >= 0 && daysFromStart % interval == 0;
+      case 3: // Дни недели
+        final selectedDays = frequencyType.selectedDaysOfWeek ?? [];
+        return selectedDays.contains(dayOfWeek);
+      case 4: // X раз в неделю
+        final timesPerWeek = frequencyType.intervalValue ?? 3;
+        // Простая логика: если это один из первых дней недели с учетом количества раз
+        final weekStart = _getWeekStart(date);
+        final daysFromWeekStart = date.difference(weekStart).inDays;
+        return daysFromWeekStart < timesPerWeek;
+      default:
+        return false;
+    }
   }
 
   // Проверяет, является ли дата прошедшей (меньше текущей даты)
