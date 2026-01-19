@@ -36,6 +36,7 @@ class _DayReportScreenState extends State<DayReportScreen> {
   late DateTime _selectedDate;
   bool _isLoading = true;
   String? _errorMessage;
+  static const _backgroundImage = AssetImage('assets/images/fon1.png');
   
   // Виджет баннера создается один раз и переиспользуется
   Widget? _bannerWidget;
@@ -223,14 +224,19 @@ class _DayReportScreenState extends State<DayReportScreen> {
         ],
       ),
       body: Container(
-        color: const Color(0xFFF5F5F5),
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: _backgroundImage,
+            fit: BoxFit.cover,
+          ),
+        ),
         child: Column(
           children: [
             // Основной контент
             Expanded(
               child: _buildMainContent(l10n),
             ),
-            
+
             // Блок рекламы - используем созданный один раз виджет
             if (_bannerWidget != null) ...[
               _bannerWidget!,
@@ -256,229 +262,248 @@ class _DayReportScreenState extends State<DayReportScreen> {
       return _buildErrorWidget(l10n);
     }
     
-    return SingleChildScrollView(
+    return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
-          const Divider(
-            color: Colors.black,
-            thickness: 2,
-            height: 2,
-          ),
-          const SizedBox(height: 8),
-
-          // Заголовок с датой
+          // Заголовок с датой (над подложкой)
           _buildDateHeader(l10n),
-          const SizedBox(height: 8),
-          // Толстая черная линия под заголовком
-          const Divider(
-            color: Colors.black,
-            thickness: 2,
-            height: 2,
-          ),
           const SizedBox(height: 16),
 
-          // --- Задачи на сегодня ---
-          ..._generatePlannerTasksReport(l10n),
-          const SizedBox(height: 16),
-          // Тонкая серая линия
-          const Divider(
-            color: Colors.grey,
-            thickness: 1,
-            height: 1,
-          ),
-          const SizedBox(height: 16),
-
-          // --- Лекарства ---
-          const Text(
-            'Лекарства',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-          ),
-          const SizedBox(height: 8),
-          ..._generateMedicationsReport(l10n),
-          const SizedBox(height: 16),
-          // Тонкая серая линия
-          const Divider(
-            color: Colors.grey,
-            thickness: 1,
-            height: 1,
-          ),
-          const SizedBox(height: 16),
-
-          // --- Привычки ---
-          const Text(
-            'Привычки',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-          ),
-          const SizedBox(height: 8),
-          ..._generateHabitsReport(l10n),
-          const SizedBox(height: 16),
-          // Тонкая серая линия
-          const Divider(
-            color: Colors.grey,
-            thickness: 1,
-            height: 1,
-          ),
-          const SizedBox(height: 16),
-
-          // --- Активные списки задач ---
-          // Отображаем только на текущую дату и в будущем
-          if (!_isDateInPast(_selectedDate)) ...[
-            const Text(
-              'Активные списки задач',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            const SizedBox(height: 8),
-            FutureBuilder<List<ListWithProgressAndItems>>(
-              future: _getActiveListsWithProgress(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Text('Загрузка списков задач...');
-                }
-                if (snapshot.hasError) {
-                  return Text('Ошибка загрузки списков задач: ${snapshot.error}');
-                }
-                
-                final activeLists = snapshot.data!;
-                if (activeLists.isEmpty) {
-                  return const Text('Нет активных списков задач', style: TextStyle(color: Colors.grey));
-                }
-                
-                return Column(
+          // Белая подложка со всеми блоками отчета
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: activeLists.map((listWithItems) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          // '• ${listWithItems.list.name}: ${listWithItems.completed}/${listWithItems.total} выполнено',
-                          '• ${listWithItems.list.name}',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        // Показываем невыполненные задачи с отступом
-                        ...listWithItems.incompleteItems.map((item) {
-                          return Padding(
-                            padding: const EdgeInsets.only(left: 16, top: 2),
-                            child: Text(
-                              '  - ${item.text}',
-                              style: const TextStyle(color: Color(0xFF212121)),
-                            ),
+                  children: [
+                    // Толстая черная линия
+                    const Divider(
+                      color: Colors.black,
+                      thickness: 2,
+                      height: 2,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // --- Задачи на сегодня ---
+                    ..._generatePlannerTasksReport(l10n),
+                    const SizedBox(height: 16),
+                    // Тонкая серая линия
+                    const Divider(
+                      color: Colors.grey,
+                      thickness: 1,
+                      height: 1,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // --- Лекарства ---
+                    const Text(
+                      'Лекарства',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    ),
+                    const SizedBox(height: 8),
+                    ..._generateMedicationsReport(l10n),
+                    const SizedBox(height: 16),
+                    // Тонкая серая линия
+                    const Divider(
+                      color: Colors.grey,
+                      thickness: 1,
+                      height: 1,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // --- Привычки ---
+                    const Text(
+                      'Привычки',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    ),
+                    const SizedBox(height: 8),
+                    ..._generateHabitsReport(l10n),
+                    const SizedBox(height: 16),
+                    // Тонкая серая линия
+                    const Divider(
+                      color: Colors.grey,
+                      thickness: 1,
+                      height: 1,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // --- Активные списки задач ---
+                    // Отображаем только на текущую дату и в будущем
+                    if (!_isDateInPast(_selectedDate)) ...[
+                      const Text(
+                        'Активные списки задач',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      ),
+                      const SizedBox(height: 8),
+                      FutureBuilder<List<ListWithProgressAndItems>>(
+                        future: _getActiveListsWithProgress(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Text('Загрузка списков задач...');
+                          }
+                          if (snapshot.hasError) {
+                            return Text('Ошибка загрузки списков задач: ${snapshot.error}');
+                          }
+
+                          final activeLists = snapshot.data!;
+                          if (activeLists.isEmpty) {
+                            return const Text('Нет активных списков задач', style: TextStyle(color: Colors.grey));
+                          }
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: activeLists.map((listWithItems) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    // '• ${listWithItems.list.name}: ${listWithItems.completed}/${listWithItems.total} выполнено',
+                                    '• ${listWithItems.list.name}',
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  // Показываем невыполненные задачи с отступом
+                                  ...listWithItems.incompleteItems.map((item) {
+                                    return Padding(
+                                      padding: const EdgeInsets.only(left: 16, top: 2),
+                                      child: Text(
+                                        '  - ${item.text}',
+                                        style: const TextStyle(color: Color(0xFF212121)),
+                                      ),
+                                    );
+                                  }),
+                                  const SizedBox(height: 8),
+                                ],
+                              );
+                            }).toList(),
                           );
-                        }),
-                        const SizedBox(height: 8),
-                      ],
-                    );
-                  }).toList(),
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-            // Тонкая серая линия
-            const Divider(
-              color: Colors.grey,
-              thickness: 1,
-              height: 1,
-            ),
-            const SizedBox(height: 16),
-          ],
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      // Тонкая серая линия
+                      const Divider(
+                        color: Colors.grey,
+                        thickness: 1,
+                        height: 1,
+                      ),
+                      const SizedBox(height: 16),
+                    ],
 
-          // --- Информация о месячных ---
-          const Text(
-            'Информация о месячных',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    // --- Информация о месячных ---
+                    const Text(
+                      'Информация о месячных',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    ),
+                    const SizedBox(height: 8),
+                    ..._generatePeriodInfoReport(l10n),
+                    const SizedBox(height: 16),
+                    // Тонкая серая линия
+                    const Divider(
+                      color: Colors.grey,
+                      thickness: 1,
+                      height: 1,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // --- Информация о сексе ---
+                    if (_dayNote?.hadSex == true) ...[
+                      const Text(
+                        'Секс',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      ),
+                      const SizedBox(height: 8),
+                      ..._generateSexReport(l10n),
+                      const SizedBox(height: 16),
+                      // Тонкая серая линия
+                      const Divider(
+                        color: Colors.grey,
+                        thickness: 1,
+                        height: 1,
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // --- Симптомы ---
+                    if (_dayNote?.symptoms.isNotEmpty == true) ...[
+                      const Text(
+                        'Симптомы',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      ),
+                      const SizedBox(height: 8),
+                      ..._generateSymptomsReport(l10n),
+                      const SizedBox(height: 16),
+                      // Тонкая серая линия
+                      const Divider(
+                        color: Colors.grey,
+                        thickness: 1,
+                        height: 1,
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // --- Заметки ---
+                    Text(
+                      'Заметки (${_getNotesForSelectedDate().length})',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    ),
+                    const SizedBox(height: 8),
+                    ..._generateNotesReport(l10n),
+                  ],
+                ),
+              ),
+            ),
           ),
-          const SizedBox(height: 8),
-          ..._generatePeriodInfoReport(l10n),
-          const SizedBox(height: 16),
-          // Тонкая серая линия
-          const Divider(
-            color: Colors.grey,
-            thickness: 1,
-            height: 1,
-          ),
-          const SizedBox(height: 16),
-
-          // --- Информация о сексе ---
-          if (_dayNote?.hadSex == true) ...[
-            const Text(
-              'Секс',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            const SizedBox(height: 8),
-            ..._generateSexReport(l10n),
-            const SizedBox(height: 16),
-            // Тонкая серая линия
-            const Divider(
-              color: Colors.grey,
-              thickness: 1,
-              height: 1,
-            ),
-            const SizedBox(height: 16),
-          ],
-
-          // --- Симптомы ---
-          if (_dayNote?.symptoms.isNotEmpty == true) ...[
-            const Text(
-              'Симптомы',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            const SizedBox(height: 8),
-            ..._generateSymptomsReport(l10n),
-            const SizedBox(height: 16),
-            // Тонкая серая линия
-            const Divider(
-              color: Colors.grey,
-              thickness: 1,
-              height: 1,
-            ),
-            const SizedBox(height: 16),
-          ],
-
-          // --- Заметки ---
-          Text(
-            'Заметки (${_getNotesForSelectedDate().length})',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-          ),
-          const SizedBox(height: 8),
-          ..._generateNotesReport(l10n),
         ],
       ),
     );
   }
 
   Widget _buildDateHeader(AppLocalizations l10n) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            IconButton(
-              onPressed: _goToPreviousDay,
-              icon: const Icon(Icons.chevron_left),
-              tooltip: 'Предыдущий день',
-            ),
-            
-            Expanded(
-              child: Center(
-                child: Text(
-                  _formatDate(context, _selectedDate),
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: _goToPreviousDay,
+            icon: const Icon(Icons.chevron_left),
+            tooltip: 'Предыдущий день',
+          ),
+
+          Expanded(
+            child: Center(
+              child: Text(
+                _formatDate(context, _selectedDate),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-            
-            IconButton(
-              onPressed: _goToNextDay,
-              icon: const Icon(Icons.chevron_right),
-              tooltip: 'Следующий день',
-            ),
-          ],
-        ),
+          ),
+
+          IconButton(
+            onPressed: _goToNextDay,
+            icon: const Icon(Icons.chevron_right),
+            tooltip: 'Следующий день',
+          ),
+        ],
       ),
     );
   }
