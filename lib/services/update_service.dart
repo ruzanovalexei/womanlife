@@ -1,6 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:math';
+// import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
@@ -82,53 +81,9 @@ class UpdateService {
 
   /// Получить информацию о последней версии из RuStore
   Future<void> _fetchLatestVersion() async {
-    try {
-      // API RuStore для получения информации о приложении
-      final url = 'https://public-api.rustore.ru/application/$_rustoreAppId';
-      debugPrint('UpdateService: Fetching from $url');
-      final response = await http.get(Uri.parse(url));
-
-      debugPrint('UpdateService: Response status: ${response.statusCode}');
-      debugPrint('UpdateService: Response body: ${response.body.substring(0, min(200, response.body.length))}...');
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        debugPrint('UpdateService: Parsed JSON: $data');
-
-        if (data['success'] == true && data['result'] != null) {
-          final result = data['result'];
-          _latestVersion = result['versionName'] ?? '';
-          _storeUrl = result['storeUrl'] ?? _storeUrl;
-
-          debugPrint('UpdateService: Latest version from API: $_latestVersion');
-          debugPrint('UpdateService: Store URL: $_storeUrl');
-
-          // Сравниваем версии
-          final comparison = _compareVersions(_latestVersion, _currentVersion);
-          debugPrint('UpdateService: Version comparison ($_latestVersion vs $_currentVersion): $comparison');
-
-          if (comparison > 0) {
-            _updateAvailable = true;
-            debugPrint('UpdateService: New version available: $_latestVersion');
-          } else {
-            _updateAvailable = false;
-            debugPrint('UpdateService: App is up to date');
-          }
-        } else {
-          debugPrint('UpdateService: API response success=false or no result');
-          await _parseStorePage();
-        }
-      } else {
-        debugPrint('UpdateService: API returned status ${response.statusCode}, parsing store page...');
-        // Если API недоступен, пробуем парсить HTML страницу
-        await _parseStorePage();
-      }
-    } catch (e) {
-      debugPrint('UpdateService: Error fetching version info: $e');
-      debugPrint('UpdateService: Stack trace: ${StackTrace.current}');
-      // При ошибке пробуем парсить страницу магазина
-      await _parseStorePage();
-    }
+    // Сразу парсим страницу магазина, API RuStore может быть недоступен
+    debugPrint('UpdateService: Parsing store page directly...');
+    await _parseStorePage();
   }
 
   /// Парсинг страницы магазина для получения версии
