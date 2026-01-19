@@ -9,6 +9,7 @@ import 'package:period_tracker/services/locale_service.dart';
 import 'package:period_tracker/services/simple_background_service.dart';
 import 'package:period_tracker/services/cache_service.dart';
 import 'package:period_tracker/services/ad_banner_service.dart';
+import 'package:period_tracker/services/update_service.dart';
 import 'package:period_tracker/utils/object_pool.dart';
 //import 'package:period_tracker/services/notification_service.dart';
 
@@ -52,6 +53,10 @@ void main() async {
   // Очистка кеша при закрытии приложения не поддерживается на всех платформах
   // Вместо этого используем автоматическую очистку при запуске приложения
 
+  // Инициализируем сервис проверки обновлений
+  await updateService.initialize();
+
+  // Запускаем приложение
   runApp(const MyApp());
 }
 
@@ -73,7 +78,7 @@ class MyApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
-      home: LocalizedMenuScreen(),
+      home: const LocalizedMenuScreen(),
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
         return LifecycleWatcher(child: child);
@@ -157,13 +162,15 @@ class _LifecycleWatcherState extends State<LifecycleWatcher>
 
 // Отдельный виджет для локализованного экрана меню
 class LocalizedMenuScreen extends StatelessWidget {
+  const LocalizedMenuScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: localeService,
       builder: (context, _) {
         // Только локализация обновляется, остальная часть не перестраивается
-        return MenuScreen();
+        return const MenuScreen();
       },
     );
   }
