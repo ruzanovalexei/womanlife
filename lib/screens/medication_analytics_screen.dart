@@ -293,23 +293,7 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
       BarChartData(
         alignment: BarChartAlignment.spaceAround,
         maxY: _getMaxValue(displayStats).toDouble() + 1,
-        barTouchData: BarTouchData(
-          enabled: true,
-          touchTooltipData: BarTouchTooltipData(
-            getTooltipColor: (_) => Colors.blueGrey.withValues(alpha: 0.8),
-            getTooltipItem: (group, groupIndex, rod, rodIndex) {
-              final stat = displayStats[group.x.toInt()];
-              final dateStr = DateFormat('dd.MM').format(stat.date.toLocal());
-              return BarTooltipItem(
-                '$dateStr\n${l10n.medicationPlannedLabel}: ${stat.plannedCount}\n${l10n.medicationTakenLabel}: ${stat.takenCount}',
-                const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                ),
-              );
-            },
-          ),
-        ),
+        barTouchData: BarTouchData(enabled: false),
         titlesData: FlTitlesData(
           show: true,
           bottomTitles: AxisTitles(

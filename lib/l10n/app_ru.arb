@@ -238,8 +238,8 @@
     }
   },
   "medicationDeleteError": "Ошибка удаления лекарства: {message}",
-  "medicationFilterShowCurrent": "Показать текущие и будущие лекарства",
-  "medicationFilterShowPast": "Показать прошедшие лекарства",
+  "medicationFilterShowCurrent": "Архив лекарств",
+  "medicationFilterShowPast": "Актуальные лекарства",
   "noMedicationsCurrent": "Нет текущих или будущих лекарств",
   "noMedicationsPast": "Нет прошедших лекарств",
   "analyticsTitle": "Аналитика",
