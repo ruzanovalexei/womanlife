@@ -491,6 +491,18 @@
   "save": "Сохранить",
   "deleteTask": "Удалить задачу",
   "deleteTaskConfirm": "Вы уверены, что хотите удалить эту задачу?",
-  "dayTimeRangeError": "Разница между окончанием и началом дня должна быть не менее 1 часа"
+  "dayTimeRangeError": "Разница между окончанием и началом дня должна быть не менее 1 часа",
+  "medicationAnalytics": "Статистика приема",
+  "medicationNoStatsData": "Нет данных для отображения статистики",
+  "medicationSummaryTitle": "Сводная статистика",
+  "medicationPlannedLabel": "Запланировано",
+  "medicationTakenLabel": "Принято",
+  "medicationAdherenceLabel": "Соблюдение",
+  "medicationChartTitle": "График приема",
+  "medicationTableTitle": "Таблица приема",
+  "medicationDateLabel": "Дата",
+  "medicationPlannedShortLabel": "План",
+  "medicationTakenShortLabel": "Факт",
+  "medicationStatusLabel": "Статус"
 }
 

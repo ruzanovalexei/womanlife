@@ -489,5 +489,17 @@
   "save": "Save",
   "deleteTask": "Delete Task",
   "deleteTaskConfirm": "Are you sure you want to delete this task?",
-  "dayTimeRangeError": "The difference between day end and day start must be at least 1 hour"
+  "dayTimeRangeError": "The difference between day end and day start must be at least 1 hour",
+  "medicationAnalytics": "Intake Statistics",
+  "medicationNoStatsData": "No data to display statistics",
+  "medicationSummaryTitle": "Summary Statistics",
+  "medicationPlannedLabel": "Planned",
+  "medicationTakenLabel": "Taken",
+  "medicationAdherenceLabel": "Adherence",
+  "medicationChartTitle": "Intake Chart",
+  "medicationTableTitle": "Intake Table",
+  "medicationDateLabel": "Date",
+  "medicationPlannedShortLabel": "Plan",
+  "medicationTakenShortLabel": "Taken",
+  "medicationStatusLabel": "Status"
 }

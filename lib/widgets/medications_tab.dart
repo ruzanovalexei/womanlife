@@ -7,6 +7,7 @@ import '../utils/period_calculator.dart';
 import '../database/database_helper.dart';
 import '../utils/date_utils.dart'; // Добавлен импорт MyDateUtils
 import '../models/medication_time.dart';
+import '../screens/medication_analytics_screen.dart';
 
 class MedicationsTab extends StatefulWidget {
   final Function(bool hasChanges)? onDataChanged;
@@ -246,6 +247,18 @@ class _MedicationsTabState extends State<MedicationsTab> {
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.bar_chart, color: Colors.teal),
+                                      tooltip: l10n.medicationAnalytics,
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => MedicationAnalyticsScreen(medication: medication),
+                                          ),
+                                        );
+                                      },
+                                    ),
                                     IconButton(
                                       icon: const Icon(Icons.edit, color: Colors.blueAccent),
                                       onPressed: () => _showMedicationDialog(medication: medication),

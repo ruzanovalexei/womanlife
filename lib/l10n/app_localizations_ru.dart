@@ -682,7 +682,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get medicationTimeLabel => 'Время приема:';
 
   @override
-  String get medicationTakenLabel => 'Принято:';
+  String get medicationTakenLabel => 'Принято';
 
   @override
   String get editListTitle => 'Редактировать список';
@@ -941,4 +941,37 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get dayTimeRangeError => 'Разница между окончанием и началом дня должна быть не менее 1 часа';
+
+  @override
+  String get medicationAnalytics => 'Статистика приема';
+
+  @override
+  String get medicationNoStatsData => 'Нет данных для отображения статистики';
+
+  @override
+  String get medicationSummaryTitle => 'Сводная статистика';
+
+  @override
+  String get medicationPlannedLabel => 'Запланировано';
+
+  @override
+  String get medicationAdherenceLabel => 'Соблюдение';
+
+  @override
+  String get medicationChartTitle => 'График приема';
+
+  @override
+  String get medicationTableTitle => 'Таблица приема';
+
+  @override
+  String get medicationDateLabel => 'Дата';
+
+  @override
+  String get medicationPlannedShortLabel => 'План';
+
+  @override
+  String get medicationTakenShortLabel => 'Факт';
+
+  @override
+  String get medicationStatusLabel => 'Статус';
 }

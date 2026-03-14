@@ -682,7 +682,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get medicationTimeLabel => 'Medication time:';
 
   @override
-  String get medicationTakenLabel => 'Taken:';
+  String get medicationTakenLabel => 'Taken';
 
   @override
   String get editListTitle => 'Edit List';
@@ -941,4 +941,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dayTimeRangeError => 'The difference between day end and day start must be at least 1 hour';
+
+  @override
+  String get medicationAnalytics => 'Intake Statistics';
+
+  @override
+  String get medicationNoStatsData => 'No data to display statistics';
+
+  @override
+  String get medicationSummaryTitle => 'Summary Statistics';
+
+  @override
+  String get medicationPlannedLabel => 'Planned';
+
+  @override
+  String get medicationAdherenceLabel => 'Adherence';
+
+  @override
+  String get medicationChartTitle => 'Intake Chart';
+
+  @override
+  String get medicationTableTitle => 'Intake Table';
+
+  @override
+  String get medicationDateLabel => 'Date';
+
+  @override
+  String get medicationPlannedShortLabel => 'Plan';
+
+  @override
+  String get medicationTakenShortLabel => 'Taken';
+
+  @override
+  String get medicationStatusLabel => 'Status';
 }

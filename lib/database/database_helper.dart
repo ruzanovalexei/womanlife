@@ -964,6 +964,25 @@ class DatabaseHelper {
     return await db.delete(medicationTakenRecordsTable, where: 'id = ?', whereArgs: [id]);
   }
 
+  /// Получение всех записей о приеме лекарства за период
+  Future<List<MedicationTakenRecord>> getMedicationTakenRecordsForPeriod(
+    int medicationId,
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
+    Database db = await database;
+    final startDateStr = MyDateUtils.toUtcDateString(startDate);
+    final endDateStr = MyDateUtils.toUtcDateString(endDate);
+    
+    List<Map<String, dynamic>> maps = await db.query(
+      medicationTakenRecordsTable,
+      where: 'medicationId = ? AND date >= ? AND date <= ?',
+      whereArgs: [medicationId, startDateStr, endDateStr],
+      orderBy: 'date ASC, scheduledHour ASC, scheduledMinute ASC',
+    );
+    return maps.map((map) => MedicationTakenRecord.fromMap(map)).toList();
+  }
+
   // Symptom methods (updated for new model)
   Future<int> insertSymptom(Symptom symptom) async {
     Database db = await database;

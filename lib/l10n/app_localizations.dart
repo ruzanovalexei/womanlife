@@ -1328,7 +1328,7 @@ abstract class AppLocalizations {
   /// No description provided for @medicationTakenLabel.
   ///
   /// In en, this message translates to:
-  /// **'Taken:'**
+  /// **'Taken'**
   String get medicationTakenLabel;
 
   /// No description provided for @editListTitle.
@@ -1810,6 +1810,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The difference between day end and day start must be at least 1 hour'**
   String get dayTimeRangeError;
+
+  /// No description provided for @medicationAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Intake Statistics'**
+  String get medicationAnalytics;
+
+  /// No description provided for @medicationNoStatsData.
+  ///
+  /// In en, this message translates to:
+  /// **'No data to display statistics'**
+  String get medicationNoStatsData;
+
+  /// No description provided for @medicationSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary Statistics'**
+  String get medicationSummaryTitle;
+
+  /// No description provided for @medicationPlannedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Planned'**
+  String get medicationPlannedLabel;
+
+  /// No description provided for @medicationAdherenceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Adherence'**
+  String get medicationAdherenceLabel;
+
+  /// No description provided for @medicationChartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Intake Chart'**
+  String get medicationChartTitle;
+
+  /// No description provided for @medicationTableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Intake Table'**
+  String get medicationTableTitle;
+
+  /// No description provided for @medicationDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get medicationDateLabel;
+
+  /// No description provided for @medicationPlannedShortLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan'**
+  String get medicationPlannedShortLabel;
+
+  /// No description provided for @medicationTakenShortLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Taken'**
+  String get medicationTakenShortLabel;
+
+  /// No description provided for @medicationStatusLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get medicationStatusLabel;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
