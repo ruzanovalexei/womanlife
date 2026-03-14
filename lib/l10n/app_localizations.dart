@@ -821,6 +821,30 @@ abstract class AppLocalizations {
   /// **'Error deleting medication: {message}'**
   String medicationDeleteError(Object message);
 
+  /// No description provided for @medicationFilterShowCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Show current and future medications'**
+  String get medicationFilterShowCurrent;
+
+  /// No description provided for @medicationFilterShowPast.
+  ///
+  /// In en, this message translates to:
+  /// **'Show past medications'**
+  String get medicationFilterShowPast;
+
+  /// No description provided for @noMedicationsCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'No current or future medications'**
+  String get noMedicationsCurrent;
+
+  /// No description provided for @noMedicationsPast.
+  ///
+  /// In en, this message translates to:
+  /// **'No past medications'**
+  String get noMedicationsPast;
+
   /// No description provided for @analyticsTitle.
   ///
   /// In en, this message translates to:

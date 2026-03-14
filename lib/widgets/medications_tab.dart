@@ -21,11 +21,39 @@ class _MedicationsTabState extends State<MedicationsTab> {
   final _databaseHelper = DatabaseHelper();
   List<Medication> _medications = [];
   bool _isLoading = true;
+  bool _showCurrentAndFuture = true; // По умолчанию показываем текущие/будущие
 
   @override
   void initState() {
     super.initState();
     _loadMedications();
+  }
+
+  // Фильтрация лекарств по времени
+  List<Medication> _getFilteredMedications() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    if (_showCurrentAndFuture) {
+      // Показываем текущие и будущие (те, у которых endDate >= today или ещё не закончились)
+      return _medications.where((med) {
+        final endDate = med.endDate;
+        // Лекарство активно, если:
+        // 1. Нет endDate (принимается бессрочно)
+        // 2. endDate >= сегодня (ещё не закончилось)
+        if (endDate == null) return true;
+        final normalizedEndDate = DateTime(endDate.year, endDate.month, endDate.day);
+        return !normalizedEndDate.isBefore(today);
+      }).toList();
+    } else {
+      // Показываем прошедшие (те, у которых endDate < today)
+      return _medications.where((med) {
+        final endDate = med.endDate;
+        if (endDate == null) return false; // Бессрочные не показываем в прошедших
+        final normalizedEndDate = DateTime(endDate.year, endDate.month, endDate.day);
+        return normalizedEndDate.isBefore(today);
+      }).toList();
+    }
   }
 
   Future<void> _loadMedications() async {
@@ -143,18 +171,60 @@ class _MedicationsTabState extends State<MedicationsTab> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
+
+            // Переключатель фильтра
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    _showCurrentAndFuture 
+                        ? l10n.medicationFilterShowCurrent 
+                        : l10n.medicationFilterShowPast,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                    ),
+                  ),
+                  const Spacer(),
+                  Switch(
+                    value: _showCurrentAndFuture,
+                    onChanged: (value) {
+                      setState(() {
+                        _showCurrentAndFuture = value;
+                      });
+                    },
+                    activeColor: Theme.of(context).colorScheme.primary,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
 
             // Список лекарств
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
-                  : _medications.isEmpty
-                      ? Center(child: Text(l10n.noMedications))
+                  : _getFilteredMedications().isEmpty
+                      ? Center(
+                          child: Text(
+                            _showCurrentAndFuture 
+                                ? l10n.noMedicationsCurrent 
+                                : l10n.noMedicationsPast,
+                            style: TextStyle(
+                              color: Theme.of(context).textTheme.bodySmall?.color,
+                            ),
+                          ),
+                        )
                       : ListView.builder(
-                          itemCount: _medications.length,
+                          itemCount: _getFilteredMedications().length,
                           itemBuilder: (context, index) {
-                            final medication = _medications[index];
+                            final medication = _getFilteredMedications()[index];
                             return Card(
                               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               child: ListTile(

@@ -236,6 +236,10 @@
     }
   },
   "medicationDeleteError": "Error deleting medication: {message}",
+  "medicationFilterShowCurrent": "Show current and future medications",
+  "medicationFilterShowPast": "Show past medications",
+  "noMedicationsCurrent": "No current or future medications",
+  "noMedicationsPast": "No past medications",
   "analyticsTitle": "Analytics",
   "dayReportTitle": "Daily Report",
   "medicationsReportTitle": "Medications Report",

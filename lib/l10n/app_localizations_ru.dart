@@ -416,6 +416,18 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get medicationFilterShowCurrent => 'Показать текущие и будущие лекарства';
+
+  @override
+  String get medicationFilterShowPast => 'Показать прошедшие лекарства';
+
+  @override
+  String get noMedicationsCurrent => 'Нет текущих или будущих лекарств';
+
+  @override
+  String get noMedicationsPast => 'Нет прошедших лекарств';
+
+  @override
   String get analyticsTitle => 'Аналитика';
 
   @override

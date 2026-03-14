@@ -416,6 +416,18 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get medicationFilterShowCurrent => 'Show current and future medications';
+
+  @override
+  String get medicationFilterShowPast => 'Show past medications';
+
+  @override
+  String get noMedicationsCurrent => 'No current or future medications';
+
+  @override
+  String get noMedicationsPast => 'No past medications';
+
+  @override
   String get analyticsTitle => 'Analytics';
 
   @override
