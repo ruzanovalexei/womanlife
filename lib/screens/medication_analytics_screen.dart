@@ -21,6 +21,7 @@ class MedicationAnalyticsScreen extends StatefulWidget {
 
 class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
   final _databaseHelper = DatabaseHelper();
+  final _chartScrollController = ScrollController();
   List<MedicationDailyStats> _dailyStats = [];
   bool _isLoading = true;
   
@@ -33,6 +34,12 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
   void initState() {
     super.initState();
     _loadStats();
+  }
+
+  @override
+  void dispose() {
+    _chartScrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadStats() async {
@@ -89,6 +96,14 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
           _adherencePercent = _totalPlanned > 0 
               ? (_totalTaken / _totalPlanned * 100).clamp(0, 100) 
               : 0;
+        });
+        
+        // Прокручиваем к последним дням после построения виджета
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_chartScrollController.hasClients) {
+            final maxScroll = _chartScrollController.position.maxScrollExtent;
+            _chartScrollController.jumpTo(maxScroll);
+          }
         });
       }
     } catch (e) {
@@ -232,6 +247,9 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
   }
 
   Widget _buildChartCard(BuildContext context, AppLocalizations l10n) {
+    // Вычисляем ширину графика: минимум 40 пикселей на день
+    final chartWidth = (_dailyStats.length * 40.0).clamp(300.0, double.infinity);
+    
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -258,7 +276,14 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
             const SizedBox(height: 16),
             SizedBox(
               height: 250,
-              child: _buildBarChart(l10n),
+              child: SingleChildScrollView(
+                controller: _chartScrollController,
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(
+                  width: chartWidth,
+                  child: _buildBarChart(l10n),
+                ),
+              ),
             ),
           ],
         ),
@@ -284,10 +309,8 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
   }
 
   Widget _buildBarChart(AppLocalizations l10n) {
-    // Ограничиваем количество отображаемых дней для читаемости
-    final displayStats = _dailyStats.length > 14 
-        ? _dailyStats.sublist(_dailyStats.length - 14) 
-        : _dailyStats;
+    // Показываем все данные, прокрутка обеспечивает доступ ко всем дням
+    final displayStats = _dailyStats;
     
     return BarChart(
       BarChartData(
@@ -304,8 +327,14 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
                   return const SizedBox();
                 }
                 final stat = displayStats[value.toInt()];
-                // Показываем дату через день для экономии места
-                if (value.toInt() % 2 == 0) {
+                // Определяем интервал показа дат в зависимости от количества дней
+                final showInterval = displayStats.length > 30 
+                    ? 5  // Каждые 5 дней для больших периодов
+                    : displayStats.length > 14 
+                        ? 3  // Каждые 3 дня для средних периодов
+                        : 2; // Каждые 2 дня для маленьких периодов
+                
+                if (value.toInt() % showInterval == 0) {
                   return Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
