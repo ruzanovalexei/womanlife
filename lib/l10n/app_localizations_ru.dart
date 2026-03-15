@@ -955,6 +955,21 @@ class AppLocalizationsRu extends AppLocalizations {
   String get medicationNoStatsData => 'Нет данных для отображения статистики';
 
   @override
+  String get habitAnalytics => 'Статистика привычки';
+
+  @override
+  String get habitNoStatsData => 'Нет данных для отображения статистики';
+
+  @override
+  String get habitChartTitle => 'График привычки';
+
+  @override
+  String get habitTableTitle => 'Таблица привычки';
+
+  @override
+  String get habitCompletedLabel => 'Выполнено';
+
+  @override
   String get medicationSummaryTitle => 'Сводная статистика';
 
   @override

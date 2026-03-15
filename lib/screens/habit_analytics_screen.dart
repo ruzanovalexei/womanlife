@@ -2,38 +2,76 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:period_tracker/l10n/app_localizations.dart';
-import 'package:period_tracker/models/medication.dart';
-import 'package:period_tracker/models/medication_daily_stats.dart';
+import 'package:period_tracker/models/habit_execution.dart';
+import 'package:period_tracker/models/habit_measurable.dart';
+import 'package:period_tracker/models/habit_daily_stats.dart';
+import 'package:period_tracker/models/habit_execution_record.dart';
+import 'package:period_tracker/models/habit_measurable_record.dart';
+import 'package:period_tracker/models/frequency_type.dart';
 import 'package:period_tracker/database/database_helper.dart';
 import 'package:period_tracker/utils/date_utils.dart';
 
-class MedicationAnalyticsScreen extends StatefulWidget {
-  final Medication medication;
+/// Тип привычки для аналитики
+enum HabitType { execution, measurable }
 
-  const MedicationAnalyticsScreen({
+class HabitAnalyticsScreen extends StatefulWidget {
+  final dynamic habit; // HabitExecution или HabitMeasurable
+  final HabitType habitType;
+
+  const HabitAnalyticsScreen({
     super.key,
-    required this.medication,
+    required this.habit,
+    required this.habitType,
   });
 
   @override
-  State<MedicationAnalyticsScreen> createState() => _MedicationAnalyticsScreenState();
+  State<HabitAnalyticsScreen> createState() => _HabitAnalyticsScreenState();
 }
 
-class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
+class _HabitAnalyticsScreenState extends State<HabitAnalyticsScreen> {
   final _databaseHelper = DatabaseHelper();
   final _chartScrollController = ScrollController();
-  List<MedicationDailyStats> _dailyStats = [];
+  List<HabitDailyStats> _dailyStats = [];
   bool _isLoading = true;
   
   // Сводная статистика
-  int _totalPlanned = 0;
-  int _totalTaken = 0;
+  double _totalPlanned = 0;
+  double _totalActual = 0;
   double _adherencePercent = 0;
+  
+  // Данные привычки
+  late String _habitName;
+  late String _unit;
+  late DateTime _startDate;
+  late DateTime? _endDate;
+  late int _frequencyId;
+
+  // FrequencyType
+  FrequencyType? _frequencyType;
 
   @override
   void initState() {
     super.initState();
+    _initHabitData();
     _loadStats();
+  }
+
+  void _initHabitData() {
+    if (widget.habitType == HabitType.execution) {
+      final habit = widget.habit as HabitExecution;
+      _habitName = habit.name;
+      _unit = ''; // Для привычек выполнения нет единицы измерения
+      _startDate = habit.startDate;
+      _endDate = habit.endDate;
+      _frequencyId = habit.frequencyId;
+    } else {
+      final habit = widget.habit as HabitMeasurable;
+      _habitName = habit.name;
+      _unit = habit.unit;
+      _startDate = habit.startDate;
+      _endDate = habit.endDate;
+      _frequencyId = habit.frequencyId;
+    }
   }
 
   @override
@@ -44,49 +82,25 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
 
   Future<void> _loadStats() async {
     try {
+      // Загружаем FrequencyType
+      _frequencyType = await _databaseHelper.getFrequencyTypeById(_frequencyId);
+      
       // Определяем период (только до сегодняшнего дня)
       final today = MyDateUtils.startOfDayUtc(DateTime.now());
-      final startDate = widget.medication.startDate;
-      final endDate = widget.medication.endDate ?? today;
-      
-      // Нормализуем даты
-      final normalizedStart = MyDateUtils.startOfDayUtc(startDate);
-      final normalizedEnd = MyDateUtils.startOfDayUtc(endDate);
+      final normalizedStart = MyDateUtils.startOfDayUtc(_startDate);
+      final normalizedEnd = _endDate != null 
+          ? MyDateUtils.startOfDayUtc(_endDate!) 
+          : today;
       
       // Не показываем будущие дни - берём минимум из endDate и today
       final actualEnd = normalizedEnd.isBefore(today) ? normalizedEnd : today;
       
-      // Получаем записи о приеме
-      final records = await _databaseHelper.getMedicationTakenRecordsForPeriod(
-        widget.medication.id!,
-        normalizedStart,
-        actualEnd,
-      );
+      List<HabitDailyStats> stats = [];
       
-      // Группируем записи по датам
-      final Map<DateTime, List<dynamic>> recordsByDate = {};
-      for (final record in records) {
-        final dateKey = MyDateUtils.startOfDayUtc(record.date);
-        recordsByDate.putIfAbsent(dateKey, () => []).add(record);
-      }
-      
-      // Создаем статистику для каждого дня в периоде
-      final List<MedicationDailyStats> stats = [];
-      final plannedPerDay = widget.medication.times.length; // Количество запланированных приемов в день
-      
-      // Проходим по каждому дню в периоде (только до сегодня)
-      var currentDate = normalizedStart;
-      while (!currentDate.isAfter(actualEnd)) {
-        final dayRecords = recordsByDate[currentDate] ?? [];
-        final takenCount = dayRecords.where((r) => r.isTaken).length;
-        
-        stats.add(MedicationDailyStats(
-          date: currentDate,
-          plannedCount: plannedPerDay,
-          takenCount: takenCount,
-        ));
-        
-        currentDate = currentDate.add(const Duration(days: 1));
+      if (widget.habitType == HabitType.execution) {
+        stats = await _loadExecutionStats(normalizedStart, actualEnd);
+      } else {
+        stats = await _loadMeasurableStats(normalizedStart, actualEnd);
       }
       
       if (mounted) {
@@ -95,10 +109,19 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
           _isLoading = false;
           
           // Вычисляем сводную статистику
-          _totalPlanned = stats.fold(0, (sum, s) => sum + s.plannedCount);
-          _totalTaken = stats.fold(0, (sum, s) => sum + s.takenCount);
+          _totalPlanned = stats.fold(0.0, (sum, s) => sum + s.plannedValue);
+          
+          // Для измеримых привычек считаем количество выполнений, а не сумму значений
+          if (widget.habitType == HabitType.measurable) {
+            _totalActual = stats.where((s) => s.actualValue > 0).length.toDouble();
+            // Пересчитываем план как количество дней
+            _totalPlanned = stats.length.toDouble();
+          } else {
+            _totalActual = stats.fold(0.0, (sum, s) => sum + s.actualValue);
+          }
+          
           _adherencePercent = _totalPlanned > 0 
-              ? (_totalTaken / _totalPlanned * 100).clamp(0, 100) 
+              ? (_totalActual / _totalPlanned * 100).clamp(0, 100) 
               : 0;
         });
         
@@ -116,8 +139,86 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
           _isLoading = false;
         });
       }
-      debugPrint('Error loading medication stats: $e');
+      debugPrint('Error loading habit stats: $e');
     }
+  }
+
+  Future<List<HabitDailyStats>> _loadExecutionStats(
+    DateTime startDate, 
+    DateTime endDate,
+  ) async {
+    final habit = widget.habit as HabitExecution;
+    
+    // Получаем записи о выполнении
+    final records = await _databaseHelper.getHabitExecutionRecordsByHabitId(habit.id!);
+    
+    // Группируем записи по датам
+    final Map<DateTime, HabitExecutionRecord> recordsByDate = {};
+    for (final record in records) {
+      final dateKey = MyDateUtils.startOfDayUtc(record.executionDate);
+      recordsByDate[dateKey] = record;
+    }
+    
+    // Создаем статистику только для дней, когда привычка запланирована
+    final List<HabitDailyStats> stats = [];
+    var currentDate = startDate;
+    
+    while (!currentDate.isAfter(endDate)) {
+      // Проверяем, должна ли привычка выполняться в этот день
+      if (_frequencyType?.shouldExecuteOn(currentDate, startDate) ?? true) {
+        final record = recordsByDate[currentDate];
+        
+        stats.add(HabitDailyStats(
+          date: currentDate,
+          plannedValue: 1, // Для execution план = 1
+          actualValue: (record?.isCompleted ?? false) ? 1 : 0,
+          isMeasurable: false,
+        ));
+      }
+      
+      currentDate = currentDate.add(const Duration(days: 1));
+    }
+    
+    return stats;
+  }
+
+  Future<List<HabitDailyStats>> _loadMeasurableStats(
+    DateTime startDate, 
+    DateTime endDate,
+  ) async {
+    final habit = widget.habit as HabitMeasurable;
+    
+    // Получаем записи о выполнении
+    final records = await _databaseHelper.getHabitMeasurableRecordsByHabitId(habit.id!);
+    
+    // Группируем записи по датам
+    final Map<DateTime, HabitMeasurableRecord> recordsByDate = {};
+    for (final record in records) {
+      final dateKey = MyDateUtils.startOfDayUtc(record.executionDate);
+      recordsByDate[dateKey] = record;
+    }
+    
+    // Создаем статистику только для дней, когда привычка запланирована
+    final List<HabitDailyStats> stats = [];
+    var currentDate = startDate;
+    
+    while (!currentDate.isAfter(endDate)) {
+      // Проверяем, должна ли привычка выполняться в этот день
+      if (_frequencyType?.shouldExecuteOn(currentDate, startDate) ?? true) {
+        final record = recordsByDate[currentDate];
+        
+        stats.add(HabitDailyStats(
+          date: currentDate,
+          plannedValue: habit.goal,
+          actualValue: record?.actualValue ?? 0,
+          isMeasurable: true,
+        ));
+      }
+      
+      currentDate = currentDate.add(const Duration(days: 1));
+    }
+    
+    return stats;
   }
 
   @override
@@ -126,7 +227,7 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.medication.name),
+        title: Text(_habitName),
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -171,6 +272,15 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
   }
 
   Widget _buildSummaryCard(BuildContext context, AppLocalizations l10n) {
+    // Для execution: "Запланировано: X", "Выполнено: Y"
+    // Для measurable: "Запланировано: X дней", "Выполнено: Y дней"
+    final plannedDisplay = widget.habitType == HabitType.execution 
+        ? _totalPlanned.toInt().toString()
+        : '${_totalPlanned.toInt()} ${_getDaysWord(_totalPlanned.toInt())}';
+    final actualDisplay = widget.habitType == HabitType.execution 
+        ? _totalActual.toInt().toString()
+        : '${_totalActual.toInt()} ${_getDaysWord(_totalActual.toInt())}';
+    
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -191,7 +301,7 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
                   child: _buildSummaryItem(
                     context,
                     l10n.medicationPlannedLabel,
-                    '$_totalPlanned',
+                    plannedDisplay,
                     Icons.calendar_today,
                     Colors.blue,
                   ),
@@ -199,8 +309,8 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
                 Expanded(
                   child: _buildSummaryItem(
                     context,
-                    l10n.medicationTakenLabel,
-                    '$_totalTaken',
+                    l10n.habitCompletedLabel,
+                    actualDisplay,
                     Icons.check_circle,
                     Colors.green,
                   ),
@@ -222,6 +332,16 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
     );
   }
 
+  String _getDaysWord(int count) {
+    if (count % 10 == 1 && count % 100 != 11) {
+      return 'день';
+    } else if ([2, 3, 4].contains(count % 10) && ![12, 13, 14].contains(count % 100)) {
+      return 'дня';
+    } else {
+      return 'дней';
+    }
+  }
+
   Widget _buildSummaryItem(
     BuildContext context,
     String label,
@@ -236,10 +356,11 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
         Text(
           value,
           style: TextStyle(
-            fontSize: 20,
+            fontSize: 16,
             fontWeight: FontWeight.bold,
             color: color,
           ),
+          textAlign: TextAlign.center,
         ),
         Text(
           label,
@@ -261,7 +382,7 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              l10n.medicationChartTitle,
+              l10n.habitChartTitle,
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -274,7 +395,7 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
               children: [
                 _buildLegendItem(Colors.blue, l10n.medicationPlannedLabel),
                 const SizedBox(width: 24),
-                _buildLegendItem(Colors.green, l10n.medicationTakenLabel),
+                _buildLegendItem(Colors.green, l10n.habitCompletedLabel),
               ],
             ),
             const SizedBox(height: 16),
@@ -313,13 +434,13 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
   }
 
   Widget _buildBarChart(AppLocalizations l10n) {
-    // Показываем все данные, прокрутка обеспечивает доступ ко всем дням
     final displayStats = _dailyStats;
+    final maxValue = _getMaxValue(displayStats);
     
     return BarChart(
       BarChartData(
         alignment: BarChartAlignment.spaceAround,
-        maxY: _getMaxValue(displayStats).toDouble() + 1,
+        maxY: maxValue + (widget.habitType == HabitType.execution ? 0.5 : maxValue * 0.1),
         barTouchData: BarTouchData(enabled: false),
         titlesData: FlTitlesData(
           show: true,
@@ -331,12 +452,12 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
                   return const SizedBox();
                 }
                 final stat = displayStats[value.toInt()];
-                // Определяем интервал показа дат в зависимости от количества дней
+                // Определяем интервал показа дат
                 final showInterval = displayStats.length > 30 
-                    ? 5  // Каждые 5 дней для больших периодов
+                    ? 5
                     : displayStats.length > 14 
-                        ? 3  // Каждые 3 дня для средних периодов
-                        : 2; // Каждые 2 дня для маленьких периодов
+                        ? 3
+                        : 2;
                 
                 if (value.toInt() % showInterval == 0) {
                   return Padding(
@@ -356,16 +477,22 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
             sideTitles: SideTitles(
               showTitles: true,
               getTitlesWidget: (value, meta) {
-                if (value == 0 || value > _getMaxValue(displayStats)) {
+                if (value == 0 || value > maxValue) {
+                  return const SizedBox();
+                }
+                // Для execution показываем только 0 и 1
+                if (widget.habitType == HabitType.execution && value != 1) {
                   return const SizedBox();
                 }
                 return Text(
-                  value.toInt().toString(),
+                  widget.habitType == HabitType.execution 
+                      ? value.toInt().toString()
+                      : value.toStringAsFixed(0),
                   style: const TextStyle(fontSize: 10),
                 );
               },
               reservedSize: 30,
-              interval: 1,
+              interval: widget.habitType == HabitType.execution ? 1 : maxValue / 5,
             ),
           ),
           topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -375,7 +502,7 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
-          horizontalInterval: 1,
+          horizontalInterval: widget.habitType == HabitType.execution ? 1 : maxValue / 5,
           getDrawingHorizontalLine: (value) {
             return FlLine(
               color: Colors.grey.withValues(alpha: 0.3),
@@ -390,7 +517,7 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
             x: index,
             barRods: [
               BarChartRodData(
-                toY: stat.plannedCount.toDouble(),
+                toY: stat.plannedValue,
                 color: Colors.blue.withValues(alpha: 0.7),
                 width: 12,
                 borderRadius: const BorderRadius.only(
@@ -398,7 +525,7 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
                 ),
               ),
               BarChartRodData(
-                toY: stat.takenCount.toDouble(),
+                toY: stat.actualValue,
                 color: Colors.green.withValues(alpha: 0.7),
                 width: 12,
                 borderRadius: const BorderRadius.only(
@@ -412,9 +539,10 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
     );
   }
 
-  int _getMaxValue(List<MedicationDailyStats> stats) {
+  double _getMaxValue(List<HabitDailyStats> stats) {
     if (stats.isEmpty) return 1;
-    return stats.map((s) => s.plannedCount).reduce((a, b) => a > b ? a : b);
+    if (widget.habitType == HabitType.execution) return 1;
+    return stats.map((s) => s.plannedValue).reduce((a, b) => a > b ? a : b);
   }
 
   Widget _buildTableCard(BuildContext context, AppLocalizations l10n) {
@@ -425,7 +553,7 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              l10n.medicationTableTitle,
+              l10n.habitTableTitle,
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -448,7 +576,7 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          // Дата - ширина как у данных
+          // Дата
           SizedBox(
             width: 80,
             child: Text(
@@ -467,7 +595,7 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
           // Факт
           Expanded(
             child: Text(
-              l10n.medicationTakenShortLabel,
+              l10n.habitCompletedLabel,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
               textAlign: TextAlign.center,
             ),
@@ -488,9 +616,17 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
   Widget _buildTableRow(
     BuildContext context,
     AppLocalizations l10n,
-    MedicationDailyStats stat,
+    HabitDailyStats stat,
   ) {
     final dateStr = DateFormat('dd.MM.yyyy').format(stat.date.toLocal());
+    
+    // Форматирование значений
+    final plannedStr = stat.isMeasurable 
+        ? stat.plannedValue.toStringAsFixed(1)
+        : stat.plannedValue.toInt().toString();
+    final actualStr = stat.isMeasurable 
+        ? stat.actualValue.toStringAsFixed(1)
+        : stat.actualValue.toInt().toString();
     
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -503,7 +639,7 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
       ),
       child: Row(
         children: [
-          // Дата - фиксированная ширина
+          // Дата
           SizedBox(
             width: 80,
             child: Text(
@@ -514,7 +650,7 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
           // План
           Expanded(
             child: Text(
-              '${stat.plannedCount}',
+              '$plannedStr${stat.isMeasurable ? " $_unit" : ""}',
               style: const TextStyle(fontSize: 12),
               textAlign: TextAlign.center,
             ),
@@ -522,14 +658,14 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
           // Факт
           Expanded(
             child: Text(
-              '${stat.takenCount}',
+              '$actualStr${stat.isMeasurable ? " $_unit" : ""}',
               style: TextStyle(
                 fontSize: 12,
                 color: stat.isFullyCompleted
                     ? Colors.green
                     : stat.isPartiallyCompleted
                         ? Colors.orange
-                        : stat.plannedCount > 0
+                        : stat.plannedValue > 0
                             ? Colors.red
                             : null,
                 fontWeight: FontWeight.bold,
@@ -546,8 +682,8 @@ class _MedicationAnalyticsScreenState extends State<MedicationAnalyticsScreen> {
     );
   }
 
-  Widget _buildStatusIcon(MedicationDailyStats stat) {
-    if (stat.plannedCount == 0) {
+  Widget _buildStatusIcon(HabitDailyStats stat) {
+    if (stat.plannedValue <= 0) {
       return const Text('-', textAlign: TextAlign.center);
     }
     

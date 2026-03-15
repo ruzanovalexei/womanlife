@@ -75,6 +75,41 @@ class FrequencyType {
     }
   }
 
+  /// Проверяет, должна ли привычка выполняться в указанный день
+  /// [date] - проверяемая дата
+  /// [startDate] - дата начала привычки (нужна для типа 2 - каждый X день)
+  bool shouldExecuteOn(DateTime date, DateTime startDate) {
+    final normalizedDate = DateTime(date.year, date.month, date.day);
+    final normalizedStart = DateTime(startDate.year, startDate.month, startDate.day);
+    
+    switch (type) {
+      case 1:
+        // Каждый день
+        return true;
+        
+      case 2:
+        // Каждый X день
+        if (intervalValue == null || intervalValue! < 1) return false;
+        final daysDifference = normalizedDate.difference(normalizedStart).inDays;
+        // Привычка выполняется в startDate, затем через intervalValue дней
+        return daysDifference >= 0 && daysDifference % intervalValue! == 0;
+        
+      case 3:
+        // Дни недели
+        if (selectedDaysOfWeek == null || selectedDaysOfWeek!.isEmpty) return false;
+        // DateTime.weekday: 1 = Monday, 7 = Sunday
+        return selectedDaysOfWeek!.contains(date.weekday);
+        
+      case 4:
+        // X раз в неделю - показываем все дни, пользователь сам решает когда выполнять
+        // В отчёте будем считать план как intervalValue / 7 в среднем
+        return true;
+        
+      default:
+        return false;
+    }
+  }
+
   FrequencyType copyWith({
     int? id,
     int? type,

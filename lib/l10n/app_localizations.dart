@@ -1835,6 +1835,36 @@ abstract class AppLocalizations {
   /// **'No data to display statistics'**
   String get medicationNoStatsData;
 
+  /// No description provided for @habitAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Habit Statistics'**
+  String get habitAnalytics;
+
+  /// No description provided for @habitNoStatsData.
+  ///
+  /// In en, this message translates to:
+  /// **'No data to display statistics'**
+  String get habitNoStatsData;
+
+  /// No description provided for @habitChartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Habit Chart'**
+  String get habitChartTitle;
+
+  /// No description provided for @habitTableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Habit Table'**
+  String get habitTableTitle;
+
+  /// No description provided for @habitCompletedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get habitCompletedLabel;
+
   /// No description provided for @medicationSummaryTitle.
   ///
   /// In en, this message translates to:

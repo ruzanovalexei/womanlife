@@ -6,6 +6,7 @@ import '../models/habit_execution.dart';
 import '../models/habit_measurable.dart';
 import '../models/frequency_type.dart';
 import '../utils/date_utils.dart';
+import '../screens/habit_analytics_screen.dart';
 
 class HabitsTab extends StatefulWidget {
   final Function(bool hasChanges)? onDataChanged;
@@ -444,6 +445,21 @@ class _HabitsTabState extends State<HabitsTab> {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
+              icon: const Icon(Icons.bar_chart, color: Colors.teal),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => HabitAnalyticsScreen(
+                      habit: habit,
+                      habitType: HabitType.execution,
+                    ),
+                  ),
+                );
+              },
+              tooltip: l10n.medicationAnalytics,
+            ),
+            IconButton(
               icon: const Icon(Icons.edit, color: Colors.blueAccent),
               onPressed: () => _showHabitExecutionDialog(habit: habit),
               tooltip: l10n.editButton,
@@ -516,6 +532,21 @@ class _HabitsTabState extends State<HabitsTab> {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            IconButton(
+              icon: const Icon(Icons.bar_chart, color: Colors.teal),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => HabitAnalyticsScreen(
+                      habit: habit,
+                      habitType: HabitType.measurable,
+                    ),
+                  ),
+                );
+              },
+              tooltip: l10n.medicationAnalytics,
+            ),
             IconButton(
               icon: const Icon(Icons.edit, color: Colors.blueAccent),
               onPressed: () => _showHabitMeasurableDialog(habit: habit),

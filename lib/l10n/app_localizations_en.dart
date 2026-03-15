@@ -955,6 +955,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get medicationNoStatsData => 'No data to display statistics';
 
   @override
+  String get habitAnalytics => 'Habit Statistics';
+
+  @override
+  String get habitNoStatsData => 'No data to display statistics';
+
+  @override
+  String get habitChartTitle => 'Habit Chart';
+
+  @override
+  String get habitTableTitle => 'Habit Table';
+
+  @override
+  String get habitCompletedLabel => 'Completed';
+
+  @override
   String get medicationSummaryTitle => 'Summary Statistics';
 
   @override
