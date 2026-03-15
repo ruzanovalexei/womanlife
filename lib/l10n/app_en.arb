@@ -238,6 +238,8 @@
   "medicationDeleteError": "Error deleting medication: {message}",
   "medicationFilterShowCurrent": "Show current and future medications",
   "medicationFilterShowPast": "Show past medications",
+  "medicationFilterArchived": "Archived",
+  "medicationFilterActive": "Active",
   "noMedicationsCurrent": "No current or future medications",
   "noMedicationsPast": "No past medications",
   "analyticsTitle": "Analytics",

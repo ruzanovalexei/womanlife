@@ -833,6 +833,18 @@ abstract class AppLocalizations {
   /// **'Show past medications'**
   String get medicationFilterShowPast;
 
+  /// No description provided for @medicationFilterArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived'**
+  String get medicationFilterArchived;
+
+  /// No description provided for @medicationFilterActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get medicationFilterActive;
+
   /// No description provided for @noMedicationsCurrent.
   ///
   /// In en, this message translates to:

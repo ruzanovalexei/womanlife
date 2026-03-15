@@ -240,6 +240,8 @@
   "medicationDeleteError": "Ошибка удаления лекарства: {message}",
   "medicationFilterShowCurrent": "Архив лекарств",
   "medicationFilterShowPast": "Актуальные лекарства",
+  "medicationFilterArchived": "Архивные",
+  "medicationFilterActive": "Активные",
   "noMedicationsCurrent": "Нет текущих или будущих лекарств",
   "noMedicationsPast": "Нет прошедших лекарств",
   "analyticsTitle": "Аналитика",

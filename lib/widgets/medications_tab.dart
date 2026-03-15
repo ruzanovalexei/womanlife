@@ -22,7 +22,7 @@ class _MedicationsTabState extends State<MedicationsTab> {
   final _databaseHelper = DatabaseHelper();
   List<Medication> _medications = [];
   bool _isLoading = true;
-  bool _showCurrentAndFuture = true; // По умолчанию показываем текущие/будущие
+  bool _showActive = true; // По умолчанию показываем активные (true = активные, false = архивные)
 
   @override
   void initState() {
@@ -35,8 +35,8 @@ class _MedicationsTabState extends State<MedicationsTab> {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
-    if (_showCurrentAndFuture) {
-      // Показываем текущие и будущие (те, у которых endDate >= today или ещё не закончились)
+    if (_showActive) {
+      // Показываем активные и будущие (те, у которых endDate >= today или ещё не закончились)
       return _medications.where((med) {
         final endDate = med.endDate;
         // Лекарство активно, если:
@@ -47,10 +47,10 @@ class _MedicationsTabState extends State<MedicationsTab> {
         return !normalizedEndDate.isBefore(today);
       }).toList();
     } else {
-      // Показываем прошедшие (те, у которых endDate < today)
+      // Показываем архивные (те, у которых endDate < today)
       return _medications.where((med) {
         final endDate = med.endDate;
-        if (endDate == null) return false; // Бессрочные не показываем в прошедших
+        if (endDate == null) return false; // Бессрочные не показываем в архивных
         final normalizedEndDate = DateTime(endDate.year, endDate.month, endDate.day);
         return normalizedEndDate.isBefore(today);
       }).toList();
@@ -182,25 +182,34 @@ class _MedicationsTabState extends State<MedicationsTab> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    _showCurrentAndFuture 
-                        ? l10n.medicationFilterShowCurrent 
-                        : l10n.medicationFilterShowPast,
+                    l10n.medicationFilterArchived,
                     style: TextStyle(
                       fontSize: 14,
-                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                      color: !_showActive 
+                          ? Theme.of(context).textTheme.bodyMedium?.color 
+                          : Theme.of(context).textTheme.bodySmall?.color,
                     ),
                   ),
-                  const Spacer(),
                   Switch(
-                    value: _showCurrentAndFuture,
+                    value: _showActive,
                     onChanged: (value) {
                       setState(() {
-                        _showCurrentAndFuture = value;
+                        _showActive = value;
                       });
                     },
                     activeColor: Theme.of(context).colorScheme.primary,
+                  ),
+                  Text(
+                    l10n.medicationFilterActive,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: _showActive 
+                          ? Theme.of(context).textTheme.bodyMedium?.color 
+                          : Theme.of(context).textTheme.bodySmall?.color,
+                    ),
                   ),
                 ],
               ),
@@ -211,10 +220,10 @@ class _MedicationsTabState extends State<MedicationsTab> {
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
-                  : _getFilteredMedications().isEmpty
+                      : _getFilteredMedications().isEmpty
                       ? Center(
                           child: Text(
-                            _showCurrentAndFuture 
+                            _showActive 
                                 ? l10n.noMedicationsCurrent 
                                 : l10n.noMedicationsPast,
                             style: TextStyle(
