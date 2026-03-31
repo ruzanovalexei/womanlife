@@ -6,6 +6,7 @@ import 'package:period_tracker/models/list_model.dart';
 import 'package:period_tracker/models/list_item_model.dart';
 // import 'menu_screen.dart';
 import '../services/ad_banner_service.dart';
+import 'dart:async';
 
 /// Оптимизированный экран списков
 /// Реклама и основной экран не пересоздаются при обновлении списков
@@ -19,7 +20,7 @@ class ListsScreen extends StatefulWidget {
 class _ListsScreenState extends State<ListsScreen> {
   final _adBannerService = AdBannerService();
   static const _backgroundImage = AssetImage('assets/images/fon1.png');
-
+Timer? _bannerRefreshTimer;
   // Виджет баннера создается один раз и переиспользуется
   Widget? _bannerWidget;
 
@@ -39,11 +40,24 @@ class _ListsScreenState extends State<ListsScreen> {
         setState(() {});
       }
     }
+    // Запускаем таймер обновления баннера каждые 4 секунды
+    _bannerRefreshTimer?.cancel();
+    _bannerRefreshTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (mounted) {
+        _refreshBanner();
+      }
+    });
   }
-
+  void _refreshBanner() {
+    _bannerWidget = _adBannerService.createBannerWidget();
+    if (mounted) {
+      setState(() {});
+    }
+  }
   @override
   void dispose() {
     // Очищаем виджет баннера при уничтожении экрана
+    _bannerRefreshTimer?.cancel();
     _bannerWidget = null;
     super.dispose();
   }

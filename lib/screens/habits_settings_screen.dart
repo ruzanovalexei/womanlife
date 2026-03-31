@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:period_tracker/l10n/app_localizations.dart';
 import '../widgets/habits_tab.dart';
 import '../services/ad_banner_service.dart';
+import 'dart:async';
 // import 'package:yandex_mobileads/mobile_ads.dart';
 
 class HabitsSettingsScreen extends StatefulWidget {
@@ -15,7 +16,7 @@ class _HabitsSettingsScreenState extends State<HabitsSettingsScreen> {
   final _adBannerService = AdBannerService();
   static const _backgroundImage = AssetImage('assets/images/fon1.png');
   bool _hasChanges = false; // Флаг для отслеживания изменений
-
+Timer? _bannerRefreshTimer;
   // Виджет баннера создается один раз и переиспользуется
   Widget? _bannerWidget;
 
@@ -39,12 +40,25 @@ class _HabitsSettingsScreenState extends State<HabitsSettingsScreen> {
         setState(() {});
       }
     }
+    // Запускаем таймер обновления баннера каждые 4 секунды
+    _bannerRefreshTimer?.cancel();
+    _bannerRefreshTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (mounted) {
+        _refreshBanner();
+      }
+    });
   }
-  
+   void _refreshBanner() {
+    _bannerWidget = _adBannerService.createBannerWidget();
+    if (mounted) {
+      setState(() {});
+    }
+  } 
 
 @override
   void dispose() {
     // Очищаем виджет баннера при уничтожении экрана
+    _bannerRefreshTimer?.cancel();
     _bannerWidget = null;
     super.dispose();
   }

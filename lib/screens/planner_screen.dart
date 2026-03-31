@@ -7,6 +7,7 @@ import 'package:period_tracker/models/planner_task.dart';
 import 'package:period_tracker/utils/date_utils.dart';
 import 'package:period_tracker/services/ad_banner_service.dart';
 import 'planner_task_screen.dart';
+import 'dart:async';
 
 class PlannerScreen extends StatefulWidget {
   const PlannerScreen({super.key});
@@ -30,7 +31,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
   bool _isLoading = true;
   static const double _hourBlockHeight = 80.0;
   static const _backgroundImage = AssetImage('assets/images/fon1.png');
-
+Timer? _bannerRefreshTimer;
   // Виджет баннера создается один раз и переиспользуется
   Widget? _bannerWidget;
 
@@ -59,15 +60,29 @@ class _PlannerScreenState extends State<PlannerScreen> {
         setState(() {});
       }
     }
+    // Запускаем таймер обновления баннера каждые 4 секунды
+    _bannerRefreshTimer?.cancel();
+    _bannerRefreshTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (mounted) {
+        _refreshBanner();
+      }
+    });
   }
 
   @override
   void dispose() {
     // Очищаем виджет баннера при уничтожении экрана
+    _bannerRefreshTimer?.cancel();
     _bannerWidget = null;
     super.dispose();
   }
 
+  void _refreshBanner() {
+    _bannerWidget = _adBannerService.createBannerWidget();
+    if (mounted) {
+      setState(() {});
+    }
+  }
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {

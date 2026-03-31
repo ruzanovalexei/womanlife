@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:developer';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:yandex_mobileads/mobile_ads.dart';
 
-/// Сервис для управления баннерами и рекламой с вознаграждением с пулом и мониторингом Platform Views
+/// Сервис для управления баннерами и рекламой с вознаграждением
 class AdBannerService {
   static final AdBannerService _instance = AdBannerService._internal();
   factory AdBannerService() => _instance;
@@ -12,16 +12,20 @@ class AdBannerService {
   // Флаг инициализации для предотвращения повторной инициализации
   bool _isInitialized = false;
 
-  // Константы для оптимизации
-  static const int _maxPoolSize = 3;
-  static const Duration _cleanupInterval = Duration(seconds: 30);
   // Список adUnitId для round-robin ротации баннеров DEV
   static const List<String> _bannerAdUnitIds = [
-    'R-M-17946414-6',
-    'R-M-17946414-6',
-    'R-M-17946414-6',
+    'R-M-17946414-13',
+    'R-M-17946414-14',
+    'R-M-17946414-15',
+    'R-M-17946414-16',
+    'R-M-17946414-17',
+    'R-M-17946414-18',
+    'R-M-17946414-19',
+    'R-M-17946414-20',
+    'R-M-17946414-21',
+    'R-M-17946414-22',
   ];
-  // Список adUnitId для round-robin ротации баннеров Прод
+  // Список adUnitId для round-robin ротации баннеров Прод R-M-17946414-6
   // static const List<String> _bannerAdUnitIds = [
   //   'R-M-17946414-3',
   //   'R-M-17946414-4',
@@ -31,26 +35,17 @@ class AdBannerService {
 
 
   // adUnitId для рекламы с вознаграждением DEV
-  static const String _rewardedAdUnitId = 'R-M-17946414-7';
+  static const String _rewardedAdUnitId = 'R-M-17946414-2';
   // adUnitId для рекламы с вознаграждением Прод
   //  static const String _rewardedAdUnitId = 'R-M-17946414-2';
 
-  // Пул баннеров
-  final List<BannerAd> _bannerPool = [];
-  final List<BannerAd> _activeBanners = [];
-  
-  // Rewarded Ads - загружаются только при показе
+  // Счётчик созданных баннеров
+  int _totalBannersCreated = 0;
   
   // Round-robin индекс для выбора adUnitId баннеров
   int _currentBannerIndex = 0;
   
-  // Мониторинг Platform Views
-  int _platformViewCount = 0;
-  int _totalBannersCreated = 0;
-  int _totalBannersDestroyed = 0;
-  
   // Статистика баннеров
-  DateTime? _lastCleanup;
   int _failedBannerLoads = 0;
   int _successfulBannerLoads = 0;
   
@@ -66,14 +61,9 @@ class AdBannerService {
   
 
   // Getters для мониторинга баннеров
-  int get activeBannerCount => _activeBanners.length;
-  int get poolSize => _bannerPool.length;
-  int get platformViewCount => _platformViewCount;
   int get totalBannersCreated => _totalBannersCreated;
-  int get totalBannersDestroyed => _totalBannersDestroyed;
   int get failedBannerLoads => _failedBannerLoads;
   int get successfulBannerLoads => _successfulBannerLoads;
-  bool get hasAvailableBanner => _bannerPool.isNotEmpty || _activeBanners.length < _maxPoolSize;
 
   // Getters для мониторинга rewarded ads
   int get rewardedAdShownCount => _rewardedAdShownCount;
@@ -83,144 +73,66 @@ class AdBannerService {
   Future<void> initialize() async {
     // Предотвращаем повторную инициализацию
     if (_isInitialized) {
-      log('AdBannerService: Already initialized, skipping...');
+      // debugPrint('AdBannerService: Already initialized, skipping...');
       return;
     }
     
-    log('AdBannerService: Initializing...');
-    
-    // Предварительно создаем пул баннеров
-    await _createBannerPool();
-    
-    // Запускаем периодическую очистку
-    _startCleanupTimer();
+    // debugPrint('AdBannerService: Initializing...');
     
     _isInitialized = true;
     _emitStats();
-    // Rewarded ads больше не инициализируются заранее
-    log('AdBannerService: Initialized successfully');
+    // debugPrint('AdBannerService: Initialized successfully');
   }
 
-  /// Создание пула баннеров заранее с разными adUnitId
-  Future<void> _createBannerPool() async {
-    for (int i = 0; i < _maxPoolSize; i++) {
-      try {
-        final adUnitId = _bannerAdUnitIds[i % _bannerAdUnitIds.length]; // Используем разные adUnitId
-        final banner = await _createBanner(adUnitId);
-        _bannerPool.add(banner);
-        _totalBannersCreated++;
-        log('AdBannerService: Created banner $i with adUnitId: $adUnitId');
-      } catch (e) {
-        log('AdBannerService: Failed to create banner for pool: $e');
-      }
-    }
-  }
-
-  /// Создание одного баннера с переиспользованием объектов
+  /// Создание одного баннера
   Future<BannerAd> _createBanner(String adUnitId) async {
-    // Переиспользуем объекты размеров для избежания создания новых
-    final screenWidth = 320; // Стандартная ширина
+    final screenWidth = 320;
     final adSize = BannerAdSize.sticky(width: screenWidth);
     
     final banner = BannerAd(
       adUnitId: adUnitId,
       adSize: adSize,
-      adRequest: const AdRequest(), // Переиспользуем объект запроса
+      adRequest: const AdRequest(),
       onAdLoaded: () {
         _successfulBannerLoads++;
         _emitStats();
-        log('AdBannerService: Banner loaded successfully with adUnitId: $adUnitId');
+        debugPrint('AdBannerService: Banner loaded successfully with adUnitId: $adUnitId');
       },
       onAdFailedToLoad: (error) {
         _failedBannerLoads++;
         _emitStats();
-        log('AdBannerService: Ad failed to load with adUnitId $adUnitId: $error');
+        // debugPrint('AdBannerService: Ad failed to load with adUnitId $adUnitId: $error');
       },
-      onAdClicked: () => log('AdBannerService: Banner clicked with adUnitId: $adUnitId'),
-      onLeftApplication: () => log('AdBannerService: Left application with adUnitId: $adUnitId'),
-      onReturnedToApplication: () => log('AdBannerService: Returned to application with adUnitId: $adUnitId'),
-      onImpression: (impressionData) => log('AdBannerService: Impression tracked with adUnitId: $adUnitId'),
+      // onAdClicked: () => debugPrint('AdBannerService: Banner clicked with adUnitId: $adUnitId'),
+      // onLeftApplication: () => debugPrint('AdBannerService: Left application with adUnitId: $adUnitId'),
+      // onReturnedToApplication: () => debugPrint('AdBannerService: Returned to application with adUnitId: $adUnitId'),
+      // onImpression: (impressionData) => debugPrint('AdBannerService: Impression tracked with adUnitId: $adUnitId'),
     );
     
     return banner;
   }
 
-  /// Получение баннера из пула или создание нового с round-robin
+  /// Получение баннера по запросу с round-robin
   Future<BannerAd?> getBanner() async {
-    BannerAd? banner;
+    // Round-robin выбор adUnitId
+    final adUnitId = _bannerAdUnitIds[_currentBannerIndex % _bannerAdUnitIds.length];
+    // debugPrint('AdBannerService: Requesting banner with adUnitId: $adUnitId (index: ${_currentBannerIndex % _bannerAdUnitIds.length})');
     
-    // Пытаемся взять из пула
-    if (_bannerPool.isNotEmpty) {
-      banner = _bannerPool.removeLast();
-      log('AdBannerService: Reusing banner from pool');
-    } 
-    // Создаем новый, если пул пуст и лимит не превышен
-    else if (_activeBanners.length < _maxPoolSize) {
-      try {
-        // Round-robin выбор adUnitId
-        final adUnitId = _bannerAdUnitIds[_currentBannerIndex % _bannerAdUnitIds.length];
-        _currentBannerIndex++; // Переходим к следующему adUnitId
-        
-        banner = await _createBanner(adUnitId);
-        _totalBannersCreated++;
-        log('AdBannerService: Created new banner with adUnitId: $adUnitId (round-robin index: $_currentBannerIndex)');
-      } catch (e) {
-        log('AdBannerService: Failed to create new banner: $e');
-        return null;
-      }
-    } else {
-      log('AdBannerService: Maximum pool size reached');
+    // Переходим к следующему adUnitId для следующего запроса
+    _currentBannerIndex++;
+    
+    try {
+      final banner = await _createBanner(adUnitId);
+      _totalBannersCreated++;
+      // debugPrint('AdBannerService: Created new banner with adUnitId: $adUnitId');
+      _emitStats();
+      return banner;
+    } catch (e) {
+      // debugPrint('AdBannerService: Failed to create banner: $e');
       return null;
     }
+  }
     
-    _activeBanners.add(banner);
-    _platformViewCount++;
-    _emitStats();
-    
-    return banner;
-  }
-
-  /// Возврат баннера в пул
-  void returnBanner(BannerAd banner) {
-    if (_activeBanners.remove(banner)) {
-      _platformViewCount--;
-      
-      // Очищаем баннер перед возвратом в пул
-      _cleanupBanner(banner);
-      
-      // Добавляем в пул, если есть место
-      if (_bannerPool.length < _maxPoolSize) {
-        _bannerPool.add(banner);
-        log('AdBannerService: Banner returned to pool');
-      } else {
-        // Удаляем ссылку, если пул переполнен
-        _destroyBanner(banner);
-        log('AdBannerService: Banner reference removed (pool full)');
-      }
-      
-      _emitStats();
-    }
-  }
-
-  /// Очистка баннера для переиспользования
-  void _cleanupBanner(BannerAd banner) {
-    // Сброс состояния баннера для переиспользования
-    // Note: BannerAd не имеет публичного метода reset, но мы можем
-    // подготовить его для повторного использования
-  }
-
-  /// Удаление баннера из памяти
-  void _destroyBanner(BannerAd banner) {
-    try {
-      // BannerAd не имеет метода destroy в текущей версии плагина
-      // Просто удаляем ссылку и полагаемся на сборщик мусора
-      _totalBannersDestroyed++;
-      log('AdBannerService: Banner reference removed from memory');
-    } catch (e) {
-      log('AdBannerService: Error removing banner reference: $e');
-    }
-  }
-
   /// Создание виджета баннера с автоматическим управлением
   Widget createBannerWidget() {
     return FutureBuilder<BannerAd?>(
@@ -247,66 +159,22 @@ class AdBannerService {
     );
   }
 
-  /// Запуск таймера периодической очистки
-  void _startCleanupTimer() {
-    Timer.periodic(_cleanupInterval, (timer) {
-      _performCleanup();
-    });
-  }
-
-  /// Периодическая очистка неиспользуемых баннеров
-  void _performCleanup() {
-    final now = DateTime.now();
-    _lastCleanup = now;
-    
-    log('AdBannerService: Performing cleanup. Pool size: ${_bannerPool.length}, Active: ${_activeBanners.length}');
-    
-    // Удаляем старые баннеры из пула, если их слишком много
-    while (_bannerPool.length > _maxPoolSize ~/ 2) {
-      final oldBanner = _bannerPool.removeAt(0);
-      _destroyBanner(oldBanner);
-    }
-    
-    _emitStats();
-  }
-
   /// Принудительная очистка всех ресурсов
   void dispose() {
-    log('AdBannerService: Disposing all resources...');
+    // debugPrint('AdBannerService: Disposing all resources...');
     
-    // Удаляем все баннеры из пула
-    for (final banner in _bannerPool) {
-      _destroyBanner(banner);
-    }
-    _bannerPool.clear();
-    
-    // Удаляем все активные баннеры
-    for (final banner in _activeBanners) {
-      _destroyBanner(banner);
-    }
-    _activeBanners.clear();
-    
-    // Очищаем rewarded ads
-    // Rewarded ads больше не требуют дополнительной очистки
-    
-    _platformViewCount = 0;
     _isInitialized = false;
     _statsController.close();
     
-    log('AdBannerService: All resources disposed');
+    // debugPrint('AdBannerService: All resources disposed');
   }
 
   /// Отправка статистики
   void _emitStats() {
     final stats = BannerStats(
-      activeBanners: _activeBanners.length,
-      poolSize: _bannerPool.length,
-      platformViewCount: _platformViewCount,
       totalCreated: _totalBannersCreated,
-      totalDestroyed: _totalBannersDestroyed,
       successfulLoads: _successfulBannerLoads,
       failedLoads: _failedBannerLoads,
-      lastCleanup: _lastCleanup,
     );
     
     _statsController.add(stats);
@@ -325,11 +193,11 @@ class AdBannerService {
     Function()? onAdClicked,
   }) async {
     if (!_isInitialized) {
-      log('AdBannerService: Service not initialized. Call initialize() first.');
+      // debugPrint('AdBannerService: Service not initialized. Call initialize() first.');
       return null;
     }
     
-    log('AdBannerService: Starting to load RewardedAd for display...');
+    // debugPrint('AdBannerService: Starting to load RewardedAd for display...');
     
     RewardedAd? ad;
     bool adLoaded = false;
@@ -340,10 +208,10 @@ class AdBannerService {
         onAdLoaded: (loadedAd) {
           ad = loadedAd;
           adLoaded = true;
-          log('AdBannerService: RewardedAd loaded successfully for display');
+          // debugPrint('AdBannerService: RewardedAd loaded successfully for display');
         },
         onAdFailedToLoad: (error) {
-          log('AdBannerService: Failed to load RewardedAd: $error');
+          // debugPrint('AdBannerService: Failed to load RewardedAd: $error');
           adLoaded = false;
         },
       );
@@ -363,7 +231,7 @@ class AdBannerService {
       }
       
       if (!adLoaded || ad == null) {
-        log('AdBannerService: RewardedAd failed to load within timeout');
+        // debugPrint('AdBannerService: RewardedAd failed to load within timeout');
         
         // Показываем диалог с ошибкой
         if (context.mounted) {
@@ -396,28 +264,28 @@ class AdBannerService {
       ad!.setAdEventListener(
         eventListener: RewardedAdEventListener(
           onAdShown: () {
-            log('AdBannerService: RewardedAd shown');
+            // debugPrint('AdBannerService: RewardedAd shown');
           },
           onAdFailedToShow: (error) {
-            log('AdBannerService: RewardedAd failed to show: $error');
+            // debugPrint('AdBannerService: RewardedAd failed to show: $error');
             ad!.destroy();
           },
           onAdClicked: () {
             onAdClicked?.call();
-            log('AdBannerService: RewardedAd clicked');
+            // debugPrint('AdBannerService: RewardedAd clicked');
           },
           onAdDismissed: () {
-            log('AdBannerService: RewardedAd dismissed');
+            // debugPrint('AdBannerService: RewardedAd dismissed');
             ad!.destroy();
             onAdDismissed?.call();
           },
           onAdImpression: (impressionData) {
-            log('AdBannerService: RewardedAd impression recorded');
+            // debugPrint('AdBannerService: RewardedAd impression recorded');
           },
           onRewarded: (Reward reward) {
             _rewardedAdCompletedCount++;
             onAdCompleted?.call(reward);
-            log('AdBannerService: RewardedAd completed - reward granted: ${reward.amount} ${reward.type}');
+            // debugPrint('AdBannerService: RewardedAd completed - reward granted: ${reward.amount} ${reward.type}');
           },
         ),
       );
@@ -433,7 +301,7 @@ class AdBannerService {
       
       return reward;
     } catch (e) {
-      log('AdBannerService: Error showing RewardedAd: $e');
+      // debugPrint('AdBannerService: Error showing RewardedAd: $e');
       
       // Показываем диалог с ошибкой при исключении
       if (context.mounted) {
@@ -466,21 +334,16 @@ class AdBannerService {
   String getReport() {
     return '''
 AdBannerService Report:
-- Active banners: $_activeBanners.length
-- Pool size: ${_bannerPool.length}
-- Platform Views: $_platformViewCount
 - Total created: $_totalBannersCreated
-- Total references removed: $_totalBannersDestroyed
 - Successful banner loads: $_successfulBannerLoads
 - Failed banner loads: $_failedBannerLoads
 - RewardedAd shown count: $_rewardedAdShownCount
 - RewardedAd completed count: $_rewardedAdCompletedCount
-- Last cleanup: ${_lastCleanup ?? 'Never'}
 ''';
   }
 }
 
-/// Виджет баннера с автоматическим управлением жизненным циклом
+/// Виджет баннера
 class BannerWidget extends StatefulWidget {
   final BannerAd bannerAd;
   
@@ -497,17 +360,13 @@ class _BannerWidgetState extends State<BannerWidget> {
   @override
   void initState() {
     super.initState();
-    log('BannerWidget: Initialized');
-    // Загружаем баннер, когда виджет инициализируется
-    // widget.bannerAd.load();
+    // debugPrint('BannerWidget: Initialized');
   }
 
   @override
   void dispose() {
-    // Возвращаем баннер в пул при уничтожении виджета
-    AdBannerService().returnBanner(widget.bannerAd);
     super.dispose();
-    log('BannerWidget: Disposed and banner returned to pool');
+    // debugPrint('BannerWidget: Disposed');
   }
 
   @override
@@ -529,7 +388,7 @@ class _BannerWidgetState extends State<BannerWidget> {
     try {
       return AdWidget(bannerAd: widget.bannerAd);
     } catch (e) {
-      log('BannerWidget: AdWidget not available, using placeholder: $e');
+      // debugPrint('BannerWidget: AdWidget not available, using placeholder: $e');
       return Container(
         height: 50, // Соответствует ожидаемому размеру баннера
         // width: double.infinity,
@@ -543,31 +402,20 @@ class _BannerWidgetState extends State<BannerWidget> {
 }
 
 /// Класс для статистики баннеров
-/// totalDestroyed - количество баннеров, чьи ссылки были удалены из памяти
 class BannerStats {
-  final int activeBanners;
-  final int poolSize;
-  final int platformViewCount;
   final int totalCreated;
-  final int totalDestroyed;
   final int successfulLoads;
   final int failedLoads;
-  final DateTime? lastCleanup;
 
   const BannerStats({
-    required this.activeBanners,
-    required this.poolSize,
-    required this.platformViewCount,
     required this.totalCreated,
-    required this.totalDestroyed,
     required this.successfulLoads,
     required this.failedLoads,
-    required this.lastCleanup,
   });
 
   @override
   String toString() {
-    return 'BannerStats(active: $activeBanners, pool: $poolSize, views: $platformViewCount)';
+    return 'BannerStats(created: $totalCreated, success: $successfulLoads, failed: $failedLoads)';
   }
 }
 

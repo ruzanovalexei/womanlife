@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 //import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:period_tracker/l10n/app_localizations.dart';
@@ -79,7 +80,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
   late DayNote _dayNote;
   bool _isLoading = true;
   String? _errorMessage;
-  
+  Timer? _bannerRefreshTimer;
   // Реклама
   static const _backgroundImage = AssetImage('assets/images/fon1.png');
 
@@ -214,8 +215,20 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
         setState(() {});
       }
     }
+    // Запускаем таймер обновления баннера каждые 4 секунды
+    _bannerRefreshTimer?.cancel();
+    _bannerRefreshTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (mounted) {
+        _refreshBanner();
+      }
+    });
   }
-
+  void _refreshBanner() {
+    _bannerWidget = _adBannerService.createBannerWidget();
+    if (mounted) {
+      setState(() {});
+    }
+  }
   // Оптимизированная инициализация экрана - только легкие операции
   void _initializeScreen() {
     // Переносим загрузку данных в post-frame callback для лучшей производительности
@@ -1660,6 +1673,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
   @override
   void dispose() {
     // Очищаем виджет баннера при уничтожении экрана
+    _bannerRefreshTimer?.cancel();
     _bannerWidget = null;
     super.dispose();
   }

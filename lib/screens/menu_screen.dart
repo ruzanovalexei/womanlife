@@ -1,3 +1,5 @@
+import 'dart:async';
+
 // import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:period_tracker/l10n/app_localizations.dart';
@@ -35,7 +37,7 @@ class _MenuScreenState extends State<MenuScreen> {
   late Settings _settings;
   List<PeriodRecord> _periodRecords = [];
   bool _isLoading = true;
-  
+    Timer? _bannerRefreshTimer;
   // Виджет баннера создается один раз и переиспользуется
   Widget? _bannerWidget;
 
@@ -43,15 +45,39 @@ class _MenuScreenState extends State<MenuScreen> {
   void initState() {
     super.initState();
     _initializeScreen();
+    _initializeBannerWidget();
+  }
+
+  void _initializeBannerWidget() {
+    if (_bannerWidget == null) {
+      _bannerWidget = _adBannerService.createBannerWidget();
+      if (mounted) {
+        setState(() {});
+      }
+    }
+    // Запускаем таймер обновления баннера каждые 4 секунды
+    _bannerRefreshTimer?.cancel();
+    _bannerRefreshTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (mounted) {
+        _refreshBanner();
+      }
+    });
   }
 
   @override
   void dispose() {
     // Очищаем виджет баннера при уничтожении экрана
+     _bannerRefreshTimer?.cancel();
     _bannerWidget = null;
     super.dispose();
   }
 
+  void _refreshBanner() {
+    _bannerWidget = _adBannerService.createBannerWidget();
+    if (mounted) {
+      setState(() {});
+    }
+  }
   // Оптимизированная инициализация экрана - только легкие операции
   void _initializeScreen() {
     // Переносим загрузку данных в post-frame callback для лучшей производительности
@@ -78,14 +104,14 @@ class _MenuScreenState extends State<MenuScreen> {
   }
 
   // Инициализация виджета баннера - создается один раз
-  void _initializeBannerWidget() {
-    if (_bannerWidget == null) {
-      _bannerWidget = _adBannerService.createBannerWidget();
-      if (mounted) {
-        setState(() {});
-      }
-    }
-  }
+  // void _initializeBannerWidget() {
+  //   if (_bannerWidget == null) {
+  //     _bannerWidget = _adBannerService.createBannerWidget();
+  //     if (mounted) {
+  //       setState(() {});
+  //     }
+  //   }
+  // }
 
   // Инициализация сервисов
   Future<void> _initializeServices() async {
@@ -156,6 +182,7 @@ class _MenuScreenState extends State<MenuScreen> {
         }
         break;
       case 111:
+      //Вызов рекламы за вознаграждение
         // await _adBannerService.showRewardedAd(
         //   context: context,
         //   onAdCompleted: (reward) {
@@ -253,6 +280,8 @@ static const _backgroundImage = AssetImage('assets/images/fon1.png');
                   ? const Center(child: CircularProgressIndicator())
                   : _buildMenuContent(l10n),
             ),
+          // // Добавляем отступ в 20 пикселей
+          //   const SizedBox(height: 20.0),
             // Блок рекламы - используем созданный один раз виджет
             if (_bannerWidget != null) ...[
               _bannerWidget!,

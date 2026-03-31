@@ -9,6 +9,7 @@ import '../database/database_helper.dart';
 import '../services/notification_service.dart';
 import '../services/permissions_service.dart';
 import '../services/ad_banner_service.dart';
+import 'dart:async';
 class HomeScreen extends StatefulWidget {
   final bool calledFromDetailScreen; // Указывает, был ли вызван из детального экрана
 
@@ -31,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _errorMessage;
   DateTime _lastSelectedDate = DateTime.now(); // Добавляем последнюю выбранную дату
   static const _backgroundImage = AssetImage('assets/images/fon1.png');
-
+Timer? _bannerRefreshTimer;
   // Виджет баннера создается один раз и переиспользуется
   Widget? _bannerWidget;
   
@@ -59,9 +60,21 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {});
       }
     }
+    // Запускаем таймер обновления баннера каждые 4 секунды
+    _bannerRefreshTimer?.cancel();
+    _bannerRefreshTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (mounted) {
+        _refreshBanner();
+      }
+    });
   }
 
-
+  void _refreshBanner() {
+    _bannerWidget = _adBannerService.createBannerWidget();
+    if (mounted) {
+      setState(() {});
+    }
+  }
   
       
 
@@ -164,6 +177,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     // Очищаем виджет баннера при уничтожении экрана
+    _bannerRefreshTimer?.cancel();
     _bannerWidget = null;
     super.dispose();
   }

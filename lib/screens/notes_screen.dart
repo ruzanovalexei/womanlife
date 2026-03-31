@@ -7,6 +7,7 @@ import 'package:period_tracker/models/note_model.dart';
 // import 'menu_screen.dart';
 import '../services/ad_banner_service.dart';
 import 'package:period_tracker/services/speech_service.dart';
+import 'dart:async';
 // import 'package:yandex_mobileads/mobile_ads.dart';
 
 class NotesScreen extends StatefulWidget {
@@ -24,7 +25,7 @@ class _NotesScreenState extends State<NotesScreen> {
   bool _isLoading = true;
   String? _errorMessage;
   static const _backgroundImage = AssetImage('assets/images/fon1.png');
-  
+  Timer? _bannerRefreshTimer;
   // Виджет баннера создается один раз и переиспользуется
   Widget? _bannerWidget;
   
@@ -48,8 +49,20 @@ class _NotesScreenState extends State<NotesScreen> {
         setState(() {});
       }
     }
+    // Запускаем таймер обновления баннера каждые 4 секунды
+    _bannerRefreshTimer?.cancel();
+    _bannerRefreshTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (mounted) {
+        _refreshBanner();
+      }
+    });
   }
-
+  void _refreshBanner() {
+    _bannerWidget = _adBannerService.createBannerWidget();
+    if (mounted) {
+      setState(() {});
+    }
+  }
   // Оптимизированная инициализация экрана
   void _initializeScreen() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -676,6 +689,7 @@ class _NotesScreenState extends State<NotesScreen> {
   @override
   void dispose() {
     // Очищаем виджет баннера при уничтожении экрана
+    _bannerRefreshTimer?.cancel();
     _bannerWidget = null;
     super.dispose();
   }

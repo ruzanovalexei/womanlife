@@ -19,6 +19,7 @@ import 'package:period_tracker/models/planner_task.dart';
 import 'package:period_tracker/utils/date_utils.dart';
 import 'package:period_tracker/utils/period_calculator.dart';
 import 'package:period_tracker/services/ad_banner_service.dart';
+import 'dart:async';
 // import 'menu_screen.dart';
 
 class DayReportScreen extends StatefulWidget {
@@ -37,7 +38,7 @@ class _DayReportScreenState extends State<DayReportScreen> {
   bool _isLoading = true;
   String? _errorMessage;
   static const _backgroundImage = AssetImage('assets/images/fon1.png');
-  
+  Timer? _bannerRefreshTimer;
   // Виджет баннера создается один раз и переиспользуется
   Widget? _bannerWidget;
   
@@ -72,8 +73,20 @@ class _DayReportScreenState extends State<DayReportScreen> {
         setState(() {});
       }
     }
+    // Запускаем таймер обновления баннера каждые 4 секунды
+    _bannerRefreshTimer?.cancel();
+    _bannerRefreshTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (mounted) {
+        _refreshBanner();
+      }
+    });
   }
-
+  void _refreshBanner() {
+    _bannerWidget = _adBannerService.createBannerWidget();
+    if (mounted) {
+      setState(() {});
+    }
+  }
   void _initializeScreen() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -916,6 +929,7 @@ class _DayReportScreenState extends State<DayReportScreen> {
   @override
   void dispose() {
     // Очищаем виджет баннера при уничтожении экрана
+    _bannerRefreshTimer?.cancel();
     _bannerWidget = null;
     super.dispose();
   }
