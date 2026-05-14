@@ -27,7 +27,7 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = 100009
+        versionCode = 100010
         versionName = flutter.versionName
         
         // ✅ ДОБАВЛЯЕМ: App ID Яндекс Рекламы

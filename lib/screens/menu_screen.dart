@@ -86,22 +86,22 @@ class _MenuScreenState extends State<MenuScreen> {
         _loadData();
         _initializeServices();
         _initializeBannerWidget();
-        _checkForUpdates();
+        // _checkForUpdates();
       }
     });
   }
 
   // Проверка обновлений приложения
-  Future<void> _checkForUpdates() async {
-    try {
-      final hasUpdate = await updateService.checkForUpdates();
-      if (hasUpdate && mounted) {
-        await updateService.showUpdateDialog(context);
-      }
-    } catch (e) {
-      debugPrint('UpdateService: Error showing dialog: $e');
-    }
-  }
+  // Future<void> _checkForUpdates() async {
+  //   try {
+  //     final hasUpdate = await updateService.checkForUpdates();
+  //     if (hasUpdate && mounted) {
+  //       await updateService.showUpdateDialog(context);
+  //     }
+  //   } catch (e) {
+  //     debugPrint('UpdateService: Error showing dialog: $e');
+  //   }
+  // }
 
   // Инициализация виджета баннера - создается один раз
   // void _initializeBannerWidget() {
