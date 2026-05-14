@@ -9,7 +9,7 @@ import 'package:period_tracker/models/period_record.dart';
 import 'package:period_tracker/utils/date_utils.dart';
 import 'package:period_tracker/services/ad_banner_service.dart';
 import 'package:period_tracker/services/speech_service.dart';
-import 'package:period_tracker/services/update_service.dart';
+// import 'package:period_tracker/services/update_service.dart';
 import 'package:period_tracker/screens/day_detail_screen.dart';
 import 'package:period_tracker/screens/settings_screen.dart';
 import 'package:period_tracker/screens/lists_screen.dart';
